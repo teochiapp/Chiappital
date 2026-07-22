@@ -82,11 +82,13 @@ const LanguagesPage = () => {
           if (!prev.includes(wordId)) return [...prev, wordId];
           return prev;
         });
-        // Avanzar al siguiente (la tarjeta se mueve al final, así que simplemente avanzamos)
+        // Siempre avanzar al siguiente: la tarjeta actual va al final,
+        // entonces el siguiente índice muestra la próxima tarjeta.
+        // Si era la última (o solo quedaba 1), volvemos al 0.
         setCurrentReviewIndex(prev => {
-          // Si solo queda 1 tarjeta (que vuelve al final), quedamos en 0
           if (queueLength <= 1) return 0;
-          return prev; // el índice queda igual porque la cola se reorganiza
+          // Si estamos en la última posición antes del reordenamiento, volver al inicio
+          return (prev + 1) >= queueLength ? 0 : prev;
         });
       } else {
         // quality 2 o 3: la tarjeta sale de la cola para hoy, avanzar índice

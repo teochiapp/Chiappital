@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
 
 const PersonalHeader = () => {
@@ -50,6 +50,14 @@ const PersonalHeader = () => {
         >
           <Globe size={18} />
           Idiomas
+        </NavItem>
+        <NavItem
+          $active={location.pathname.startsWith('/personal/mediterranean')}
+          $med
+          onClick={() => navigate('/personal/mediterranean')}
+        >
+          <ChefHat size={18} />
+          Recetario
         </NavItem>
       </HeaderNav>
 
@@ -153,8 +161,8 @@ const NavItem = styled.button`
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background: ${props => props.$active ? 'rgba(16, 185, 129, 0.15)' : 'transparent'};
-  color: ${props => props.$active ? '#10b981' : '#94a3b8'};
+  background: ${props => props.$active ? (props.$med ? 'rgba(107, 142, 35, 0.15)' : 'rgba(16, 185, 129, 0.15)') : 'transparent'};
+  color: ${props => props.$active ? (props.$med ? '#8FAF35' : '#10b981') : '#94a3b8'};
   border: none;
   padding: 0.4rem 0.75rem;
   border-radius: 8px;

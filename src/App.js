@@ -21,6 +21,15 @@ import JournalPage from './modules/personal/pages/JournalPage';
 import FocusSessionsPage from './modules/personal/pages/FocusSessionsPage';
 import { PersonalHubProvider } from './context/PersonalHubContext';
 
+// Mediterranean Hub
+import { MediterraneanProvider } from './context/MediterraneanContext';
+import MediterraneanPage from './modules/personal/pages/MediterraneanPage';
+import MediterraneanRecipesPage from './modules/personal/pages/MediterraneanRecipesPage';
+import MediterraneanRecipeDetailPage from './modules/personal/pages/MediterraneanRecipeDetailPage';
+import MediterraneanAddRecipePage from './modules/personal/pages/MediterraneanAddRecipePage';
+import MediterraneanShoppingPage from './modules/personal/pages/MediterraneanShoppingPage';
+import MediterraneanStatsPage from './modules/personal/pages/MediterraneanStatsPage';
+
 // Importar Contexto
 import { AccountProvider } from './context/AccountContext';
 
@@ -34,91 +43,101 @@ import PersonalLayout from './modules/personal/components/PersonalLayout';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 function App() {
-  return (
-    <>
-      <GlobalStyles />
-      <AccountProvider>
-        <Router>
-          <div className="App">
-            <Header />
-            <Routes>
-              <Route path="/login" element={<LoginContainer />} />
-              <Route 
-                path="/select-account" 
-                element={
-                  <ProtectedRoute>
-                    <AccountSelectionContainer />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <DashboardContainer />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/trades" 
-                element={
-                  <ProtectedRoute>
-                    <TradeLogsContainer />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/metodologia" 
-                element={
-                  <ProtectedRoute>
-                    <MethodologyContainer />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/lab" 
-                element={
-                  <ProtectedRoute>
-                    <LabContainer />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/screener" 
-                element={
-                  <ProtectedRoute>
-                    <ScreenerContainer />
-                  </ProtectedRoute>
-                } 
-              />
+    return (
+        <>
+            <GlobalStyles />
+            <AccountProvider>
+                <Router>
+                    <div className="App">
+                        <Header />
+                        <Routes>
+                            <Route path="/login" element={<LoginContainer />} />
+                            <Route
+                                path="/select-account"
+                                element={
+                                    <ProtectedRoute>
+                                        <AccountSelectionContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <ProtectedRoute>
+                                        <DashboardContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/trades"
+                                element={
+                                    <ProtectedRoute>
+                                        <TradeLogsContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/metodologia"
+                                element={
+                                    <ProtectedRoute>
+                                        <MethodologyContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/lab"
+                                element={
+                                    <ProtectedRoute>
+                                        <LabContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/screener"
+                                element={
+                                    <ProtectedRoute>
+                                        <ScreenerContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-              {/* ─── Personal Hub (ruta oculta, acceso directo por URL) ─── */}
-              <Route
-                path="/personal"
-                element={
-                  <ProtectedRoute>
-                    <PersonalHubProvider>
-                      <PersonalLayout />
-                    </PersonalHubProvider>
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<PersonalHub />} />
-                <Route path="habits" element={<HabitsPage />} />
-                <Route path="goals" element={<GoalsPage />} />
-                <Route path="languages" element={<LanguagesPage />} />
-                <Route path="fitness" element={<FitnessPage />} />
-                <Route path="journal" element={<JournalPage />} />
-                <Route path="focus" element={<FocusSessionsPage />} />
-              </Route>
+                            {/* ─── Personal Hub (ruta oculta, acceso directo por URL) ─── */}
+                            <Route
+                                path="/personal"
+                                element={
+                                    <ProtectedRoute>
+                                        <PersonalHubProvider>
+                                            <MediterraneanProvider>
+                                                <PersonalLayout />
+                                            </MediterraneanProvider>
+                                        </PersonalHubProvider>
+                                    </ProtectedRoute>
+                                }
+                            >
+                                <Route index element={<PersonalHub />} />
+                                <Route path="habits" element={<HabitsPage />} />
+                                <Route path="goals" element={<GoalsPage />} />
+                                <Route path="languages" element={<LanguagesPage />} />
+                                <Route path="fitness" element={<FitnessPage />} />
+                                <Route path="journal" element={<JournalPage />} />
+                                <Route path="focus" element={<FocusSessionsPage />} />
 
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </div>
-        </Router>
-      </AccountProvider>
-    </>
-  );
+                                {/* ─── Subrutas de Recetario Mediterráneo ─── */}
+                                <Route path="mediterranean" element={<MediterraneanPage />} />
+                                <Route path="mediterranean/recipes" element={<MediterraneanRecipesPage />} />
+                                <Route path="mediterranean/recipes/new" element={<MediterraneanAddRecipePage />} />
+                                <Route path="mediterranean/recipes/:id" element={<MediterraneanRecipeDetailPage />} />
+                                <Route path="mediterranean/shopping" element={<MediterraneanShoppingPage />} />
+                                <Route path="mediterranean/stats" element={<MediterraneanStatsPage />} />
+                            </Route>
+
+                            <Route path="*" element={<Navigate to="/login" replace />} />
+                        </Routes>
+                    </div>
+                </Router>
+            </AccountProvider>
+        </>
+    );
 }
 
 export default App;
