@@ -138,6 +138,20 @@ class YahooFinanceService {
     throw new Error('Todos los proxies CORS fallaron para: ' + targetUrl);
   }
 
+  // Helper para mapear criptomonedas y otros símbolos especiales para Yahoo Finance
+  _mapSymbol(symbol) {
+    if (!symbol) return symbol;
+    const cryptoMap = {
+      'BTC': 'BTC-USD',
+      'ETH': 'ETH-USD',
+      'SOL': 'SOL-USD',
+      'ADA': 'ADA-USD',
+      'XRP': 'XRP-USD',
+      'USDT': 'USDT-USD'
+    };
+    return cryptoMap[symbol.toUpperCase()] || symbol;
+  }
+
   // Fetch universal: dev usa proxy local, prod usa cascada pública.
   // Nunca hace fetch directo a Yahoo Finance (siempre falla por CORS en browser).
   async fetchYahoo(path) {
@@ -182,7 +196,9 @@ class YahooFinanceService {
     try {
       await this.waitForRateLimit();
 
-      const res = await this.fetchYahoo(`/chart/${symbol}?interval=1m&range=1d`);
+      const mappedSymbol = this._mapSymbol(symbol);
+      // Usamos interval=5m en lugar de 1m para evitar errores 404 en acciones de bajo volumen (ej: DESP, ADRs)
+      const res = await this.fetchYahoo(`/chart/${mappedSymbol}?interval=5m&range=1d`);
       const data = await res.json();
 
       if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
@@ -242,7 +258,8 @@ class YahooFinanceService {
     try {
       await this.waitForRateLimit();
 
-      const res = await this.fetchYahoo(`/chart/${symbol}?interval=${interval}&range=${range}`);
+      const mappedSymbol = this._mapSymbol(symbol);
+      const res = await this.fetchYahoo(`/chart/${mappedSymbol}?interval=${interval}&range=${range}`);
       const data = await res.json();
       
       if (!data.chart || !data.chart.result || data.chart.result.length === 0) {

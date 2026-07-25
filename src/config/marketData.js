@@ -162,7 +162,6 @@ export const symbolMapping = {
   // 🏦 Criptomonedas
   'BTC': { country: 'USA', sector: 'CRYPTO', company: 'Bitcoin' },
   'ETH': { country: 'USA', sector: 'CRYPTO', company: 'Ethereum' },
-  'ADA': { country: 'USA', sector: 'CRYPTO', company: 'Cardano' },
   'SOL': { country: 'USA', sector: 'CRYPTO', company: 'Solana' },
 };
 

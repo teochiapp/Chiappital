@@ -435,7 +435,7 @@ const LogTerminal = styled.div`
   padding: 1rem;
   overflow-y: auto;
   display: flex;
-  flex-direction: column-reverse; /* El log más nuevo queda arriba/abajo dinámico */
+  flex-direction: column; /* Cambiado a column para evitar auto-scroll no deseado */
   gap: 0.4rem;
   scrollbar-width: thin;
   font-size: 0.75rem;
