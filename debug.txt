@@ -1,0 +1,2492 @@
+{
+  "generatedAt": "2026-07-25T22:40:09.052Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+  "url": "https://chiappital.surcodes.com/screener",
+  "metrics": {
+    "twelveDataCalls": 0,
+    "twelveDataLimitReached": 0,
+    "cacheHits": 158,
+    "cacheMisses": 6,
+    "proxyStats": {
+      "0": {
+        "name": "LocalServerProxy",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 2640
+      },
+      "1": {
+        "name": "CodeTabs",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 40033
+      },
+      "2": {
+        "name": "AllOrigins",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 40023
+      },
+      "3": {
+        "name": "CorsProxy.io",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 167
+      },
+      "4": {
+        "name": "ThingProxy",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 56
+      },
+      "5": {
+        "name": "CorsAnywhere",
+        "success": 0,
+        "fail": 5,
+        "totalCalls": 5,
+        "totalTime": 1260
+      }
+    }
+  },
+  "localStorageKeys": [
+    "ema21_TSLA",
+    "price_COIN",
+    "ema21_SIEGY",
+    "price_TSLA",
+    "ema21_EA",
+    "price_XLE",
+    "price_ARGT",
+    "ema21_EBAY",
+    "ema21_EWW",
+    "ema21_AZN",
+    "ema21_F",
+    "ema21_QCOM",
+    "price_GOOGL",
+    "price_SONY",
+    "ema21_PLTR",
+    "price_KLAC",
+    "price_SPCX",
+    "price_ETH",
+    "price_INDA",
+    "price_XLK",
+    "ema21_COIN",
+    "ema21_LLY",
+    "ema21_SNOW",
+    "price_PDD",
+    "ema21_UBER",
+    "price_AMD",
+    "ema21_NIO",
+    "price_DIS",
+    "price_F",
+    "price_VTI",
+    "price_PBR",
+    "price_LLY",
+    "price_JD",
+    "price_KO",
+    "price_TQQQ",
+    "price_RTX",
+    "price_SID",
+    "price_VOO",
+    "price_EA",
+    "price_JNJ",
+    "ema21_REGN",
+    "ema21_TXN",
+    "price_XRP",
+    "ema21_ABNB",
+    "ema21_UNG",
+    "ema21_PSQ",
+    "price_VRTX",
+    "ema21_CRM",
+    "ema21_INFY",
+    "price_XLC",
+    "price_HDB",
+    "price_TSM",
+    "price_AMZN",
+    "price_HOOD",
+    "ema21_BTC",
+    "price_DE",
+    "price_CRWD",
+    "price_PEP",
+    "price_MDB",
+    "price_QQQ",
+    "price_CAT",
+    "price_VALE",
+    "price_TXN",
+    "ema21_LOW",
+    "price_XLV",
+    "price_ABNB",
+    "ema21_NFLX",
+    "ema21_PFE",
+    "price_LOW",
+    "ema21_GLOB",
+    "price_PANW",
+    "price_ABBV",
+    "ema21_GLD",
+    "ema21_C",
+    "ema21_INTC",
+    "price_XLY",
+    "ema21_DIS",
+    "price_GLOB",
+    "ema21_SYK",
+    "price_MCHI",
+    "price_MA",
+    "ema21_WMT",
+    "ema21_COPX",
+    "ema21_DE",
+    "ema21_BIDU",
+    "ema21_TEAM",
+    "price_JPM",
+    "ema21_PANW",
+    "price_HIMS",
+    "price_CSCO",
+    "ema21_WDAY",
+    "price_NIO",
+    "ema21_ITUB",
+    "ema21_COP",
+    "ema21_EWZ",
+    "price_ISRG",
+    "ema21_NVS",
+    "ema21_SPY",
+    "price_GS",
+    "ema21_XLE",
+    "ema21_SID",
+    "price_TEAM",
+    "ema21_HD",
+    "ema21_VOO",
+    "price_XOM",
+    "ema21_SLV",
+    "ema21_ISRG",
+    "price_ZS",
+    "price_BAC",
+    "ema21_GE",
+    "price_INFY",
+    "price_ADSK",
+    "ema21_NVDA",
+    "ema21_XLK",
+    "ema21_HOOD",
+    "ema21_QQQ",
+    "price_WDAY",
+    "price_COP",
+    "ema21_BAC",
+    "ema21_JNJ",
+    "ema21_TSM",
+    "price_UNH",
+    "price_SMH",
+    "price_MRK",
+    "ema21_XLY",
+    "price_XLI",
+    "price_SAP",
+    "ema21_XLV",
+    "ema21_RBLX",
+    "ema21_VRTX",
+    "ema21_JD",
+    "ema21_HDB",
+    "price_CPER",
+    "ema21_ZS",
+    "ema21_GILD",
+    "ema21_META",
+    "price_EWY",
+    "price_GILD",
+    "ema21_SBUX",
+    "price_NFLX",
+    "ema21_IGV",
+    "ema21_CRWD",
+    "ema21_XOM",
+    "ema21_AMZN",
+    "price_PFE",
+    "price_DIA",
+    "price_NVDA",
+    "price_NVO",
+    "price_BABA",
+    "ema21_AAPL",
+    "ema21_CVX",
+    "ema21_MRK",
+    "price_NTES",
+    "ema21_ADBE",
+    "price_ARKK",
+    "ema21_ARGT",
+    "price_SPOT",
+    "ema21_IBN",
+    "price_HD",
+    "price_SLB",
+    "ema21_SLB",
+    "ema21_INDA",
+    "ema21_MCD",
+    "ema21_BKNG",
+    "price_USO",
+    "price_UNG",
+    "ema21_ETH",
+    "ema21_GS",
+    "price_NOW",
+    "ema21_BP",
+    "ema21_ORCL",
+    "price_GM",
+    "ema21_PEP",
+    "price_EWW",
+    "price_SBUX",
+    "ema21_XLC",
+    "price_INTU",
+    "ema21_JPM",
+    "ema21_PBR",
+    "ema21_UPS",
+    "ema21_EWY",
+    "price_COPX",
+    "price_IBN",
+    "ema21_GSK",
+    "ema21_PDD",
+    "price_ITUB",
+    "price_BP",
+    "ema21_ABEV",
+    "price_RBLX",
+    "price_UPS",
+    "price_XLB",
+    "price_OXY",
+    "ema21_ABBV",
+    "price_ORCL",
+    "price_SIEGY",
+    "price_ADBE",
+    "ema21_CSCO",
+    "price_BA",
+    "ema21_GOOGL",
+    "ema21_GM",
+    "price_EWJ",
+    "ema21_TQQQ",
+    "price_IBM",
+    "ema21_MELI",
+    "ema21_AMD",
+    "price_XLP",
+    "price_TMO",
+    "ema21_VALE",
+    "ema21_BBDC",
+    "ema21_MA",
+    "price_V",
+    "price_SHEL",
+    "ema21_NTES",
+    "ema21_MSFT",
+    "ema21_NVO",
+    "ema21_SPOT",
+    "price_COST",
+    "ema21_UAL",
+    "price_DDOG",
+    "ema21_KLAC",
+    "price_BKNG",
+    "price_ASML",
+    "price_REGN",
+    "price_HMC",
+    "price_ABEV",
+    "price_INTC",
+    "ema21_AXP",
+    "ema21_SHEL",
+    "price_CRM",
+    "ema21_INTU",
+    "price_SPY",
+    "price_XLF",
+    "price_GE",
+    "price_UAL",
+    "ema21_ON",
+    "ema21_LMT",
+    "ema21_XRP",
+    "price_LMT",
+    "ema21_HIMS",
+    "price_AZN",
+    "price_WMT",
+    "ema21_ARKK",
+    "price_CVX",
+    "price_UBER",
+    "price_META",
+    "ema21_XLI",
+    "ema21_MRNA",
+    "ema21_BABA",
+    "price_IWM",
+    "ema21_EWJ",
+    "ema21_KO",
+    "ema21_ADSK",
+    "ema21_SONY",
+    "price_SYK",
+    "price_NET",
+    "ema21_BA",
+    "ema21_ASML",
+    "price_EWZ",
+    "ema21_TGT",
+    "ema21_COST",
+    "ema21_NET",
+    "price_PYPL",
+    "price_PSQ",
+    "ema21_XLF",
+    "price_GSK",
+    "ema21_PYPL",
+    "ema21_DDOG",
+    "ema21_IWM",
+    "price_SLV",
+    "price_AAPL",
+    "ema21_TMO",
+    "ema21_RTX",
+    "price_QCOM",
+    "price_XLU",
+    "ema21_NOW",
+    "ema21_SAP",
+    "ema21_UNH",
+    "price_NKE",
+    "ema21_HMC",
+    "price_C",
+    "price_EBAY",
+    "ema21_OXY",
+    "price_NU",
+    "price_BIDU",
+    "ema21_IBM",
+    "ema21_V",
+    "price_GLD",
+    "price_MELI",
+    "price_MRNA",
+    "price_IGV",
+    "price_TGT",
+    "price_AXP",
+    "price_ON",
+    "ema21_NKE",
+    "price_XLRE",
+    "ema21_DIA",
+    "ema21_USO",
+    "ema21_MDB",
+    "ema21_CPER",
+    "ema21_CAT",
+    "price_BBDC",
+    "ema21_XLRE",
+    "price_MCD",
+    "ema21_SMH",
+    "ema21_XLP",
+    "ema21_XLB",
+    "ema21_SPCX",
+    "ema21_VTI",
+    "ema21_NU",
+    "price_MSFT",
+    "ema21_XLU",
+    "price_SNOW",
+    "price_BTC",
+    "price_PLTR",
+    "price_NVS",
+    "ema21_MCHI"
+  ],
+  "sessionStorageKeys": [
+    "yf_candles_XOM_1d_3mo",
+    "yf_candles_TEAM_1d_3mo",
+    "yf_candles_JNJ_1d_3mo",
+    "yf_candles_GLOB_1d_3mo",
+    "yf_candles_HOOD_1d_3mo",
+    "yf_candles_ON_1d_3mo",
+    "yf_candles_RTX_1d_3mo",
+    "yf_candles_BTC_1d_3mo",
+    "yf_candles_CRWD_1d_3mo",
+    "yf_candles_COST_1d_3mo",
+    "yf_candles_WMT_1d_3mo",
+    "yf_candles_ITUB_1d_3mo",
+    "yf_candles_NVS_1d_3mo",
+    "yf_candles_GSK_1d_3mo",
+    "yf_candles_GLD_1d_3mo",
+    "yf_candles_UNG_1d_3mo",
+    "yf_candles_BP_1d_3mo",
+    "yf_candles_MRNA_1d_3mo",
+    "yf_candles_XLU_1d_3mo",
+    "yf_candles_DIS_1d_3mo",
+    "yf_candles_HIMS_1d_3mo",
+    "yf_candles_CAT_1d_3mo",
+    "yf_candles_ETH_1d_3mo",
+    "yf_candles_REGN_1d_3mo",
+    "yf_candles_NFLX_1d_3mo",
+    "yf_candles_SONY_1d_3mo",
+    "yf_candles_C_1d_3mo",
+    "yf_candles_KO_1d_3mo",
+    "yf_candles_WDAY_1d_3mo",
+    "yf_candles_SHEL_1d_3mo",
+    "yf_candles_COPX_1d_3mo",
+    "yf_candles_SBUX_1d_3mo",
+    "yf_candles_ABNB_1d_3mo",
+    "yf_candles_LMT_1d_3mo",
+    "yf_candles_XLV_1d_3mo",
+    "yf_candles_ABEV_1d_3mo",
+    "yf_candles_CVX_1d_3mo",
+    "yf_candles_ZS_1d_3mo",
+    "yf_candles_MA_1d_3mo",
+    "yf_candles_MDB_1d_3mo",
+    "yf_candles_AMZN_1d_3mo",
+    "yf_candles_MELI_1d_3mo",
+    "yf_candles_CPER_1d_3mo",
+    "yf_candles_BA_1d_3mo",
+    "yf_candles_MCD_1d_3mo",
+    "yf_candles_NTES_1d_3mo",
+    "yf_candles_BBDC_1d_3mo",
+    "yf_candles_SIEGY_1d_3mo",
+    "yf_candles_TMO_1d_3mo",
+    "yf_candles_KLAC_1d_3mo",
+    "yf_candles_JPM_1d_3mo",
+    "yf_candles_PDD_1d_3mo",
+    "yf_candles_TXN_1d_3mo",
+    "yf_candles_SPOT_1d_3mo",
+    "yf_candles_PFE_1d_3mo",
+    "yf_candles_UAL_1d_3mo",
+    "yf_candles_UNH_1d_3mo",
+    "yf_candles_BAC_1d_3mo",
+    "yf_candles_SLB_1d_3mo",
+    "yf_candles_ISRG_1d_3mo",
+    "yf_candles_AXP_1d_3mo",
+    "yf_candles_GILD_1d_3mo",
+    "yf_candles_XRP_1d_3mo",
+    "yf_candles_INFY_1d_3mo",
+    "yf_candles_TGT_1d_3mo",
+    "yf_candles_SPCX_1d_3mo",
+    "yf_candles_V_1d_3mo",
+    "yf_candles_NVO_1d_3mo",
+    "yf_candles_LLY_1d_3mo",
+    "yf_candles_SYK_1d_3mo",
+    "yf_candles_SID_1d_3mo",
+    "yf_candles_ASML_1d_3mo",
+    "yf_candles_ADSK_1d_3mo",
+    "yf_candles_NET_1d_3mo",
+    "yf_candles_DE_1d_3mo",
+    "yf_candles_PBR_1d_3mo",
+    "yf_candles_JD_1d_3mo",
+    "yf_candles_NIO_1d_3mo",
+    "yf_candles_PYPL_1d_3mo",
+    "yf_candles_AZN_1d_3mo",
+    "yf_candles_VALE_1d_3mo",
+    "yf_candles_SMH_1d_3mo",
+    "yf_candles_HD_1d_3mo",
+    "yf_candles_HMC_1d_3mo",
+    "yf_candles_BABA_1d_3mo",
+    "yf_candles_SLV_1d_3mo",
+    "yf_candles_BIDU_1d_3mo",
+    "yf_candles_UBER_1d_3mo",
+    "yf_candles_IBN_1d_3mo",
+    "yf_candles_HDB_1d_3mo",
+    "yf_candles_XLP_1d_3mo",
+    "yf_candles_MCHI_1d_3mo",
+    "yf_candles_F_1d_3mo",
+    "yf_candles_ABBV_1d_3mo",
+    "yf_candles_UPS_1d_3mo",
+    "yf_candles_TSLA_1d_3mo",
+    "yf_candles_INTU_1d_3mo",
+    "yf_candles_PEP_1d_3mo",
+    "yf_candles_GE_1d_3mo",
+    "yf_candles_BKNG_1d_3mo",
+    "yf_candles_GS_1d_3mo",
+    "yf_candles_NKE_1d_3mo",
+    "yf_candles_TSM_1d_3mo",
+    "yf_candles_VRTX_1d_3mo",
+    "yf_candles_DDOG_1d_3mo",
+    "yf_candles_RBLX_1d_3mo",
+    "yf_candles_MRK_1d_3mo",
+    "yf_quote_ADA",
+    "yf_candles_LOW_1d_3mo",
+    "yf_candles_EA_1d_3mo",
+    "yf_candles_USO_1d_3mo",
+    "yf_candles_SAP_1d_3mo",
+    "yf_candles_OXY_1d_3mo",
+    "yf_candles_COP_1d_3mo",
+    "yf_candles_EBAY_1d_3mo"
+  ],
+  "recentLogs": [
+    {
+      "id": "6wjkuhjjn",
+      "timestamp": "19:37:32",
+      "level": "WARNING",
+      "message": "Yahoo Finance falló para SOL: Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/SOL?interval=1m&range=1d",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "y8bhg9qwq",
+      "timestamp": "19:37:32",
+      "level": "ERROR",
+      "message": "Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/SOL?interval=1m&range=1d",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ouc52am0p",
+      "timestamp": "19:37:32",
+      "level": "WARNING",
+      "message": "Proxy CorsAnywhere devolvió HTTP 403 para SOL",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "y344qpnz9",
+      "timestamp": "19:37:32",
+      "level": "INFO",
+      "message": "[Intento 5] Consultando SOL vía CORS Proxy CorsAnywhere...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "s4olz0jol",
+      "timestamp": "19:37:32",
+      "level": "WARNING",
+      "message": "Proxy ThingProxy falló para SOL: Failed to fetch (15ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "313tbzzb9",
+      "timestamp": "19:37:32",
+      "level": "INFO",
+      "message": "[Intento 4] Consultando SOL vía CORS Proxy ThingProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "1rqdph9pv",
+      "timestamp": "19:37:32",
+      "level": "WARNING",
+      "message": "Proxy CorsProxy.io devolvió HTTP 403 para SOL",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ozzla970c",
+      "timestamp": "19:37:32",
+      "level": "INFO",
+      "message": "[Intento 3] Consultando SOL vía CORS Proxy CorsProxy.io...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "3ovwc35bk",
+      "timestamp": "19:37:32",
+      "level": "WARNING",
+      "message": "Proxy AllOrigins falló para SOL: signal timed out (8000ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "01isfych6",
+      "timestamp": "19:37:30",
+      "level": "WARNING",
+      "message": "Yahoo Finance falló para ERJ: Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/ERJ?interval=1m&range=1d",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "r58r3aedx",
+      "timestamp": "19:37:30",
+      "level": "ERROR",
+      "message": "Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/ERJ?interval=1m&range=1d",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "62ow2z86y",
+      "timestamp": "19:37:30",
+      "level": "WARNING",
+      "message": "Proxy CorsAnywhere devolvió HTTP 403 para ERJ",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "b0kk15lof",
+      "timestamp": "19:37:30",
+      "level": "INFO",
+      "message": "[Intento 5] Consultando ERJ vía CORS Proxy CorsAnywhere...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "dv1aazbt7",
+      "timestamp": "19:37:30",
+      "level": "WARNING",
+      "message": "Proxy ThingProxy falló para ERJ: Failed to fetch (10ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "jy0u5edm3",
+      "timestamp": "19:37:30",
+      "level": "INFO",
+      "message": "[Intento 4] Consultando ERJ vía CORS Proxy ThingProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "khq2hsb0y",
+      "timestamp": "19:37:30",
+      "level": "WARNING",
+      "message": "Proxy CorsProxy.io devolvió HTTP 403 para ERJ",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "rrj43upw8",
+      "timestamp": "19:37:30",
+      "level": "INFO",
+      "message": "[Intento 3] Consultando ERJ vía CORS Proxy CorsProxy.io...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "wnq4vkc2k",
+      "timestamp": "19:37:30",
+      "level": "WARNING",
+      "message": "Proxy AllOrigins falló para ERJ: signal timed out (8008ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "452lal4cm",
+      "timestamp": "19:37:29",
+      "level": "WARNING",
+      "message": "Yahoo Finance falló para BRFS: Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/BRFS?interval=1m&range=1d",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "m302fmkvq",
+      "timestamp": "19:37:29",
+      "level": "ERROR",
+      "message": "Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/BRFS?interval=1m&range=1d",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ks26uoh2h",
+      "timestamp": "19:37:29",
+      "level": "WARNING",
+      "message": "Proxy CorsAnywhere devolvió HTTP 403 para BRFS",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "mz2bdymjc",
+      "timestamp": "19:37:29",
+      "level": "INFO",
+      "message": "[Intento 5] Consultando BRFS vía CORS Proxy CorsAnywhere...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "6unvrzvhd",
+      "timestamp": "19:37:29",
+      "level": "WARNING",
+      "message": "Proxy ThingProxy falló para BRFS: Failed to fetch (8ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "rx0bbqdie",
+      "timestamp": "19:37:29",
+      "level": "INFO",
+      "message": "[Intento 4] Consultando BRFS vía CORS Proxy ThingProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "8qbjt3s8w",
+      "timestamp": "19:37:29",
+      "level": "WARNING",
+      "message": "Proxy CorsProxy.io devolvió HTTP 403 para BRFS",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "up6bw0p4a",
+      "timestamp": "19:37:29",
+      "level": "INFO",
+      "message": "[Intento 3] Consultando BRFS vía CORS Proxy CorsProxy.io...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "9ft1fa74v",
+      "timestamp": "19:37:29",
+      "level": "WARNING",
+      "message": "Proxy AllOrigins falló para BRFS: signal timed out (8000ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ur28psiry",
+      "timestamp": "19:37:27",
+      "level": "WARNING",
+      "message": "Yahoo Finance falló para DESP: Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/DESP?interval=1m&range=1d",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "2l6ehvmtr",
+      "timestamp": "19:37:27",
+      "level": "ERROR",
+      "message": "Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/DESP?interval=1m&range=1d",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "zeohsfbou",
+      "timestamp": "19:37:27",
+      "level": "WARNING",
+      "message": "Proxy CorsAnywhere devolvió HTTP 403 para DESP",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "8ov9v1okc",
+      "timestamp": "19:37:27",
+      "level": "INFO",
+      "message": "[Intento 5] Consultando DESP vía CORS Proxy CorsAnywhere...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "mct3jhzs0",
+      "timestamp": "19:37:27",
+      "level": "WARNING",
+      "message": "Proxy ThingProxy falló para DESP: Failed to fetch (9ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "jg3t6mi8y",
+      "timestamp": "19:37:27",
+      "level": "INFO",
+      "message": "[Intento 4] Consultando DESP vía CORS Proxy ThingProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "lqvo0p452",
+      "timestamp": "19:37:27",
+      "level": "WARNING",
+      "message": "Proxy CorsProxy.io devolvió HTTP 403 para DESP",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "m12j626t0",
+      "timestamp": "19:37:27",
+      "level": "INFO",
+      "message": "[Intento 3] Consultando DESP vía CORS Proxy CorsProxy.io...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "w5grz26vk",
+      "timestamp": "19:37:27",
+      "level": "WARNING",
+      "message": "Proxy AllOrigins falló para DESP: signal timed out (8015ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "7vv6pzjy0",
+      "timestamp": "19:37:26",
+      "level": "WARNING",
+      "message": "Yahoo Finance falló para BRKB: Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/BRKB?interval=1m&range=1d",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "04kmjre0f",
+      "timestamp": "19:37:26",
+      "level": "ERROR",
+      "message": "Todos los proxies CORS fallaron para: https://query1.finance.yahoo.com/v8/finance/chart/BRKB?interval=1m&range=1d",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "g5rgg2eco",
+      "timestamp": "19:37:26",
+      "level": "WARNING",
+      "message": "Proxy CorsAnywhere devolvió HTTP 403 para BRKB",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "dd96nlv62",
+      "timestamp": "19:37:26",
+      "level": "INFO",
+      "message": "[Intento 5] Consultando BRKB vía CORS Proxy CorsAnywhere...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "i3shtyqa9",
+      "timestamp": "19:37:26",
+      "level": "WARNING",
+      "message": "Proxy ThingProxy falló para BRKB: Failed to fetch (14ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "a0nqr7zhv",
+      "timestamp": "19:37:26",
+      "level": "INFO",
+      "message": "[Intento 4] Consultando BRKB vía CORS Proxy ThingProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "vu44vjqqi",
+      "timestamp": "19:37:26",
+      "level": "WARNING",
+      "message": "Proxy CorsProxy.io devolvió HTTP 403 para BRKB",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "swahtx04s",
+      "timestamp": "19:37:26",
+      "level": "INFO",
+      "message": "[Intento 3] Consultando BRKB vía CORS Proxy CorsProxy.io...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "7y0mq2ja9",
+      "timestamp": "19:37:26",
+      "level": "WARNING",
+      "message": "Proxy AllOrigins falló para BRKB: signal timed out (8000ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "2g5lsiohr",
+      "timestamp": "19:37:24",
+      "level": "INFO",
+      "message": "[Intento 2] Consultando SOL vía CORS Proxy AllOrigins...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ruvi66khz",
+      "timestamp": "19:37:24",
+      "level": "WARNING",
+      "message": "Proxy CodeTabs falló para SOL: signal timed out (8007ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "4e53oxr02",
+      "timestamp": "19:37:22",
+      "level": "INFO",
+      "message": "[Intento 2] Consultando ERJ vía CORS Proxy AllOrigins...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "2qr3b2j1d",
+      "timestamp": "19:37:22",
+      "level": "WARNING",
+      "message": "Proxy CodeTabs falló para ERJ: signal timed out (8006ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "zv6js106f",
+      "timestamp": "19:37:21",
+      "level": "INFO",
+      "message": "[Intento 2] Consultando BRFS vía CORS Proxy AllOrigins...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "737nen4un",
+      "timestamp": "19:37:21",
+      "level": "WARNING",
+      "message": "Proxy CodeTabs falló para BRFS: signal timed out (8007ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "9frprp7jv",
+      "timestamp": "19:37:19",
+      "level": "INFO",
+      "message": "[Intento 2] Consultando DESP vía CORS Proxy AllOrigins...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "hvtrinnz2",
+      "timestamp": "19:37:19",
+      "level": "WARNING",
+      "message": "Proxy CodeTabs falló para DESP: signal timed out (8001ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "noi8fypfw",
+      "timestamp": "19:37:18",
+      "level": "INFO",
+      "message": "[Intento 2] Consultando BRKB vía CORS Proxy AllOrigins...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "jydzk70eu",
+      "timestamp": "19:37:18",
+      "level": "WARNING",
+      "message": "Proxy CodeTabs falló para BRKB: signal timed out (8012ms)",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "t9ozuy1qh",
+      "timestamp": "19:37:16",
+      "level": "INFO",
+      "message": "[Intento 1] Consultando SOL vía CORS Proxy CodeTabs...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "uwx0v1hbs",
+      "timestamp": "19:37:16",
+      "level": "WARNING",
+      "message": "Proxy LocalServerProxy devolvió HTTP 404 para SOL",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "5paspx4in",
+      "timestamp": "19:37:15",
+      "level": "INFO",
+      "message": "[Intento 0] Consultando SOL vía CORS Proxy LocalServerProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "piasjss46",
+      "timestamp": "19:37:14",
+      "level": "INFO",
+      "message": "[Intento 1] Consultando ERJ vía CORS Proxy CodeTabs...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "dslb0xmrn",
+      "timestamp": "19:37:14",
+      "level": "WARNING",
+      "message": "Proxy LocalServerProxy devolvió HTTP 404 para ERJ",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "tb55zyraa",
+      "timestamp": "19:37:14",
+      "level": "INFO",
+      "message": "[Intento 0] Consultando ERJ vía CORS Proxy LocalServerProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "wzvsgrnzi",
+      "timestamp": "19:37:14",
+      "level": "WARNING",
+      "message": "[Yahoo Queue] Pausando 1500ms para respetar intervalo...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "vkugtdehf",
+      "timestamp": "19:37:13",
+      "level": "INFO",
+      "message": "[Intento 1] Consultando BRFS vía CORS Proxy CodeTabs...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "2pfu9ba0i",
+      "timestamp": "19:37:13",
+      "level": "WARNING",
+      "message": "Proxy LocalServerProxy devolvió HTTP 404 para BRFS",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "w020fibay",
+      "timestamp": "19:37:12",
+      "level": "INFO",
+      "message": "[Intento 0] Consultando BRFS vía CORS Proxy LocalServerProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "db410nd7e",
+      "timestamp": "19:37:12",
+      "level": "WARNING",
+      "message": "[Yahoo Queue] Pausando 1500ms para respetar intervalo...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "o9uhqm3rv",
+      "timestamp": "19:37:11",
+      "level": "INFO",
+      "message": "[Intento 1] Consultando DESP vía CORS Proxy CodeTabs...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "2ilsp0i5x",
+      "timestamp": "19:37:11",
+      "level": "WARNING",
+      "message": "Proxy LocalServerProxy devolvió HTTP 404 para DESP",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "kch1o102o",
+      "timestamp": "19:37:11",
+      "level": "INFO",
+      "message": "[Intento 0] Consultando DESP vía CORS Proxy LocalServerProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "6cjj5mc9c",
+      "timestamp": "19:37:11",
+      "level": "WARNING",
+      "message": "[Yahoo Queue] Pausando 1500ms para respetar intervalo...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "mkyex9jow",
+      "timestamp": "19:37:10",
+      "level": "INFO",
+      "message": "[Intento 1] Consultando BRKB vía CORS Proxy CodeTabs...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "2w6jt7r0e",
+      "timestamp": "19:37:10",
+      "level": "WARNING",
+      "message": "Proxy LocalServerProxy devolvió HTTP 404 para BRKB",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ixpqwaget",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de SOL a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "tqbf8ij29",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para SOL: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "l19urrnyg",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de ERJ a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "p4ygn2wza",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para ERJ: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "kqdwwj1sc",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de BRFS a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "zpzgkhprf",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para BRFS: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "ff3flovhk",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "[Yahoo Queue] Pausando 1497ms para respetar intervalo...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "rojtq8689",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de DESP a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "uxy8sp3z5",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para DESP: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "ou8oohxdr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de ADA a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "dsn6vewk1",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para ADA: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "0e6j7sfnx",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[Intento 0] Consultando BRKB vía CORS Proxy LocalServerProxy...",
+      "category": "PROXY",
+      "metadata": null
+    },
+    {
+      "id": "ot04ikgnn",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[FALLBACK] Solicitando cotización de BRKB a Yahoo Finance...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "1cliv52fl",
+      "timestamp": "19:37:09",
+      "level": "WARNING",
+      "message": "Finnhub falló para BRKB: Invalid price data",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "wrirr2g2t",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SPCX: $115.07 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "nzfm43te7",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de UNG: $10.55 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "lf0lc1tat",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de USO: $136.69 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "66qqjd6ya",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CPER: $38.35 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "khhs0up4q",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de COPX: $77.72 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "kwfqn8qbu",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de HOOD: $94.91 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ma7i30nf7",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de UAL: $118.27 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "pgrsahu09",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de UPS: $114.79 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0p826nja3",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XOM: $156.94 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ixl0u4nmd",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de DIS: $94.85 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "bi54fd1eu",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de LOW: $207.64 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "jk1q9zxyo",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TGT: $136.78 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "2bnt3xxcu",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de WMT: $109.47 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "xkx6dmxng",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SYK: $330.25 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "6iom5mjb0",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de REGN: $656.01 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "tna6ntd3y",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de VRTX: $477.36 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "2vlhxyoye",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TMO: $568.26 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "yv9t0gvzp",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de UNH: $420.74 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "mvitm7z9s",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de V: $355.74 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3yo6236fj",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TEAM: $86.88 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3p423lw8y",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ADSK: $209.75 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "et14bwe2k",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de INTU: $296.33 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "255r4zg2w",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de WDAY: $135.34 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0j80tp1nh",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ZS: $142.32 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "wye20xat8",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MDB: $298.22 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "yv3df44co",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NET: $262.15 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "p3cdrzhyj",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de DDOG: $246.86 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "cgnmjc1pp",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CRWD: $183.28 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "zhg646lqn",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SPOT: $482.66 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "hdl3nlijt",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de UBER: $65.94 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "f5bcife7s",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TSLA: $313.03 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "my6ijijlj",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TSM: $403.41 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "jofktriqs",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ON: $86.81 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "1487ktn13",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de KLAC: $210.52 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "e1e0ru5ns",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TXN: $279.58 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "aladtkq43",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de ADA a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "jyyz4d62j",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XRP: $12.16 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "w6vpug8b2",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de SOL a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "wor6s8p7i",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ETH: $17.75 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "1w550e2oc",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BTC: $28.37 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3z2nxw30e",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de IBN: $29.51 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "gbbuzbnnl",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de HDB: $23.23 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "1d6gqxlku",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de INFY: $11.11 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "8xuoarvpq",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SONY: $20.98 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "vvxtc97vh",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de HMC: $28.16 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "aun4ir0yl",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SIEGY: $153.91 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "v2j62jpyp",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BP: $43.82 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "x33njgrdl",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SHEL: $88.38 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "pcy3ru5as",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GSK: $51.35 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "yvcuurk6g",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NVS: $155.01 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "yfvyu9zgs",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de AZN: $169.26 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "f5i5ikri8",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NVO: $48.77 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "33gmgb0ss",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SAP: $160 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "lir1wlc7h",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ASML: $1757.09 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "afh1p1nnj",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NIO: $4.49 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "t65zqbx45",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NTES: $119.55 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "5c7eh7ey3",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BIDU: $105.34 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "08i3kj1bo",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PDD: $82.66 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "h1qaxk03r",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de JD: $30.19 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "hn5ktdelw",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BABA: $112.14 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "00fg12ci6",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SID: $1.08 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "d6pgbkirn",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de BRFS a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "zomwwxb8s",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de ERJ a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "m37uzm3hs",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ABEV: $3.06 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "etcfljbck",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NU: $14.09 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "nqh58nzau",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BBDC: $8.23 (22 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "h7jn9gzfy",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ITUB: $8.28 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "m3yyjfzuy",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de VALE: $14.79 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "nad7t2xau",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PBR: $18.77 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "yvpcc29po",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de DESP a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "hdxq3sc9c",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GLOB: $31.3 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ul34lyzhj",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MELI: $1801.44 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3c4sjogg8",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GE: $353.73 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ubdd065kl",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de DE: $628.16 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "howlc14ov",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CAT: $888.73 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "owwzud3t4",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de RTX: $212.79 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "uwundm3q8",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de LMT: $582.6 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "mvvbzrcqb",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BA: $209.52 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "s6hii2aot",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SLB: $52.42 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "usohxincd",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de OXY: $57.3 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "l24c2gm4w",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de COP: $120.26 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "te7j094xd",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CVX: $194.79 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "sth7vxkki",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de HIMS: $28.09 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "jk3m452zi",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ISRG: $337.5 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "lb46z6fm1",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MRNA: $54.07 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "y2di9dhcy",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GILD: $129.31 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "95ggfzksr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ABBV: $259.36 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "a0io6r8lp",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de LLY: $1196.03 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "zafyuy1dx",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MRK: $131.07 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "7yat79sov",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PFE: $24.54 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "2j1t9ewmw",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de JNJ: $263.4 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0zxqb9w18",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "Solicitando precio de BRKB a Finnhub...",
+      "category": "API",
+      "metadata": null
+    },
+    {
+      "id": "tu0h512pe",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PYPL: $56.15 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "tsha2hpfc",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de AXP: $326.17 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "y3u6yikga",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MA: $539.66 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "jx2qnpxsv",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GS: $1061.23 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "50hm4c586",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de C: $132.19 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0nj1i9p8j",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BAC: $62.05 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "zcrj7kh6a",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de JPM: $353.21 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "81vh2hzy9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EA: $209.06 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "bvmeypko4",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de RBLX: $47.55 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "4m3hsxzvt",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NFLX: $70.09 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0ra3qczl7",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GM: $82.64 (35 min, delayed)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "dit5vod7j",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de F: $14.37 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "i1p0aq32m",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PEP: $136.64 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "naej7oom0",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de KO: $82.25 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "kovs3gbhm",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NKE: $41.7 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "857vysfjv",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SBUX: $103.25 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "72kmtj5rm",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MCD: $264.76 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3e4c4qrhr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de HD: $332.98 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "c4cxsu24a",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de COST: $935.03 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "a8me7gi9w",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EBAY: $109.39 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "i4sanr1w7",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ABNB: $141.1 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "p2urfkhhc",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de BKNG: $177.46 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "62qzrdjz0",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de AMZN: $232.11 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "gt7yvd8kp",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PANW: $323.79 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "w6akz9eli",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CSCO: $114.17 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "uen65l6c2",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de IBM: $214.19 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "m3d6mjqb9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de COIN: $158.29 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "snlkbeeub",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PLTR: $122.92 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ghnkojvg9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SNOW: $268.06 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "l0jwa81i9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NOW: $98.78 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "jrcag2hvn",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ORCL: $114.99 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "cr4k7ig48",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de CRM: $163.66 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "uwea7ggu7",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ADBE: $225.11 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "t1rb94xvu",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de QCOM: $166.97 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "o83t50ege",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de INTC: $92.32 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "pf5yoysg4",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de AMD: $521.95 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ec1t79a3r",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de NVDA: $206.84 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "70udhkslf",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de META: $595.19 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "6qsef3n6h",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GOOGL: $319.74 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "wl2cp11vk",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MSFT: $381.7 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ytqc5y2do",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de AAPL: $333.02 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "38jdcasbr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ARKK: $71.89 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "o5t0ogc30",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SMH: $561.19 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "194otsnqr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de IGV: $87.98 (35 min, delayed)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "lfwroval9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLB: $51.26 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "v6by9b0wq",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLRE: $45.95 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "8vpd2ucrv",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLU: $46.29 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "hboynepbf",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLP: $84.13 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "304dif4pa",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLV: $162.57 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "f7uh2enzn",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLI: $182.66 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "kabekee7w",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLC: $106.3 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "h77498xyz",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLY: $109.41 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "krizt3r2d",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLK: $175.88 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "n2hhu43w3",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLF: $56.31 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "51444pts4",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de XLE: $59.62 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "bdxuv4sl2",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SLV: $52.59 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "p11bdhsr9",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de GLD: $371.9 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "qbi9vqep5",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de MCHI: $53.33 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "g0ht0bv6c",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de ARGT: $93.14 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "6uzs55601",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de INDA: $48.02 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "zjhsbqahs",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EWW: $75.45 (35 min, delayed)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "wcc953hfr",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EWY: $162.96 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "1q4puihzt",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EWJ: $91.21 (30 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "wj43i1h7l",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de EWZ: $35.73 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "bsa1hxujg",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de PSQ: $26.99 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "0r9g622ws",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de TQQQ: $64 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "7npgpomfi",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de VOO: $679.14 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "hrnbnj9nc",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de VTI: $364.8 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "efmzy0kp0",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de IWM: $291.17 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "3v9vdbif2",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de DIA: $518.76 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "ss8xby6dw",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de QQQ: $684.23 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    },
+    {
+      "id": "x4ltpih1z",
+      "timestamp": "19:37:09",
+      "level": "INFO",
+      "message": "[HIT] Precio de SPY: $738.93 (38 min, real)",
+      "category": "CACHE",
+      "metadata": null
+    }
+  ]
+}

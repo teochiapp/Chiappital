@@ -1,5 +1,7 @@
 // services/yahooFinanceService.js - Servicio para Yahoo Finance API (GRATUITA)
 
+import loggerService from './loggerService';
+
 // En desarrollo usamos el proxy del dev server de CRA (src/setupProxy.js)
 // para evitar CORS. En producción usamos proxies públicos en cascada.
 const IS_DEV = process.env.NODE_ENV === 'development';
@@ -9,12 +11,15 @@ class YahooFinanceService {
     this.baseURL = 'https://query1.finance.yahoo.com/v8/finance';
     this.devProxyBase = '/api/yahoo'; // mapeado en setupProxy.js → query1.finance.yahoo.com/v8/finance
     this.cache = new Map();
+    this.queuePromise = Promise.resolve(); // Cola para asegurar requests secuenciales
     this.lastCallTime = 0;
-    this.minIntervalBetweenCalls = 500; // 500ms entre llamadas
+    this.minIntervalBetweenCalls = IS_DEV ? 500 : 1500; // 500ms local, 1500ms prod para no enojar a proxies públicos
 
     // Proxies CORS públicos — se usan en cascada en producción.
     // Solo se intentan si el proxy de dev o el proxy anterior fallaron.
     this.corsProxies = [
+      (url) => `/proxy.php?url=${encodeURIComponent(url)}`,
+      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
       (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
       (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
       (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
@@ -22,17 +27,23 @@ class YahooFinanceService {
     ];
   }
 
-  // Rate limiting
+  // Rate limiting usando cola (para evitar ráfagas simultáneas)
   async waitForRateLimit() {
-    const now = Date.now();
-    const timeSinceLastCall = now - this.lastCallTime;
-    
-    if (timeSinceLastCall < this.minIntervalBetweenCalls) {
-      const waitTime = this.minIntervalBetweenCalls - timeSinceLastCall;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-    
-    this.lastCallTime = Date.now();
+    const executeWait = async () => {
+      const now = Date.now();
+      const timeSinceLastCall = now - this.lastCallTime;
+      
+      if (timeSinceLastCall < this.minIntervalBetweenCalls) {
+        const waitTime = this.minIntervalBetweenCalls - timeSinceLastCall;
+        loggerService.warn(`[Yahoo Queue] Pausando ${waitTime}ms para respetar intervalo...`, 'PROXY');
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+      
+      this.lastCallTime = Date.now();
+    };
+
+    this.queuePromise = this.queuePromise.then(executeWait).catch(() => null);
+    await this.queuePromise;
   }
 
   // Verificar cache en memoria (sesión)
@@ -88,19 +99,42 @@ class YahooFinanceService {
   // Fetch a través de múltiples proxies CORS en cascada (solo producción).
   // En dev este método no debería llamarse porque getYahooPath ya da una URL local.
   async fetchWithCorsProxies(targetUrl) {
+    const symbol = targetUrl.split('/').pop().split('?')[0]; // AAPL/KO
+    
     for (let i = 0; i < this.corsProxies.length; i++) {
       const proxyUrl = this.corsProxies[i](targetUrl);
+      const startTime = Date.now();
+      
+      // Nombre limpio del proxy
+      let proxyName = 'Unknown';
+      if (proxyUrl.startsWith('/proxy.php')) proxyName = 'LocalServerProxy';
+      else if (proxyUrl.includes('codetabs')) proxyName = 'CodeTabs';
+      else if (proxyUrl.includes('allorigins')) proxyName = 'AllOrigins';
+      else if (proxyUrl.includes('corsproxy.io')) proxyName = 'CorsProxy.io';
+      else if (proxyUrl.includes('thingproxy')) proxyName = 'ThingProxy';
+      else if (proxyUrl.includes('cors-anywhere')) proxyName = 'CorsAnywhere';
+
       try {
+        loggerService.info(`[Intento ${i}] Consultando ${symbol} vía CORS Proxy ${proxyName}...`, 'PROXY');
         const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+        const timeMs = Date.now() - startTime;
+        
         if (response.ok) {
-          console.log(`✅ CORS proxy [${i}] funcionó para: ${targetUrl.split('/').pop()}`);
+          loggerService.recordProxyCall(i, proxyName, true, timeMs);
+          loggerService.success(`[Proxy ${proxyName}] Respondió OK en ${timeMs}ms para ${symbol}`, 'PROXY');
           return response;
         }
-        console.warn(`⚠️ CORS proxy [${i}] devolvió ${response.status}, probando siguiente...`);
+        
+        loggerService.recordProxyCall(i, proxyName, false, timeMs);
+        loggerService.warn(`Proxy ${proxyName} devolvió HTTP ${response.status} para ${symbol}`, 'PROXY');
       } catch (err) {
-        console.warn(`⚠️ CORS proxy [${i}] falló (${err.message}), probando siguiente...`);
+        const timeMs = Date.now() - startTime;
+        loggerService.recordProxyCall(i, proxyName, false, timeMs);
+        loggerService.warn(`Proxy ${proxyName} falló para ${symbol}: ${err.message} (${timeMs}ms)`, 'PROXY');
       }
     }
+    
+    loggerService.error(`Todos los proxies CORS fallaron para: ${targetUrl}`, 'PROXY');
     throw new Error('Todos los proxies CORS fallaron para: ' + targetUrl);
   }
 

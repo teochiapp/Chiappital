@@ -6,6 +6,7 @@ import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
 import priceService from '../../services/priceService';
 import { colors, withOpacity } from '../../styles/colors';
+import { useLabData } from '../../context/LabContext';
 
 // Nombres de las regiones
 const REGION_LABELS = {
@@ -64,6 +65,9 @@ const ScreenerPage = () => {
   const [groupMode, setGroupMode]   = useState('general'); // 'region' | 'sector' | 'general'
   const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
+  // Data del laboratorio (Sectores y Paises)
+  const { sectorData, countryData } = useLabData();
+
   // ── Scan Rápido ──────────────────────────────────────────────────────────────
   const [showScan, setShowScan]         = useState(false);
   const [scanRegion, setScanRegion]     = useState('ALL');
@@ -117,20 +121,46 @@ const ScreenerPage = () => {
     }
   }, [symbolsList]);
 
-  // Función para cargar las EMA faltantes de a poco en segundo plano
+  // Función para cargar las EMA faltantes en lotes paralelos (Chunking) usando Yahoo
   const loadEmaDistances = async (dataList) => {
     const missing = dataList.filter(s => s.emaDistance === null && s.price > 0);
-    
-    for (let i = 0; i < missing.length; i++) {
-      const item = missing[i];
-      try {
-        const emaDistance = await priceService.getEma21Distance(item.symbol, item.price);
-        setStockData(prev => prev.map(s => 
-          s.symbol === item.symbol ? { ...s, emaDistance } : s
-        ));
-      } catch (e) {
-        console.warn(`Error procesando EMA para ${item.symbol}`);
-      }
+    // En local (dev) podemos usar lotes de 5 porque el proxy es local y robusto.
+    // En producción usamos lotes de 1 (secuencial) para que los proxies públicos no colapsen (Error 429).
+    const isDev = process.env.NODE_ENV === 'development';
+    const CHUNK_SIZE = isDev ? 5 : 1; 
+
+    for (let i = 0; i < missing.length; i += CHUNK_SIZE) {
+      const chunk = missing.slice(i, i + CHUNK_SIZE);
+      
+      const promises = chunk.map(async (item) => {
+        try {
+          // pasamos "true" al final para forzar Yahoo y saltar la cola de TwelveData
+          const emaDistance = await priceService.getEma21Distance(item.symbol, item.price, true);
+          return { symbol: item.symbol, emaDistance };
+        } catch (e) {
+          console.warn(`Error procesando EMA para ${item.symbol}`);
+          return { symbol: item.symbol, emaDistance: null };
+        }
+      });
+
+      const results = await Promise.all(promises);
+
+      // Actualizar el estado de a bloques
+      setStockData(prev => {
+        let next = [...prev];
+        results.forEach(res => {
+          if (res.emaDistance !== null) {
+            const idx = next.findIndex(s => s.symbol === res.symbol);
+            if (idx !== -1) {
+              next[idx] = { ...next[idx], emaDistance: res.emaDistance };
+            }
+          }
+        });
+        return next;
+      });
+      
+      // Pequeña pausa entre lotes para que el navegador respire y React renderice
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   };
 
@@ -145,8 +175,31 @@ const ScreenerPage = () => {
     setTimeout(() => {
       let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
 
-      if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
-      if (scanSector !== 'ALL') pool = pool.filter(s => s.sector === scanSector);
+      if (scanRegion !== 'ALL') {
+        pool = pool.filter(s => s.region === scanRegion);
+      } else {
+        // Filtrar para que la región de la acción sea alcista
+        pool = pool.filter(s => {
+          const mappedId = MAP_REGION[s.region];
+          if (!mappedId) return false;
+          const rData = countryData?.[mappedId] || {};
+          const trend = rData.dailyTrend || rData.trend || 'lateral';
+          return trend === 'alcista';
+        });
+      }
+
+      if (scanSector !== 'ALL') {
+        pool = pool.filter(s => s.sector === scanSector);
+      } else {
+        // Filtrar para que el sector de la acción sea alcista
+        pool = pool.filter(s => {
+          const mappedId = MAP_SECTOR[s.sector];
+          if (!mappedId) return false;
+          const sData = sectorData?.[mappedId] || {};
+          const trend = sData.dailyTrend || sData.trend || 'lateral';
+          return trend === 'alcista';
+        });
+      }
 
       const results = pool
         .filter(s => s.emaDistance !== null && Math.abs(s.emaDistance) <= scanThreshold)
@@ -156,15 +209,74 @@ const ScreenerPage = () => {
       setScanRan(true);
       setScanLoading(false);
     }, 300);
-  }, [stockData, scanRegion, scanSector, scanThreshold]);
+  }, [stockData, scanRegion, scanSector, scanThreshold, countryData, sectorData]);
 
-  // Sectores disponibles para el scan (según región seleccionada en el scan)
+  // ── MAPEOS LAB ──────────────────────────────────────────────────────────────
+  const MAP_REGION = {
+    'US': 'spy',
+    'AR': 'merval',
+    'BR': 'ewz',
+    'CN': 'fxi',
+    'EU': 'vgk',
+    'JP': 'ewj',
+    'Global': 'eem'
+  };
+
+  const MAP_SECTOR = {
+    'Software': 'igv',
+    'Semiconductores': 'smh',
+    'Criptomonedas': 'btc',
+    'Consumo Discrecional': 'xly',
+    'Comunicaciones': 'xlc',
+    'Financiero': 'xlf',
+    'Industrial': 'xli',
+    'Salud': 'xlv',
+    'Consumo Básico': 'xlp',
+    'Energía': 'xle',
+    'Servicios Públicos': 'xlu',
+    'Real Estate': 'xlre',
+    'Materiales': 'xlb',
+    // Si la db local los tiene en inglés o diferente
+    'Technology': 'igv', // fallback
+    'Financial': 'xlf',
+    'Energy': 'xle',
+  };
+
+  // Sectores disponibles para el scan (según región seleccionada en el scan y si son ALCISTAS)
   const scanSectors = useMemo(() => {
     let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
+    
+    // Sectores únicos en el universo actual
     const unique = [...new Set(pool.map(s => s.sector).filter(Boolean))];
-    return unique.sort((a, b) => a.localeCompare(b));
-  }, [stockData, scanRegion]);
+    
+    // Filtrar solo los sectores que estén marcados como ALCISTAS (diario)
+    const bullSectors = unique.filter(sec => {
+      const mappedId = MAP_SECTOR[sec];
+      if (!mappedId) return false; // si no mapea o es 'General', se oculta
+      const data = sectorData?.[mappedId] || {};
+      const trend = data.dailyTrend || data.trend || 'lateral';
+      return trend === 'alcista';
+    });
+
+    return bullSectors.sort((a, b) => a.localeCompare(b));
+  }, [stockData, scanRegion, sectorData]);
+
+  // Regiones disponibles para el scan (solo las ALCISTAS)
+  const scanRegions = useMemo(() => {
+    const data = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
+    const unique = [...new Set(data.map(s => s.region).filter(Boolean))];
+    
+    const bullRegions = unique.filter(reg => {
+      const mappedId = MAP_REGION[reg];
+      if (!mappedId) return false;
+      const rData = countryData?.[mappedId] || {};
+      const trend = rData.dailyTrend || rData.trend || 'lateral';
+      return trend === 'alcista';
+    });
+
+    return bullRegions.sort();
+  }, [stockData, countryData]);
 
   // Contar cuántos símbolos en el universo actual ya tienen EMA calculada
   const emaReadyCount = useMemo(() => {
@@ -490,27 +602,29 @@ const ScreenerPage = () => {
             <ScanBody>
               {/* Descripción */}
               <ScanDescription>
-                Filtra por País y Sector, luego busca acciones con distancia a EMA 21 dentro del umbral — zona de potencial punto de compra.
+                Filtra por País y Sector, buscando acciones a <strong>1% o menos</strong> de la EMA 21.<br/>
+                <span style={{color: colors.primary}}>Solo aparecen opciones marcadas como <strong>Alcistas (Diario)</strong> en el Lab.</span>
               </ScanDescription>
 
               {/* Filtro País */}
               <ScanFilterBlock>
-                <ScanFilterLabel><Globe size={12} /> País</ScanFilterLabel>
+                <ScanFilterLabel><Globe size={12} /> País (Solo Alcistas)</ScanFilterLabel>
                 <PillGroup>
                   <Pill $active={scanRegion === 'ALL'} onClick={() => { setScanRegion('ALL'); setScanSector('ALL'); }}>
                     Todos
                   </Pill>
-                  {regions.map(r => (
+                  {scanRegions.map(r => (
                     <Pill key={r} $active={scanRegion === r} onClick={() => { setScanRegion(r); setScanSector('ALL'); }}>
                       <RegionFlag code={r} showName />
                     </Pill>
                   ))}
+                  {scanRegions.length === 0 && <span style={{ fontSize: '0.85rem', color: colors.textSecondary, fontStyle: 'italic', padding: '6px' }}>Ningún país alcista</span>}
                 </PillGroup>
               </ScanFilterBlock>
 
               {/* Filtro Sector */}
               <ScanFilterBlock>
-                <ScanFilterLabel><Layers size={12} /> Sector</ScanFilterLabel>
+                <ScanFilterLabel><Layers size={12} /> Sector (Solo Alcistas)</ScanFilterLabel>
                 <PillGroup>
                   <Pill $active={scanSector === 'ALL'} onClick={() => setScanSector('ALL')}>
                     Todos
@@ -520,6 +634,7 @@ const ScreenerPage = () => {
                       {s}
                     </Pill>
                   ))}
+                  {scanSectors.length === 0 && <span style={{ fontSize: '0.85rem', color: colors.textSecondary, fontStyle: 'italic', padding: '6px' }}>Ningún sector alcista</span>}
                 </PillGroup>
               </ScanFilterBlock>
 
@@ -530,10 +645,10 @@ const ScreenerPage = () => {
                   <ScanThresholdValue>±{scanThreshold.toFixed(1)}%</ScanThresholdValue>
                 </ScanFilterLabel>
                 <ScanSliderRow>
-                  <ScanSliderLabel>0.5%</ScanSliderLabel>
+                  <ScanSliderLabel>0.1%</ScanSliderLabel>
                   <ScanSlider
                     type="range"
-                    min="0.5" max="5" step="0.5"
+                    min="0.1" max="5" step="0.1"
                     value={scanThreshold}
                     onChange={e => setScanThreshold(parseFloat(e.target.value))}
                   />

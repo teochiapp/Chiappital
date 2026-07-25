@@ -32,9 +32,11 @@ import MediterraneanStatsPage from './modules/personal/pages/MediterraneanStatsP
 
 // Importar Contexto
 import { AccountProvider } from './context/AccountContext';
+import { LabProvider } from './context/LabContext';
 
 // Componentes
 import Header from './components/common/Header';
+import DebugConsole from './components/common/DebugConsole';
 
 // Personal Hub Layout
 import PersonalLayout from './modules/personal/components/PersonalLayout';
@@ -47,9 +49,10 @@ function App() {
         <>
             <GlobalStyles />
             <AccountProvider>
-                <Router>
-                    <div className="App">
-                        <Header />
+                <LabProvider>
+                    <Router>
+                        <div className="App">
+                            <Header />
                         <Routes>
                             <Route path="/login" element={<LoginContainer />} />
                             <Route
@@ -133,8 +136,10 @@ function App() {
 
                             <Route path="*" element={<Navigate to="/login" replace />} />
                         </Routes>
+                        <DebugConsole />
                     </div>
-                </Router>
+                    </Router>
+                </LabProvider>
             </AccountProvider>
         </>
     );

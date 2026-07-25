@@ -6,7 +6,6 @@ import MethodologyChecklist from './MethodologyChecklist';
 import SectorAnalysis from './SectorAnalysis';
 import CountryAnalysis from './CountryAnalysis';
 import LabPortfolio from './LabPortfolio';
-import { LabProvider } from '../../context/LabContext';
 
 const Lab = () => {
   const [activeTab, setActiveTab] = useState('portfolio'); // 'portfolio', 'methodology', 'sectors', 'countries'
@@ -18,31 +17,29 @@ const Lab = () => {
   };
 
   return (
-    <LabProvider>
-      <LabLayout>
-        <StyledContainer>
-          <LabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+    <LabLayout>
+      <StyledContainer>
+        <LabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+        
+        <LabContent>
+          {activeTab === 'portfolio' && (
+            <LabPortfolio onEvaluate={handleEvaluateTrade} />
+          )}
           
-          <LabContent>
-            {activeTab === 'portfolio' && (
-              <LabPortfolio onEvaluate={handleEvaluateTrade} />
-            )}
-            
-            {activeTab === 'methodology' && (
-              <MethodologyChecklist initialTicker={selectedTicker} />
-            )}
+          {activeTab === 'methodology' && (
+            <MethodologyChecklist initialTicker={selectedTicker} />
+          )}
 
-            {activeTab === 'sectors' && (
-              <SectorAnalysis />
-            )}
+          {activeTab === 'sectors' && (
+            <SectorAnalysis />
+          )}
 
-            {activeTab === 'countries' && (
-              <CountryAnalysis />
-            )}
-          </LabContent>
-        </StyledContainer>
-      </LabLayout>
-    </LabProvider>
+          {activeTab === 'countries' && (
+            <CountryAnalysis />
+          )}
+        </LabContent>
+      </StyledContainer>
+    </LabLayout>
   );
 };
 
