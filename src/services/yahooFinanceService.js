@@ -147,7 +147,10 @@ class YahooFinanceService {
       'SOL': 'SOL-USD',
       'ADA': 'ADA-USD',
       'XRP': 'XRP-USD',
-      'USDT': 'USDT-USD'
+      'USDT': 'USDT-USD',
+      'BRKB': 'BRK-B',
+      'BRK.B': 'BRK-B',
+      'SMSN': 'SMSN.IL'
     };
     return cryptoMap[symbol.toUpperCase()] || symbol;
   }
@@ -197,8 +200,8 @@ class YahooFinanceService {
       await this.waitForRateLimit();
 
       const mappedSymbol = this._mapSymbol(symbol);
-      // Usamos interval=5m en lugar de 1m para evitar errores 404 en acciones de bajo volumen (ej: DESP, ADRs)
-      const res = await this.fetchYahoo(`/chart/${mappedSymbol}?interval=5m&range=1d`);
+      // Usamos interval=1d en lugar de 5m/1m para evitar errores 404 absolutos en acciones de bajo volumen (ej: DESP, ADRs, WBA, MMC)
+      const res = await this.fetchYahoo(`/chart/${mappedSymbol}?interval=1d&range=1d`);
       const data = await res.json();
 
       if (!data.chart || !data.chart.result || data.chart.result.length === 0) {

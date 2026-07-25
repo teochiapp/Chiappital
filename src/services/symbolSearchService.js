@@ -591,7 +591,7 @@ class SymbolSearchService {
         { symbol: 'UPST', name: 'Upstart Holdings Inc.', sector: 'Financiero', region: 'US', currency: 'USD', type: 'Equity' },
         { symbol: 'GILD', name: 'Gilead Sciences Inc.', sector: 'Salud', region: 'US', currency: 'USD', type: 'Equity' },
         { symbol: 'TEN', name: 'Tenaris', sector: 'Materiales', region: 'AR', currency: 'USD', type: 'Equity' },
-        { symbol: 'TXR', name: 'Ternium S.A.', sector: 'Materiales', region: 'AR', currency: 'USD', type: 'Equity' },
+        { symbol: 'TX', name: 'Ternium S.A.', sector: 'Materiales', region: 'AR', currency: 'USD', type: 'Equity' },
         { symbol: 'VIST', name: 'Vista Energy S.A.B. de C.V.', sector: 'Energía', region: 'AR', currency: 'USD', type: 'Equity' },
         { symbol: 'LAC', name: 'Lithium Americas Corp', sector: 'Materiales', region: 'US', currency: 'USD', type: 'Equity' },
         { symbol: 'VST', name: 'Vistra Corporation', sector: 'Energía', region: 'US', currency: 'USD', type: 'Equity' },
