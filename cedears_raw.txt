@@ -1,0 +1,899 @@
+The following changes were made by the USER to: c:\Users\teoch\OneDrive\Desktop\React\Chiappital\Chiappital\cedears.js. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -1,0 +1,1125 @@
++ARG	AABA	-	-	-	-	-	-	-	-	-	3:1	-
++ARG	AAL	American Airlines Group Inc	11.460,00	+6,1	-17,0	-1,0	42,89 K	487,79 M	-	-	2:1	1.589,46
++ARG	AALC	AMERICAN AIRLINES GROUP INC CED	6,23	-	-	-	-	-	-	-	-	-
++ARG	AALC	AMERICAN AIRLINES GROUP INC CED	6,23	-	-	-	-	-	-	-	-	-
++ARG	AAP	Advanced Auto Parts Inc	6.345,00	+5,8	-10,4	+47,8	8,04 K	50,36 M	-	-	14:1	1.592,79
++ARG	AAPL	Apple Inc.	26.580,00	+4,3	+17,8	+28,0	71,36 K	1,88 MM	-	-	20:1	1.592,57
++ARG	AAPLC	APPLE INC CEDEAR(REPR 1/20 SHR)	12,21	-	-	-	-	-	-	-	-	-
++ARG	AAPLC	APPLE INC CEDEAR(REPR 1/20 SHR)	12,21	-	-	-	-	-	-	-	-	-
++ARG	ABBV	AbbVie Inc.	41.320,00	+1,9	+5,5	+18,8	1,14 K	47,22 M	-	-	10:1	1.600,93
++ARG	ABBVC	ABBVIE INC CEDEAR EA 10 REP 1 C	22,00	-4,5	-	-	39	858	-	-	-	-
++ARG	ABEV	Ambev S.A.	14.590,00	-0,5	-0,3	+29,3	3,80 K	55,51 M	-	-	1:3	1.584,41
++ARG	ABEV3	Ambev S.A.	4.970,00	-0,1	+0,1	+28,2	26	128,94 K	-	-	1:1	-
++ARG	ABEVC	AMBEV SA CEDEAR EACH REPR 3 ADR	9,22	-	-	-	-	-	-	-	-	-
++ARG	ABEVC	AMBEV SA CEDEAR EACH REPR 3 ADR	9,22	-	-	-	-	-	-	-	-	-
++ARG	ABNB	Airbnb Inc	15.000,00	+3,3	+0,3	+7,9	680	10,20 M	-	-	15:1	1.598,92
++ARG	ABNBC	AIRBNB INC CEDEAR EACH 15 REP 1	8,92	-	-	-	-	-	-	-	-	-
++ARG	ABT	Abbott Labs	41.180,00	+3,0	+16,0	-13,8	2,06 K	84,75 M	-	-	4:1	1.596,90
++ARG	ABTC	Abbott Labs (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ACN	Accenture	3.107,50	+7,3	+19,3	-45,6	96,99 K	297,13 M	-	-	75:1	1.596,21
++ARG	ACNC	Accenture (Cable)	0,00	-5,3	+9,0	-	-	-	
++1,69
++2,58
++-	-
++ARG	ACWI	iShares MSCI ACWI ETF	9.495,00	+1,0	+0,4	+12,8	18,95 K	179,65 M	-	-	26:1	1.603,05
++ARG	ACWIC	iShares MSCI ACWI ETF (Cable)	6,11	+0,5	-1,1	-	8	49	
++5,72
++6,38
++-	-
++ARG	ADBE	Adobe Systems Incorporated	8.155,00	+7,1	+12,0	-33,4	68,76 K	553,52 M	-	-	44:1	1.594,76
++ARG	ADBEC	ADOBE INC CEDEAR EACH 44 REP 1	5,64	-	-	-	-	-	-	-	-	-
++ARG	ADBEC	ADOBE INC CEDEAR EACH 44 REP 1	5,64	-	-	-	-	-	-	-	-	-
++ARG	ADGO	Adecoagro S.A.	16.850,00	-1,9	+13,1	+38,8	9,90 K	167,56 M	-	-	1:1	1.561,63
++ARG	ADGOC	ADECOAGRO S A CEDEAR EACH 1 REP	0,00	-5,9	-	-	-	-	
++10,35
++14,00
++-	-	-
++ARG	ADI	Analog Devices	39.440,00	-1,0	-4,7	+41,4	79	3,11 M	-	-	15:1	1.586,31
++ARG	ADP	Automatic Data Processing Inc.	66.425,00	+3,5	+13,5	+0,8	375	24,79 M	-	-	6:1	1.567,55
++ARG	ADPC	Automatic Data Processing Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ADS	Adidas AG	0,01	-	-	-	-	-	-	-	22:1	-
++ARG	AEG	Aegon N.V.	14.590,00	+2,1	+10,9	+23,3	5	72,95 K	-	-	1:1	-
++ARG	AEM	Agnico Eagle Mines Limited	38.740,00	+1,8	-3,9	-11,6	196	7,60 M	-	-	6:1	1.600,78
++ARG	AI	C3.AI INC	2.595,00	+1,2	-9,3	-38,7	7,24 K	18,85 M	-	-	5:1	1.592,02
++ARG	AIC	C3.AI INC (Cable)	0,00	-	-	-	-	-	
++1,75
++2,00
++-	-	-
++ARG	AIG	American International Group (AIG)	25.360,00	+2,5	+9,0	-3,3	210	5,28 M	-	-	5:1	1.603,85
++ARG	AIGC	American International Group (AIG) (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ALAB	ASTERA LABS INC CEDEAR EACH 28	10.580,00	-9,6	-38,3	+77,2	11,54 K	125,28 M	-	-	44:1	-
++ARG	AMAT	Applied Materials Inc.	170.975,00	-3,8	-25,5	+115,5	1,76 K	304,27 M	-	-	5:1	1.590,47
++ARG	AMATC	Applied Materials Inc. (Cable)	104,00	-7,1	-	-	2	208	
++74,50
++131,25
++-	-
++ARG	AMDC	ADVANCED MICRO DEVICES INC CEDE	18,00	-	-	-	-	-	-	-	-	-
++ARG	AMDC	ADVANCED MICRO DEVICES INC CEDE	18,00	-	-	-	-	-	-	-	-	-
++ARG	AMGN	Amgen Inc.	20.020,00	+2,5	+6,2	+20,1	1,44 K	28,81 M	-	-	30:1	1.598,83
++ARG	AMGNC	Amgen Inc. (Cable)	0,00	-2,5	-	-	-	-	
++6,03
++12,66
++-	-	-
++ARG	AMX	America Movil	41.620,00	+1,5	+3,2	+31,1	29	1,21 M	-	-	1:1	1.600,15
++ARG	AMXC	America Movil (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	AMZN	Amazon.Com Inc.	2.585,00	+0,3	-0,3	+5,1	970,88 K	2,51 MM	-	-	144:1	1.607,25
++ARG	AMZNC	AMAZON COM INC CEDEAR EACH 144	1,37	-	-	-	-	-	-	-	-	-
++ARG	AMZNC	AMAZON COM INC CEDEAR EACH 144	1,37	-	-	-	-	-	-	-	-	-
++ARG	ANET	ARISTA NETWORKS INC GDS ARS	9.560,00	-0,5	+3,6	-	3,97 K	37,84 M	-	-	29:1	1.595,63
++ARG	ANETC	ARISTA NETWORKS INC GDS ARS (Cable)	6,02	-1,0	-	-	14	85	-	-	-	-
++ARG	ANF	Abercrombie & Fitch Co	150.050,00	+4,1	+6,8	-22,8	793	118,90 M	-	-	1:1	1.599,68
++ARG	AOCA	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	AOCAC	-	-	-	-	-	-	-	-	-	-	-
++ARG	ARCO	Arcos Dorados Holdings Inc.	26.360,00	+0,8	+5,2	+18,5	399	10,58 M	-	-	1:2	1.603,41
++ARG	ARCOC	Arcos Dorados Holdings Inc. (Cable)	0,00	-1,2	-	-	2	33	
++13,27
++18,30
++-	-	-
++ARG	ARCOC	Arcos Dorados Holdings Inc. (Cable)	0,00	-1,2	-	-	2	33	
++13,27
++18,30
++-	-	-
++ARG	ARKK	ARK INNOVATION	11.510,00	-1,6	-8,7	-7,9	3,12 K	35,92 M	-	-	10:1	1.601,06
++ARG	ARKKC	ARK ETF TRUST CEDEAR EACH 10 RE	7,00	-	-	-	-	-	-	-	-	-
++ARG	ARM	ARM Holdings Plc	15.340,00	-7,0	-25,8	+135,6	4,31 K	68,45 M	-	-	27:1	1.593,00
++ARG	ASML	ASML HOLDING NV	19.130,00	-1,8	-10,1	+71,0	10,17 K	196,09 M	-	-	146:1	1.590,08
++ARG	ASMLC	ASML HOLDING NV CEDEAR EACH 14	9,00	-	-	-	-	-	-	-	-	-
++ARG	ASR	Grupo Aeroportuario Del Sureste S.A.B. de C.V.	21.390,00	+0,1	-10,2	-12,8	349	7,50 M	-	-	20:1	-
++ARG	ASTS	AST SPACEMOBILE INC CEDEAR EACH	5.985,00	-4,1	-31,3	-22,5	75,07 K	450,70 M	-	-	15:1	1.600,27
++ARG	ASTSC	AST SPACEMOBILE INC CEDEAR EACH (Cable)	0,00	-3,2	-	-	-	-	
++4,65
++8,79
++-	-	-
++ARG	AUY	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	AVGO	Broadcom Inc.	15.590,00	-1,8	+2,7	+14,0	29,61 K	463,51 M	-	-	39:1	1.593,86
++ARG	AVGOC	BROADCOM INC CEDEAR EA 39 REP 1	7,92	-	-	-	32	-	-	-	-	-
++ARG	AVGOC	BROADCOM INC CEDEAR EA 39 REP 1	7,92	-	-	-	32	-	-	-	-	-
++ARG	AVY	Avery Dennison Corp.	14.270,00	+4,6	+1,2	-7,5	14	199,77 K	-	-	18:1	-
++ARG	AVYC	Avery Dennison Corp. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	AXIA	CENTRAIS ELET BRAS SA ELETROBRA	63.500,00	-0,2	-3,4	+14,2	1	63,50 K	-	-	-	-
++ARG	AXP	American Express Co	34.720,00	-3,6	-1,3	-8,5	11,17 K	384,37 M	-	-	15:1	1.597,55
++ARG	AXPC	AMERICAN EXPRESS CO CEDEAR EACH	24,45	-4,7	-	-	2	49	-	-	-	-
++ARG	AXPC	AMERICAN EXPRESS CO CEDEAR EACH	24,45	-4,7	-	-	2	49	-	-	-	-
++ARG	AZN	Astrazeneca Plc	67.525,00	+1,5	-8,6	-4,3	179	12,05 M	-	-	4:1	1.607,64
++ARG	AZNC	Astrazeneca Plc (Cable)	0,00	+2,7	+33,7	-	-	-	
++38,60
++51,60
++-	-	-
++ARG	AZNC	Astrazeneca Plc (Cable)	0,00	+2,7	+33,7	-	-	-	
++38,60
++51,60
++-	-	-
++ARG	B	Barrick Gold Corp	29.660,00	+0,8	+7,0	-12,8	12,07 K	358,81 M	-	-	2:1	1.592,91
++ARG	B.C	-	20,64	-1,3	-	-	6	124	-	-	-	-
++ARG	B.C	-	20,64	-1,3	-	-	6	124	-	-	-	-
++ARG	BA	The Boeing Company	13.910,00	+1,3	-1,5	-0,1	3,39 K	46,97 M	-	-	24:1	1.591,99
++ARG	BA.C	Bank Of America Corporation	24.710,00	+1,6	+11,2	+16,8	2,08 K	51,41 M	-	-	4:1	1.593,42
++ARG	BA.CC	Bank Of America Corporation (Cable)	12,48	-	-	-	-	-	-	-	-	-
++ARG	BABA	Alibaba Group Holding Limited	19.930,00	-0,7	+19,3	-20,9	15,82 K	314,35 M	-	-	9:1	1.598,81
++ARG	BABAC	ALIBABA GROUP HOLDING LTD CEDEA	14,04	-	-	-	-	-	-	-	-	-
++ARG	BABAC	ALIBABA GROUP HOLDING LTD CEDEA	14,04	-	-	-	-	-	-	-	-	-
++ARG	BAC	BOEING CO CEDEAR EACH 24 REP 1	9,52	-	-	-	-	-	-	-	-	-
++ARG	BAC	BOEING CO CEDEAR EACH 24 REP 1	9,52	-	-	-	-	-	-	-	-	-
++ARG	BAK	Braskem SA	1.975,00	+0,5	+3,2	-13,7	19,70 K	38,30 M	-	-	2:1	1.580,00
++ARG	BAS	Basf Se	0,01	-	-	-	-	-	-	-	2:1	-
++ARG	BASC	-	-	-	-	-	-	-	-	-	-	-
++ARG	BAYN	Bayer AG	-	-	-	-	-	-	-	-	3:1	-
++ARG	BB	Blackberry Limited	4.520,00	-0,2	-31,1	+135,8	2,84 K	12,87 M	-	-	3:1	1.589,68
++ARG	BBAS3	Banco do Brasil S.A.	3.235,00	+0,1	+7,8	+6,2	1,07 K	3,45 M	-	-	2:1	-
++ARG	BBDC	BANCO BRADESCO SA CEDEAR EACH R	4,08	-	-	-4,9	-	-	-	-	-	-
++ARG	BBDC	BANCO BRADESCO SA CEDEAR EACH R	4,08	-	-	-4,9	-	-	-	-	-	-
++ARG	BBDC3	Banco Bradesco S.A.	4.997,50	-1,6	+5,3	+13,6	563	2,81 M	-	-	1:1	-
++ARG	BBV	Bilbao Vizcaya Argentaria S.A.	41.380,00	+3,2	+6,0	+14,9	2,13 K	88,10 M	-	-	1:1	1.594,61
++ARG	BBVC	-	-	-	-	-	-	-	-	-	-	-
++ARG	BCS	Barclays Bank Plc	44.660,00	+1,6	+6,6	+14,6	66	2,93 M	-	-	1:1	-
++ARG	BCSC	-	-	-	-	-	-	-	-	-	-	-
++ARG	BHP	Bhp Group Ltd	66.925,00	+0,9	+3,0	+44,1	104	6,91 M	-	-	2:1	1.598,78
++ARG	BHPC	Bhp Group Ltd (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	BIDU	Baidu Inc.	15.320,00	-1,0	-5,4	-15,4	2,87 K	44,08 M	-	-	11:1	1.598,71
++ARG	BIDUC	BAIDU INC CEDEAR EACH REPR 1 AD	11,60	-6,4	-	-	8	93	-	-	-	-
++ARG	BIDUC	BAIDU INC CEDEAR EACH REPR 1 AD	11,60	-6,4	-	-	8	93	-	-	-	-
++ARG	BIIB	Biogen Inc.	24.940,00	+1,8	-4,4	+20,3	68	1,69 M	-	-	13:1	1.603,54
++ARG	BIOX	Bioceres Crop Solutions Corp.	548,00	-2,1	+5,2	-72,8	37,42 K	20,80 M	-	-	1:1	1.597,67
++ARG	BIOXC	BIOCERES CROP SOLUTIONS CORP CE	0,50	-	-	-	-	-	-	-	-	-
++ARG	BIOXC	BIOCERES CROP SOLUTIONS CORP CE	0,50	-	-	-	-	-	-	-	-	-
++ARG	BITF	Bitfarms Ltd.	15.800,00	+8,1	+9,5	-14,6	74,86 K	1,16 MM	-	-	1:5	-
++ARG	BK	The Bank Of New York Mellon Corp.	102.050,00	+0,8	+0,9	+14,7	26	2,66 M	-	-	2:1	-
++ARG	BKC	The Bank Of New York Mellon Corp. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	BKNG	Booking	397,25	+2,9	+0,8	-96,9	31,41 K	12,38 M	-	-	700:1	-
++ARG	BKNGC	Booking (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	BKR	Baker Hughes Co	13.140,00	+1,1	+6,0	+26,2	451	5,86 M	-	-	7:1	-
++ARG	BKRC	Baker Hughes Co (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	BMNR	BANCO COMAFI SA CEDEAR EACH 8 R	3.160,00	-2,6	+23,4	-	6,47 K	20,46 M	-	-	8:1	1.600,00
++ARG	BMY	Bristol-Myers Squibb Company	33.040,00	+1,9	+10,1	+20,5	654	21,64 M	-	-	3:1	1.603,88
++ARG	BMYC	Bristol-Myers Squibb Company (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	BNG	Bunge Limited	38.820,00	+0,3	+16,5	+42,5	328	12,77 M	-	-	5:1	1.603,34
++ARG	BNGC	-	0,49	-	-	-	-	-	-	-	-	-
++ARG	BNY	BANK OF NEW YORK MELLON CORP CE	126.675,00	-0,3	+12,2	-	57	7,23 M	-	-	-	-
++ARG	BP	BP PCL	13.950,00	+0,5	+21,3	+31,7	754	10,54 M	-	-	5:1	1.588,84
++ARG	BPA11	Banco BTG Pactual S.A.	17.610,00	+1,7	+6,7	+10,1	57	1,00 M	-	-	1:1	-
++ARG	BPC	BP CEDEAR EACH REPR 1/5 ADR(ARS	0,00	-	+4,2	-	-	-	
++7,96
++9,67
++-	-	-
++ARG	BRFS	-	17.960,00	-5,1	+16,6	+23,6	14,56 K	264,83 M	-	-	1:3	-
++ARG	BRKB	Berkshire Hathaway Inc.	35.860,00	+1,5	+2,8	+2,8	50,08 K	1,80 MM	-	-	22:1	-
++ARG	BRKBC	BERKSHIRE HATHAWAY INC CEDEAR E	21,00	-	-	-	-	-	-	-	-	-
++ARG	BRKBC	BERKSHIRE HATHAWAY INC CEDEAR E	21,00	-	-	-	-	-	-	-	-	-
++ARG	BSBR	Banco Santander (Brasil) S.A.	8.515,00	+0,9	+4,5	-9,4	176	1,49 M	-	-	1:1	1.606,60
++ARG	BSN	Danone	0,01	-	-	-	-	-	-	-	20:1	-
++ARG	BSNC	-	0,51	-	-	-	-	-	-	-	-	-
++ARG	BX	BANCO COMAFI SA CEDEAR EACH 30	6.880,00	+5,0	+12,1	-	856	5,84 M	-	-	30:1	1.593,82
++ARG	C	Citigroup Inc	70.250,00	+0,5	-3,8	+18,6	4,77 K	335,41 M	-	-	3:1	1.595,87
++ARG	CAAP	Corporación America Airports S.A.	160.300,00	+1,1	+2,6	-0,3	246	39,51 M	-	-	1:4	1.592,17
++ARG	CAAPC	Corporación America Airports S.A. (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	CAH	Cardinal Health Inc	121.550,00	+2,9	-1,9	+15,3	15	1,82 M	-	-	3:1	1.595,84
++ARG	CAHC	Cardinal Health Inc (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	CAJ	-	-	-	-	-	-	-	-	-	2:1	-
++ARG	CAJC	-	-	-	-	-	-	-	-	-	-	-
++ARG	CAR	Avis Budget Group Inc.	9.780,00	+1,3	+8,1	+29,1	580	5,72 M	-	-	26:1	1.598,74
++ARG	CAT	Caterpillar Inc	71.100,00	+0,2	-14,6	+62,0	7,46 K	529,49 M	-	-	20:1	1.602,58
++ARG	CATC	CATERPILLAR INC CEDEAR EA 20 RE	37,86	-	-	-	448	-	-	-	-	-
++ARG	CATC	CATERPILLAR INC CEDEAR EA 20 RE	37,86	-	-	-	448	-	-	-	-	-
++ARG	CC	CITIGROUP INC CEDEAR EACH REP 0	37,11	-	-	+168,9	-	-	-	-	10:1	21,70
++ARG	CC	CITIGROUP INC CEDEAR EACH REP 0	37,11	-	-	+168,9	-	-	-	-	10:1	21,70
++ARG	CCJ	Cameco Corporation	6.100,00	-1,2	-12,1	-	26,42 K	160,05 M	-	-	23:1	1.598,50
++ARG	CCL	Carnival	13.960,00	+4,3	-6,8	-11,5	145	2,02 M	-	-	3:1	1.591,79
++ARG	CCLC	CARNIVAL CORP CEDEAR EACH 3 REP	9,64	-	-	-	-	-	
++7,91
++8,67
++-	-	-
++ARG	CCLC	CARNIVAL CORP CEDEAR EACH 3 REP	9,64	-	-	-	-	-	
++7,91
++8,67
++-	-	-
++ARG	CDE	Coeur Mining Inc.	24.120,00	+0,2	-5,6	-13,2	1,11 K	27,13 M	-	-	1:1	1.591,09
++ARG	CEG	CONSTELLATION ENERGY CORPORATION	9.740,00	+0,1	+13,1	-19,2	17,69 K	172,85 M	-	-	45:1	1.599,64
++ARG	CEGC	CONSTELLATION ENERGY CORPORATION (Cable)	0,00	-4,4	+3,5	-	-	-	
++5,46
++7,05
++-	-
++ARG	CHL	-	-	-	-	-	-	-	-	-	-	-
++ARG	CHLC	-	-	-	-	-	-	-	-	-	-	-
++ARG	CIBR	First Trust NASDAQ Cybersecurity ETF	14.130,00	+1,4	+0,7	+28,4	5,94 K	84,02 M	-	-	10:1	1.605,68
++ARG	CIBRC	First Trust NASDAQ Cybersecurity ETF (Cable)	9,05	+2,8	-	-	10	91	
++8,80
++9,05
++-	-	-
++ARG	CL	Colgate Palmolive Co	48.420,00	+2,3	+1,2	+20,4	405	19,50 M	-	-	3:1	1.600,66
++ARG	CLC	Colgate Palmolive Co (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	CLS	CELESTICA INC	24.330,00	-7,8	-14,4	+5,7	1,39 K	34,37 M	-	-	20:1	1.591,44
++ARG	COIN	Coinbase Global Inc	9.340,00	-0,9	+10,1	-28,8	38,49 K	356,30 M	-	-	27:1	1.596,18
++ARG	COINC	COINBASE GLOBAL INC CED EACH 2	6,79	-	-	-	-	-	-	-	-	-
++ARG	COINC	COINBASE GLOBAL INC CED EACH 2	6,79	-	-	-	-	-	-	-	-	-
++ARG	COP	ConocoPhillips	7.695,00	+0,9	+18,8	-	9,62 K	73,74 M	-	-	25:1	1.597,29
++ARG	COPX	BANCO COMAFI SA CEDEAR EACH 14	8.835,00	+0,1	+2,6	-	12,09 K	107,00 M	-	-	14:1	1.591,71
++ARG	COPXC	BANCO COMAFI SA CEDEAR EACH 14	6,00	-	-	-	-	-	
++4,00
++6,81
++-	-
++ARG	COST	Costco Wholesale Corp	31.180,00	+2,3	+2,6	+13,5	562	17,43 M	-	-	48:1	1.602,40
++ARG	COSTC	COSTCO WHOLESALE CORP CEDEAR EA	20,90	-	-	+78,7	-	-	-	-	-	-
++ARG	COSTC	COSTCO WHOLESALE CORP CEDEAR EA	20,90	-	-	+78,7	-	-	-	-	-	-
++ARG	CRM	Salesforce Inc.	14.490,00	+4,8	+6,4	-35,5	5,33 K	76,72 M	-	-	18:1	1.598,75
++ARG	CRMC	SALESFORCE INC CEDEAR EACH 18 R	13,60	-2,9	-	-	3	41	-	-	-	-
++ARG	CRMC	SALESFORCE INC CEDEAR EACH 18 R	13,60	-2,9	-	-	3	41	-	-	-	-
++ARG	CRWV	COREWEAVE INC CEDEAR EACH 27 RE	4.267,50	-9,8	-26,3	+1,6	55,19 K	242,35 M	-	-	27:1	1.598,31
++ARG	CS	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	CSC	-	-	-	-	-	-	-	-	-	-	-
++ARG	CSCO	Cisco Systems Inc	36.380,00	+1,6	-0,7	+54,3	1,31 K	47,50 M	-	-	5:1	1.596,87
++ARG	CSCOC	Cisco Systems Inc (Cable)	14,00	+1,9	-	+35,0	14	196	-	-	-	-
++ARG	CSNA3	Companhia Siderúrgica Nacional S.A.	1.696,00	+4,5	+21,1	-32,2	20	33,25 K	-	-	1:1	-
++ARG	CVS	CVS Health	11.410,00	+1,7	+6,9	+53,6	799	9,15 M	-	-	15:1	1.588,10
++ARG	CVSC	CVS Health (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	CVX	Chevron Corp.	19.350,00	+0,6	+19,9	+34,2	8,64 K	167,77 M	-	-	16:1	1.588,10
++ARG	CVXC	CHEVRON CORPORATION CEDEAR EACH	11,77	-	-	-	-	-	-	-	-	-
++ARG	CVXC	CHEVRON CORPORATION CEDEAR EACH	11,77	-	-	-	-	-	-	-	-	-
++ARG	CX	Cemex S.A.B. de CV	19.310,00	-0,5	+3,0	+7,2	10,75 K	208,47 M	-	-	1:1	1.601,16
++ARG	CXC	Cemex S.A.B. de CV (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	DAL	Delta Air Lines	17.020,00	+5,3	-7,0	+28,4	784	13,31 M	-	-	8:1	1.599,25
++ARG	DDC	Dupont de Nemours Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	DE	Deere & Co.	25.000,00	+3,4	+1,1	+39,6	2,56 K	63,27 M	-	-	40:1	1.591,95
++ARG	DEC	DEERE & CO CEDEAR EACH 40 REP 1	15,76	-	-	+1000,0	-	-	-	-	-	-
++ARG	DEC	DEERE & CO CEDEAR EACH 40 REP 1	15,76	-	-	+1000,0	-	-	-	-	-	-
++ARG	DECK	DECKERS OUTDOOR CORPORATION	6.160,00	+1,6	-0,7	-3,5	9,38 K	55,95 M	-	-	25:1	1.605,84
++ARG	DECKC	DECKERS OUTDOOR CORPORATION (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	DEO	Diageo PLC	22.140,00	+2,1	+5,9	+0,7	102	2,25 M	-	-	6:1	1.598,94
++ARG	DEOC	Diageo PLC (Cable)	0,00	-16,6	-	-	-	-	
++12,18
++14,47
++-	-	-
++ARG	DESP	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	DESPC	-	-	-	-	-	-	-	-	-	-	-
++ARG	DHR	Danaher Corp	5.660,00	+0,3	+3,0	-12,9	928	5,25 M	-	-	54:1	1.600,21
++ARG	DHRC	Danaher Corp (Cable)	3,81	-	-	-	-	-	-	-	-	-
++ARG	DIA	SPDR DOW JONES INDUSTRIAL	41.480,00	+1,4	+1,6	+12,7	5,66 K	233,69 M	-	-	20:1	1.599,75
++ARG	DIAC	STATE ST SPDR DOW JONES INDL CE	24,46	-	-	-	-	-	-	-	-	-
++ARG	DIAC	STATE ST SPDR DOW JONES INDL CE	24,46	-	-	-	-	-	-	-	-	-
++ARG	DISN	The Walt Disney Co.	12.650,00	+2,9	+1,0	-13,4	61,57 K	781,69 M	-	-	12:1	1.598,06
++ARG	DISNC	WALT DISNEY COMPANY (THE) 12 CE	8,64	-	-	-	-	-	-	-	-	-
++ARG	DISNC	WALT DISNEY COMPANY (THE) 12 CE	8,64	-	-	-	-	-	-	-	-	-
++ARG	DJN2C	-	-	-	-	-	-	-	-	-	-	-
++ARG	DJN3C	-	1,11	-	-	-	-	-	-	-	-	-
++ARG	DJNJ2	-	-	-	-	-	-	-	-	-	-	-
++ARG	DJNJ3	JOHNSON & JOHNSON CEDEAR(REPR 6	2.500,00	-	-	-	22	55,00 K	-	-	-	-
++ARG	DOCU	DocuSign Inc.	3.632,50	+7,7	+15,7	-24,2	2,48 K	8,81 M	-	-	22:1	1.586,24
++ARG	DOCUC	DOCUSIGN INC CEDEAR EA 22 RER 1	0,00	-3,6	-	-	-	-	
++1,96
++2,20
++-	-	-
++ARG	DOW	DOW Inc	7.940,00	-2,3	+11,8	+34,1	15,70 K	124,39 M	-	-	6:1	1.593,31
++ARG	DOWC	DOW INC CED EACH 2 REPR 1	0,00	-8,1	-12,4	-	-	-	
++4,55
++7,05
++-	-	-
++ARG	DOWC	DOW INC CED EACH 2 REPR 1	0,00	-8,1	-12,4	-	-	-	
++4,55
++7,05
++-	-	-
++ARG	DTEA	Deutsche Telekom Ag	0,01	-	-	-	-	-	-	-	3:1	-
++ARG	DTEAC	-	-	-	-	-	-	-	-	-	-	-
++ARG	E	Eni Spa	20.960,00	+2,0	+15,2	+44,5	179	3,75 M	-	-	4:1	-
++ARG	EA	Electronic Arts Inc	23.890,00	+1,1	+4,5	+7,5	165	3,92 M	-	-	14:1	1.600,82
++ARG	EAC	Electronic Arts Inc (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	EBAY	Ebay Inc.	87.075,00	+0,6	-0,3	+31,9	646	56,00 M	-	-	2:1	1.606,56
++ARG	EBAYC	EBAY INC CEDEAR EACH 2 REP 1	44,69	-	-	-	-	-	-	-	-	-
++ARG	EBAYC	EBAY INC CEDEAR EACH 2 REP 1	44,69	-	-	-	-	-	-	-	-	-
++ARG	EBR	-	64.750,00	-1,6	+3,8	+155,3	82	5,28 M	-	-	1:4	-
++ARG	EC	Eni Spa (Cable)	0,00	+107,8	-	-	-	-	
++6,53
++13,56
++-	-	-
++ARG	ECL	ECOLAB INC CEDEAR EACH 12 REPR	7.665,00	+3,3	-1,2	+6,5	343	2,61 M	-	-	56:1	1.596,58
++ARG	EEM	Mercados Emergentes	20.260,00	-0,8	-5,4	+19,2	14,39 K	292,13 M	-	-	5:1	1.599,56
++ARG	EEMC	ISHARES TRUST CEDEAR EACH 5 REP	12,34	-	-	-	-	-	-	-	-	-
++ARG	EEMC	ISHARES TRUST CEDEAR EACH 5 REP	12,34	-	-	-	-	-	-	-	-	-
++ARG	EFA	iShares MSCI EAFE ETF	9.160,00	+1,2	+1,8	+12,2	1,72 K	15,79 M	-	-	18:1	1.594,89
++ARG	EFAC	iShares MSCI EAFE ETF (Cable)	0,00	-4,0	-	-	-	-	
++5,60
++6,05
++-	-	-
++ARG	EFX	Equifax Inc.	17.130,00	+4,1	+11,1	-18,4	186	3,20 M	-	-	16:1	-
++ARG	EFXC	Equifax Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ELP	-	44.300,00	+1,6	+2,0	+2,0	13	573,88 K	-	-	1:3	-
++ARG	ELPC	CIA PARANAENSE DE ENERGIA COPEL	55.650,00	-0,5	+1,2	-	4	223,43 K	-	-	-	-
++ARG	ELPC	CIA PARANAENSE DE ENERGIA COPEL	55.650,00	-0,5	+1,2	-	4	223,43 K	-	-	-	-
++ARG	EMBJ	EMBRAER SA CEDEAR EACH REPR 1 A	103.250,00	-0,3	+3,3	+4,6	233	24,31 M	-	-	-	-
++ARG	EOAN	E.On Se	0,01	-	-	-	-	-	-	-	6:1	-
++ARG	EOANC	-	0,01	-	-	-	-	-	-	-	-	-
++ARG	EQNR	Equinor Asa	10.610,00	-3,4	+29,7	+76,8	963	10,45 M	-	-	6:1	1.552,68
++ARG	ERIC	Lm Ericsson Telephone Co.	7.415,00	+0,9	-14,6	-	93	690,48 K	-	-	2:1	1.598,06
++ARG	ERICC	Lm Ericsson Telephone Co. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ERJ	-	97.000,00	-0,1	+4,1	+124,9	334	32,33 M	-	-	1:1	-
++ARG	ESGU	BANCO COMAFI SA CEDEAR EACH 30	8.640,00	+1,1	+1,7	-	19	163,88 K	-	-	30:1	-
++ARG	ETHA	ISHARES ETHEREUM TR ETF	4.465,00	+0,1	+19,5	-36,0	34,11 K	151,85 M	-	-	5:1	1.592,37
++ARG	ETHAC	ISHARES ETHEREUM TRUST DR ENTL	2,95	-	-	-	-	-	-	-	-	-
++ARG	ETHAC	ISHARES ETHEREUM TRUST DR ENTL	2,95	-	-	-	-	-	-	-	-	-
++ARG	ETSY	Etsy Inc.	8.055,00	+0,4	+10,0	+52,1	331	2,66 M	-	-	16:1	1.598,61
++ARG	ETSYC	Etsy Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ETSYC	Etsy Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	EWJ	iShares MSCI JAPAN ETF	10.370,00	+0,6	-0,4	+17,9	2,88 K	30,00 M	-	-	14:1	1.591,71
++ARG	EWJC	ISHARES INC CEDEAR EACH 14 REPR	6,62	-0,7	+7,6	-	1	7	
++5,75
++6,87
++-	-
++ARG	EWY	iShares MSCI South Korea ETF	5.205,00	-5,0	-16,0	-	46,35 K	243,17 M	-	-	50:1	1.603,51
++ARG	EWYC	iShares MSCI South Korea ETF (Cable)	0,00	+2,1	-	-	-	-	
++3,14
++3,92
++-	-	-
++ARG	EWZ	ISHARES MSCI BRAZIL CAP	28.540,00	-0,4	+6,1	+17,2	19,49 K	558,57 M	-	-	2:1	1.606,53
++ARG	EWZC	ISHARES INC CEDEAR EACH 2 REPR	14,50	-	-	-	-	-	-	-	-	-
++ARG	EWZC	ISHARES INC CEDEAR EACH 2 REPR	14,50	-	-	-	-	-	-	-	-	-
++ARG	F	Ford Motor Company	22.850,00	+2,2	+5,5	+14,1	921	21,11 M	-	-	1:1	1.592,89
++ARG	FC	FORD MOTOR CO CEDEAR EACH 1 REP	1,17	-	-	-	-	-	
++1,17
++15,29
++-	-	-
++ARG	FC	FORD MOTOR CO CEDEAR EACH 1 REP	1,17	-	-	-	-	-	
++1,17
++15,29
++-	-	-
++ARG	FCX	Freeport Mcmoran Copper & Gold Inc.	33.240,00	-0,6	+1,7	+26,9	2,13 K	70,44 M	-	-	3:1	1.593,61
++ARG	FCXC	FREEPORT-MCMORAN INC CEDEAR EAC	0,00	-	-	-	-	-	
++19,81
++20,67
++-	-	-
++ARG	FDX	Fedex Corp	50.200,00	+0,6	+2,6	+13,2	124	6,26 M	-	-	10:1	1.588,86
++ARG	FDXC	Fedex Corp (Cable)	2,83	-	-	-	-	-	
++2,83
++38,17
++-	-	-
++ARG	FISV	FISERV INC GDS ARS	7.435,00	+3,5	+6,7	-	628	4,65 M	-	-	11:1	1.605,20
++ARG	FMCC	Freddie Mac (Federal Home Loan)	12.000,00	-	-	-	2	24,00 K	-	-	1:1	2.166,06
++ARG	FMX	Fomento Economico Mexicano - Femsa	33.900,00	+0,9	+2,0	+33,4	18	609,96 K	-	-	6:1	-
++ARG	FMXC	Fomento Economico Mexicano - Femsa (Cable)	0,00	+100,0	-	-	-	-	
++0,02
++0,04
++-	-	-
++ARG	FNMA	Fed. Natl Mortgage - Fannie Mae	9.790,00	-1,1	-9,3	-38,0	12	117,50 K	-	-	1:1	1.576,49
++ARG	FSLR	First Solar Inc.	17.950,00	-0,9	-12,4	-19,9	3,39 K	60,92 M	-	-	18:1	1.585,07
++ARG	FXI	ISHARES CHINA LARGE-CAP ETF	11.040,00	+1,1	+11,6	-6,4	7,29 K	80,39 M	-	-	5:1	1.590,78
++ARG	FXIC	ISHARES TRUST CEDEAR EACH 5 REP	7,80	-	-	-	553	-	-	-	-	-
++ARG	FXIC	ISHARES TRUST CEDEAR EACH 5 REP	7,80	-	-	-	553	-	-	-	-	-
++ARG	GDX	Van Eck Gold Miners ETF/USA	11.980,00	+1,1	+1,6	-9,2	14,00 K	168,82 M	-	-	10:1	1.586,12
++ARG	GDXC	Van Eck Gold Miners ETF/USA (Cable)	0,00	-0,1	-	-	-	-	
++7,14
++9,54
++-	-
++ARG	GE	General Electric Co.	70.525,00	+2,1	-3,4	+18,8	1,59 K	112,37 M	-	-	8:1	1.594,97
++ARG	GEC	GE AEROSPACE CEDEARS 8 REPR 1 C	38,32	-1,7	-	+187,0	3	115	-	-	-	-
++ARG	GEC	GE AEROSPACE CEDEARS 8 REPR 1 C	38,32	-1,7	-	+187,0	3	115	-	-	-	-
++ARG	GFI	Gold Fields Ltd.	52.300,00	+2,5	-	-22,8	1,42 K	74,80 M	-	-	1:1	-
++ARG	GGB	Gerdau S.A.	30.600,00	+1,7	+21,2	+35,7	438	13,40 M	-	-	1:4	1.590,44
++ARG	GGBC	-	-	-	-	-	-	-	-	-	-	-
++ARG	GILDC	GILEAD SCIENCES INC CEDEAR EACH	0,00	+2,1	+6,4	-	-	-	
++32,98
++36,54
++-	-	-
++ARG	GLDC	SPDR GOLD TRUST GDR EACH REPR 5	8,75	-	-	-	-	-	-	-	-	-
++ARG	GLDC	SPDR GOLD TRUST GDR EACH REPR 5	8,75	-	-	-	-	-	-	-	-	-
++ARG	GLNG	GOLAR LNG LIMITED GDS ARS	7.805,00	-1,3	+0,7	-	187	1,47 M	-	-	10:1	1.605,31
++ARG	GLOB	Globant S.A.	2.790,00	+3,6	+10,5	-52,7	360,35 K	1,01 MM	-	-	18:1	1.604,47
++ARG	GLOBC	GLOBANT SA CEDEAR EACH 18 REP 1	2,47	-	-	-	-	-	-	-	-	-
++ARG	GLOBC	GLOBANT SA CEDEAR EACH 18 REP 1	2,47	-	-	-	-	-	-	-	-	-
++ARG	GLW	Corning Inc.	58.375,00	-5,0	-41,9	+73,5	6,77 K	410,25 M	-	-	4:1	1.609,46
++ARG	GLWC	Corning Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	GM	General Motors Co	21.950,00	+3,6	+9,4	+5,1	27,98 K	615,53 M	-	-	6:1	1.593,66
++ARG	GMC	General Motors Co (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	GOGLB	ALPHABET INC CEDEAR EACH 58 REP	7.240,00	+2,4	-	+111,7	70,47 K	510,22 M	-	-	-	-
++ARG	GOGLC	ALPHABET INC CEDEAR EACH 58 REP	5,00	-	-	-	-	-	-	-	-	-
++ARG	GOGLC	ALPHABET INC CEDEAR EACH 58 REP	5,00	-	-	-	-	-	-	-	-	-
++ARG	GOOGL	Alphabet Inc.	8.830,00	+1,3	-8,5	+7,2	880,07 K	7,75 MM	-	-	58:1	1.606,26
++ARG	GPRK	Geopark Ltd.	15.930,00	-2,0	+12,1	+42,9	8,44 K	135,78 M	-	-	1:1	1.593,00
++ARG	GPRKC	GEOPARK LIMITED CEDEAR EA 1 REP	8,39	-	-7,8	-	-	-	-	-	-	-
++ARG	GPRKC	GEOPARK LIMITED CEDEAR EA 1 REP	8,39	-	-7,8	-	-	-	-	-	-	-
++ARG	GRMN	Garmin Ltd.	129.300,00	+2,2	+5,0	+24,6	14	1,82 M	-	-	3:1	1.596,10
++ARG	GRMNC	Garmin Ltd. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	GS	The Goldman Sachs Group Inc	130.500,00	-0,4	+7,5	+26,4	299	39,16 M	-	-	13:1	1.595,95
++ARG	GSC	GOLDMAN SACHS GROUP INC CEDEARS	66,40	-	-	-	-	-	-	-	-	-
++ARG	GSC	GOLDMAN SACHS GROUP INC CEDEARS	66,40	-	-	-	-	-	-	-	-	-
++ARG	GSK	GSK Plc.	20.520,00	+2,1	+0,2	+9,8	122	2,50 M	-	-	4:1	1.598,44
++ARG	GSKC	GSK PLC CEDEAR EACH REPR 1/4 AD	10,00	+21,4	-	-	12	120	-	-	-	-
++ARG	GSKC	GSK PLC CEDEAR EACH REPR 1/4 AD	10,00	+21,4	-	-	12	120	-	-	-	-
++ARG	GT	Goodyear Tire & Rubber co./the	5.735,00	+4,0	+12,3	-18,0	1,10 K	6,32 M	-	-	2:1	1.599,72
++ARG	GTC	GOODYEAR TIRE & RUBBER CO CEDEA	0,00	-	+5,9	-	-	-	
++3,11
++3,76
++-	-	-
++ARG	HAL	Halliburton Co.	26.660,00	+3,3	+0,8	+22,0	841	22,36 M	-	-	2:1	1.603,13
++ARG	HALC	Halliburton Co. (Cable)	0,00	-	-	-	-	-	
++12,05
++17,86
++-	-	-
++ARG	HAPV3	Hapvida Participacoes E Investimentos S.A.	3.082,50	-6,6	-8,5	-25,6	14,64 K	45,59 M	-	-	1:1	-
++ARG	HDBC	-	-	-	-	-	-	-	-	-	-	-
++ARG	HDC	HOME DEPOT INC CEDEAR EACH 32 R	0,00	-	-	-	-	-	
++9,65
++10,59
++-	-	-
++ARG	HHPD	Hon Hai Precision Industry Co. Ltd.	0,01	-	-	-	-	-	-	-	2:1	-
++ARG	HIMS	HIMS & HERS HEALTH INC GDS ARS	11.220,00	-13,6	-11,8	-	124,17 K	1,49 MM	-	-	4:1	1.603,64
++ARG	HIMSC	HIMS & HERS HEALTH INC GDS ARS (Cable)	0,00	-2,7	-	-	-	-	
++8,17
++8,40
++-	-	-
++ARG	HL	Hecla Mining Co.	24.080,00	-0,5	-0,5	-18,5	695	16,80 M	-	-	1:1	1.590,56
++ARG	HMC	Honda Motor Co. Ltd	44.980,00	+1,7	+6,6	-0,3	36	1,62 M	-	-	1:1	1.586,04
++ARG	HMC.C	-	-	-	-	-	-	-	-	-	-	-
++ARG	HMY	Harmony Gold Mining Company Ltd.	25.320,00	+3,4	+6,5	-16,9	9,23 K	234,58 M	-	-	1:1	1.572,68
++ARG	HMYC	HARMONY GOLD MINING CO CEDEAR E	22,64	+14,3	-	-	25	560	-	-	-	-
++ARG	HMYC	HARMONY GOLD MINING CO CEDEAR E	22,64	+14,3	-	-	25	560	-	-	-	-
++ARG	HNP	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	HNPC	-	-	-	-	-	-	-	-	-	-	-
++ARG	HOG	Harley-Davidson Inc.	13.520,00	-2,9	+6,5	+26,9	325	4,49 M	-	-	3:1	1.596,85
++ARG	HON	Honeywell International Inc.	48.420,00	-0,3	+8,3	+28,9	256	12,38 M	-	-	8:1	1.593,81
++ARG	HONC	Honeywell International Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	HPQ	Hp Inc	41.180,00	+6,5	+20,3	+19,0	1,37 K	56,24 M	-	-	1:1	1.599,22
++ARG	HPQC	Hp Inc (Cable)	24,37	-0,5	-	-	12	292	
++2,18
++24,37
++-	-	-
++ARG	HSBC	Hsbc Holdings Plc	82.675,00	+2,6	+11,3	+37,0	339	27,94 M	-	-	2:1	1.598,36
++ARG	HSBCC	Hsbc Holdings Plc (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	HSY	The Hershey Company	13.270,00	+2,2	+2,1	+0,7	992	13,12 M	-	-	21:1	1.591,95
++ARG	HSYC	HERSHEY COMPANY CEDEAR EACH 21	11,24	-	-	-	-	-	
++8,08
++10,69
++-	-	-
++ARG	HSYC	HERSHEY COMPANY CEDEAR EACH 21	11,24	-	-	-	-	-	
++8,08
++10,69
++-	-	-
++ARG	HUT	Hut 8 Mining Corp.	35.180,00	-5,6	-2,7	-90,2	26,21 K	949,58 M	-	-	5:1	1.600,55
++ARG	HUTC	HUT 8 CORP CEDEAR EACH 1 REPR 5	240,00	-	-	-	-	-	-	-	-	-
++ARG	HWM	Howmet Aerospace Inc.	459.550,00	+0,8	+10,0	+45,8	1,23 K	563,98 M	-	-	1:1	1.592,07
++ARG	HWMC	Howmet Aerospace Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	IBB	iShares Nasdaq Biotechnology ETF	11.170,00	+1,0	+2,3	+17,4	4,77 K	53,16 M	-	-	27:1	1.608,99
++ARG	IBBC	ISHARES TRUST CEDEAR EACH 27 RE	6,44	-	-	-	-	-	
++5,92
++7,45
++-	-	-
++ARG	IBBC	ISHARES TRUST CEDEAR EACH 27 RE	6,44	-	-	-	-	-	
++5,92
++7,45
++-	-	-
++ARG	IBIT	ISHARES BITCOIN TRUST	5.825,00	+0,2	+11,8	-23,3	780,87 K	4,52 MM	-	-	10:1	1.605,53
++ARG	IBITC	ISHARES BITCOIN TRUST ETF CEDEA	3,72	-	-	-	-	-	-	-	-	-
++ARG	IBITC	ISHARES BITCOIN TRUST ETF CEDEA	3,72	-	-	-	-	-	-	-	-	-
++ARG	IBM	International Business Machines	22.810,00	+4,6	-22,5	-25,6	197,68 K	4,50 MM	-	-	15:1	1.606,49
++ARG	IBMC	INTERNATIONAL BUS MACH CORP CED	15,56	-	-	-	-	-	-	-	-	-
++ARG	IBMC	INTERNATIONAL BUS MACH CORP CED	15,56	-	-	-	-	-	-	-	-	-
++ARG	IBN	Icici Bank Ltd.	47.180,00	+2,2	+4,0	+4,1	37	1,74 M	-	-	1:1	1.598,78
++ARG	IBNC	-	-	-	-	-	-	-	-	-	-	-
++ARG	ICLN	iShares Global Clean Energy ETF	5.700,00	-1,8	-11,4	-	1,86 K	10,67 M	-	-	5:1	1.596,64
++ARG	ICLNC	iShares Global Clean Energy ETF (Cable)	3,79	-1,6	-	-	1	4	
++3,78
++4,75
++-	-	-
++ARG	IEMG	iShares Core MSCI Emerging Markets ETF	10.280,00	-0,5	-5,1	+20,2	4,03 K	41,44 M	-	-	12:1	1.601,04
++ARG	IEMGC	iShares Core MSCI Emerging Markets ETF (Cable)	6,50	-0,8	-	-	5	33	
++6,41
++6,96
++-	-
++ARG	IEUR	iShares Core MSCI Europe ETF	10.870,00	+1,8	+2,1	+10,3	3,90 K	42,41 M	-	-	11:1	1.596,61
++ARG	IEURC	ISHARES TRUST CEDEAR EACH 11 RE	7,30	-	-	-	606	-	-	-	-	-
++ARG	IEURC	ISHARES TRUST CEDEAR EACH 11 RE	7,30	-	-	-	606	-	-	-	-	-
++ARG	IFF	International Flavors & Fragrances Inc.	10.180,00	+4,7	+1,8	+17,6	38	381,45 K	-	-	12:1	-
++ARG	IFFC	International Flavors & Fragrances Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	IJH	iShares CORE S&P MID-CAP ETF	10.050,00	+1,0	-0,2	+18,6	1,31 K	13,26 M	-	-	12:1	1.592,08
++ARG	IJHC	iShares CORE S&P MID-CAP ETF (Cable)	0,00	-	-	-	-	-	
++5,29
++6,50
++-	-	-
++ARG	ILF	BANCO COMAFI SA CEDEAR EACH 6 R	9.235,00	+0,4	+5,1	-	4,72 K	43,63 M	-	-	6:1	1.599,60
++ARG	ILFC	BANCO COMAFI SA CEDEAR EACH 6 R	6,05	-	-	-	-	-	
++5,40
++6,39
++-	-
++ARG	INFY	Infosys Limited	17.790,00	+4,5	+7,9	-35,6	195	3,44 M	-	-	1:1	-
++ARG	INFYC	Infosys Limited (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	ING	Ing Groep Nv	17.550,00	+2,1	+7,9	+23,7	3	52,53 K	-	-	3:1	1.603,72
++ARG	INGC	-	-	-	-	-	-	-	-	-	-	-
++ARG	INTC	Intel Corporation	29.440,00	-7,0	-29,9	+158,9	146,52 K	4,49 MM	-	-	5:1	1.608,13
++ARG	INTCC	INTEL CORP CEDEARS (EACH 5 REP	9,04	-	-	-	-	-	-	-	-	-
++ARG	INTCC	INTEL CORP CEDEARS (EACH 5 REP	9,04	-	-	-	-	-	-	-	-	-
++ARG	IP	International Paper Co.	16.800,00	+13,1	+13,2	+11,8	8,59 K	136,10 M	-	-	4:1	1.602,29
++ARG	IPC	International Paper Co. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	IREN	IREN LIMITED CEDEAR EACH 44 REP	4.955,00	-7,2	-16,8	+1,1	341,15 K	1,72 MM	-	-	12:1	1.608,10
++ARG	IRENC	IREN LIMITED CEDEAR EACH 44 REP	0,00	+6,1	-0,2	-	-	-	
++3,12
++5,30
++-	-
++ARG	ISRG	Intuitive Surgical inc	6.015,00	+2,6	-15,0	-39,9	11,89 K	71,42 M	-	-	90:1	1.610,92
++ARG	ITA	iShares U.S. Aerospace & Defense	7.680,00	+1,8	+1,8	+16,4	2,37 K	18,21 M	-	-	50:1	1.599,07
++ARG	ITAC	iShares U.S. Aerospace & Defense (Cable)	0,00	+5,4	-	-	-	-	
++4,51
++4,75
++-	-	-
++ARG	ITUB	Itaú Unibanco Holding S.A.	13.220,00	+0,2	+3,7	+20,2	641	8,48 M	-	-	1:1	1.573,81
++ARG	ITUB3	Banco Itaú Unibanco S.A	14.210,00	+0,7	+5,3	+40,4	38	538,53 K	-	-	1:1	-
++ARG	ITUBC	ITAU UNIBANCO HOLDINGS S.A. CED	8,87	-	-	-	-	-	-	-	-	-
++ARG	ITUBC	ITAU UNIBANCO HOLDINGS S.A. CED	8,87	-	-	-	-	-	-	-	-	-
++ARG	IVE	iShares S&P 500 Value ETF	9.250,00	+2,1	+4,3	+14,3	9,31 K	85,63 M	-	-	40:1	1.599,24
++ARG	IVEC	ISHARES TRUST CEDEAR EACH 40 RE	5,53	-	-	-	-	-	-	-	-	-
++ARG	IVEC	ISHARES TRUST CEDEAR EACH 40 RE	5,53	-	-	-	-	-	-	-	-	-
++ARG	IVV	BANCO COMAFI SA CEDEAR EACH 692	1.719,00	+0,9	+0,9	-	50,10 K	86,10 M	-	-	692:1	-
++ARG	IVVC	BANCO COMAFI SA CEDEAR EACH 692	0,96	-	-	-	-	-	
++0,91
++1,18
++-	-
++ARG	IVW	iShares S&P 500 Growth ETF	10.620,00	+0,8	-1,7	+12,4	3,10 K	33,03 M	-	-	20:1	-
++ARG	IVWC	ISHARES TRUST CEDEAR EACH 20 RE	5,99	-	-	-	-	-	
++5,25
++7,07
++-	-
++ARG	IVWC	ISHARES TRUST CEDEAR EACH 20 RE	5,99	-	-	-	-	-	
++5,25
++7,07
++-	-
++ARG	IWDA	iSHARES Core MSCI World UCITS	0,00	-	-	-	-	-	-	-	24:1	-
++ARG	IWM	ISHARES TRUST RUSSELL 2000	46.540,00	+0,7	-1,1	+23,5	3,67 K	170,38 M	-	-	10:1	1.598,38
++ARG	IWMC	ISHARES TRUST CEDEAR EACH 10 RE	23,90	-	-	-	-	-	-	-	-	-
++ARG	IWMC	ISHARES TRUST CEDEAR EACH 10 RE	23,90	-	-	-	-	-	-	-	-	-
++ARG	JCI	Johnson Controls International	110.125,00	-	-3,8	-	1	110,13 K	-	-	2:1	-
++ARG	JCIC	Johnson Controls International (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	JDC	JD.COM INC CEDEAR EACH 4 REPR 1	7,66	+5,4	-	-	139	1,06 K	-	-	-	-
++ARG	JDC	JD.COM INC CEDEAR EACH 4 REPR 1	7,66	+5,4	-	-	139	1,06 K	-	-	-	-
++ARG	JMIA	Adr Jumia Technologies Ag	9.375,00	-0,5	-14,5	-49,0	25,01 K	238,18 M	-	-	1:1	1.599,83
++ARG	JMIAC	Adr Jumia Technologies Ag (Cable)	7,85	-	-	-	-	-	-	-	-	-
++ARG	JNJ	Johnson & Johnson	28.060,00	+2,6	+3,9	+33,4	8,84 K	246,77 M	-	-	15:1	1.598,87
++ARG	JNJC	JOHNSON & JOHNSON CEDEAR EACH 1	16,55	-	-	+27,3	-	-	-	-	-	-
++ARG	JNJC	JOHNSON & JOHNSON CEDEAR EACH 1	16,55	-	-	+27,3	-	-	-	-	-	-
++ARG	JOYY	JOYY Inc.	23.580,00	+2,7	+14,9	+20,8	214	5,02 M	-	-	5:1	-
++ARG	JPM	J.P. Morgan & Chase Co.	37.620,00	+1,9	+10,3	+14,7	23,55 K	881,61 M	-	-	15:1	1.597,44
++ARG	JPMC	JPMORGAN CHASE & CO. CEDEAR EAC	21,58	-3,3	-	-	1	22	-	-	-	-
++ARG	JPMC	JPMORGAN CHASE & CO. CEDEAR EAC	21,58	-3,3	-	-	1	22	-	-	-	-
++ARG	KB	Kb Financial Group Inc.	94.975,00	-1,3	+22,6	+45,1	1	94,97 K	-	-	2:1	-
++ARG	KEEL	Keel Infrastructure Corp.	34.160,00	-10,1	-23,8	-	18,26 K	642,73 M	-	-	1:5	1.596,26
++ARG	KEELC	Keel Infrastructure Corp. (Cable)	13,01	+8,0	-	-	20	260	
++10,34
++13,01
++-	-	-
++ARG	KEP	Korea Electric Power Corp.	19.280,00	+1,5	+0,4	-24,6	193	3,74 M	-	-	1:1	-
++ARG	KGC	Kinross Gold Corp	38.240,00	+2,2	+3,9	-12,7	311	11,87 M	-	-	1:1	1.589,01
++ARG	KMB	Kimberly-Clark Corp.	29.160,00	+3,5	+1,8	+12,2	744	21,55 M	-	-	6:1	1.610,56
++ARG	KMBC	KIMBERLY CLARK CORP CEDEAR EACH	0,00	-11,4	-	-	-	-	
++15,85
++17,89
++-	-	-
++ARG	KO	The Coca Cola Company	26.300,00	+2,1	+2,3	+23,4	66,63 K	1,74 MM	-	-	5:1	1.598,98
++ARG	KOC	COCA-COLA CO CEDEARS EACH 5 RE	15,00	-	-	-	-	-	-	-	-	-
++ARG	KOC	COCA-COLA CO CEDEARS EACH 5 RE	15,00	-	-	-	-	-	-	-	-	-
++ARG	KOFM	Coca-Cola Femsa S.A.B. De C.V.	82.250,00	+1,4	-0,3	+13,2	30	2,45 M	-	-	2:1	1.676,77
++ARG	LAAC	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	LAC	Lithium Americas Corp	4.527,50	-1,9	-24,7	-32,7	44,24 K	201,79 M	-	-	1:1	1.598,98
++ARG	LAR	Lithium Americas (Argentina) Corp	9.355,00	-3,2	-27,4	+7,7	28,41 K	267,86 M	-	-	1:1	1.585,19
++ARG	LARC	Lithium Americas (Argentina) Corp (Cable)	0,22	-	-	-	-	-	
++0,22
++2,20
++-	-	-
++ARG	LFC	-	-	-	-	-	-	-	-	-	2:1	-
++ARG	LFCC	-	-	-	-	-	-	-	-	-	-	-
++ARG	LKODC	-	-	-	-	-	-	-	-	-	-	-
++ARG	LLY	Eli Lilly and Company	34.200,00	+2,1	+2,1	+13,6	6,04 K	205,90 M	-	-	56:1	1.599,55
++ARG	LLYC	ELI LILLY AND COMPANY CEDEAR EA	18,24	-	-	-	-	-	-	-	-	-
++ARG	LLYC	ELI LILLY AND COMPANY CEDEAR EA	18,24	-	-	-	-	-	-	-	-	-
++ARG	LMT	Lockheed Martin Corporation	46.300,00	+3,1	+16,9	+23,9	6,84 K	317,24 M	-	-	20:1	1.588,01
++ARG	LMTC	LOCKHEED MARTIN CORP CEDEAR EAC	22,25	+1,1	-	-	1	22	-	-	-	-
++ARG	LMTC	LOCKHEED MARTIN CORP CEDEAR EAC	22,25	+1,1	-	-	1	22	-	-	-	-
++ARG	LRCX	Lam Research Corp	8.665,00	-3,8	-28,6	+83,4	7,25 K	63,65 M	-	-	56:1	1.588,46
++ARG	LRCXC	LAM RESEARCH CORP CED EACH 20 R	4,13	-	-	-	-	-	
++3,46
++7,06
++-	-
++ARG	LRCXC	LAM RESEARCH CORP CED EACH 20 R	4,13	-	-	-	-	-	
++3,46
++7,06
++-	-
++ARG	LREN3	Lojas Renner S.A.	4.120,00	-0,4	-7,8	+8,4	68	280,15 K	-	-	1:1	-
++ARG	LVS	Las Vegas Sands Corp	36.720,00	+0,1	+1,9	-26,0	149	5,45 M	-	-	2:1	1.593,75
++ARG	LYG	Lloyds Banking Group Plc	4.800,00	+1,2	+5,9	+19,0	94	454,13 K	-	-	2:1	1.594,68
++ARG	LYGC	Lloyds Banking Group Plc (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	MA	Mastercard Inc.	26.040,00	+2,4	+6,8	-1,7	13,79 K	357,11 M	-	-	33:1	1.594,49
++ARG	MAC	MASTERCARD INCORPORATED CEDEAR	15,84	-	-	-	-	-	-	-	-	-
++ARG	MAC	MASTERCARD INCORPORATED CEDEAR	15,84	-	-	-	-	-	-	-	-	-
++ARG	MBG	Mercedes-Benz Group AG	0,01	-	-	-	-	-	-	-	4:1	-
++ARG	MBGC	Mercedes-Benz Group AG (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	MBT	-	-	-	-	-	-	-	-	-	2:1	-
++ARG	MCDC	MCDONALD'S CORPORATION CEDEAR E	13,97	-	-	-	-	-	-	-	-	-
++ARG	MCDC	MCDONALD'S CORPORATION CEDEAR E	13,97	-	-	-	-	-	-	-	-	-
++ARG	MDLZ	Mondelez	6.455,00	+2,1	+7,7	+16,8	324	2,07 M	-	-	15:1	1.603,06
++ARG	MDLZC	Mondelez (Cable)	0,00	+4,9	+11,2	-	-	-	
++3,47
++4,21
++-	-	-
++ARG	MDT	Medtronic Public Limited Company	33.220,00	+2,1	+8,1	-9,6	424	14,04 M	-	-	4:1	1.591,38
++ARG	MDTC	Medtronic Public Limited Company (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	MELI	Mercadolibre Inc.	23.990,00	+1,0	+10,1	-6,1	157,14 K	3,79 MM	-	-	120:1	1.590,50
++ARG	MELIC	MERCADOLIBRE INC CEDEAR EACH 12	14,02	-	-	-	-	-	-	-	-	-
++ARG	MELIC	MERCADOLIBRE INC CEDEAR EACH 12	14,02	-	-	-	-	-	-	-	-	-
++ARG	META	Meta Platforms Inc	39.700,00	-1,1	+8,2	-5,3	88,17 K	3,53 MM	-	-	24:1	1.603,50
++ARG	METAC	META PLATFORMS INC CEDEAR EA 24	26,00	-	-	-	-	-	-	-	-	-
++ARG	METAC	META PLATFORMS INC CEDEAR EA 24	26,00	-	-	-	-	-	-	-	-	-
++ARG	MFG	Mizuho Financial Group	16.930,00	+0,9	+13,1	+50,0	34	578,97 K	-	-	1:1	-
++ARG	MGLU3	Magazine Luiza S.A.	1.484,00	+0,1	+4,0	-42,1	4,30 K	6,32 M	-	-	1:1	-
++ARG	MMC	-	17.440,00	-1,9	-2,0	-2,0	267	4,68 M	-	-	16:1	-
++ARG	MMCC	-	-	-	-	-	-	-	-	-	-	-
++ARG	MMM	3M Company	27.460,00	+2,4	+8,4	+12,0	1,58 K	43,10 M	-	-	10:1	1.594,01
++ARG	MMMC	3M Company (Cable)	15,90	+7,4	-	+9,1	40	636	-	-	-	-
++ARG	MO	Altria Group Inc.	29.020,00	+1,7	+3,4	+32,9	1,55 K	44,95 M	-	-	4:1	1.588,40
++ARG	MOC	ALTRIA GROUP INC CEDEARS EACH 4	14,60	+1,5	-	-	29	423	-	-	-	-
++ARG	MOC	ALTRIA GROUP INC CEDEARS EACH 4	14,60	+1,5	-	-	29	423	-	-	-	-
++ARG	MOS	The Mosaic Co	7.170,00	+1,2	+8,5	-3,2	652	4,68 M	-	-	5:1	1.606,90
++ARG	MP	MP Materials Corp.	6.605,00	-6,5	-24,6	-	4,82 K	32,44 M	-	-	10:1	1.596,57
++ARG	MRK	Merck & Co. Inc.	41.860,00	+1,5	+4,7	+29,5	1,11 K	46,53 M	-	-	5:1	1.597,83
++ARG	MRKC	Merck & Co. Inc. (Cable)	22,02	-0,6	-	-	3	66	-	-	-	-
++ARG	MRKC	Merck & Co. Inc. (Cable)	22,02	-0,6	-	-	3	66	-	-	-	-
++ARG	MRNA	Moderna Inc	4.560,00	-3,0	-20,6	+84,1	472,95 K	2,17 MM	-	-	19:1	1.605,04
++ARG	MRNAC	MODERNA INC CEDEAR EACH 19 REP	1,36	-	-	-	2	3	-	-	-	-
++ARG	MRNAC	MODERNA INC CEDEAR EACH 19 REP	1,36	-	-	-	2	3	-	-	-	-
++ARG	MRSH	MARSH & MCLENNAN COMPANIES INC	18.050,00	+3,5	+10,4	-	456	7,57 M	-	-	-	-
++ARG	MRVL	Marvell Technology Inc	22.060,00	-5,9	-33,9	+133,9	25,86 K	583,90 M	-	-	14:1	1.602,70
++ARG	MSFT	Microsoft Corp.	20.380,00	+1,2	+5,8	-17,6	138,08 K	2,82 MM	-	-	30:1	1.603,04
++ARG	MSFTC	MICROSOFT CORP CEDEAR EACH 30 R	13,00	-	-	-	-	-	-	-	-	-
++ARG	MSFTC	MICROSOFT CORP CEDEAR EACH 30 R	13,00	-	-	-	-	-	-	-	-	-
++ARG	MSI	Motorola Solutions Inc.	33.240,00	+4,1	+2,8	+14,0	69	2,28 M	-	-	20:1	-
++ARG	MSIC	Motorola Solutions Inc. (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	MSTR	Microstrategy Inc Cl A New	7.350,00	-1,3	+8,0	-38,1	564,34 K	4,13 MM	-	-	20:1	1.611,14
++ARG	MSTRC	STRATEGY INC CEDEAR EACH 20 REP	6,85	-	-	-	-	-	-	-	-	-
++ARG	MU	Micron Technology Inc	292.125,00	-6,2	-19,4	+224,6	168,89 K	50,11 MM	-	-	5:1	1.603,67
++ARG	MUC	MICRON TECHNOLOGY INC CEDEAR EA	79,60	-	-	-	-	-	-	-	-	-
++ARG	MUFG	Mitsubishi Ufj Financial Group	36.660,00	+2,2	+18,5	+50,8	101	3,70 M	-	-	1:1	1.547,98
++ARG	MUX	McEwen Mining Inc	13.660,00	-1,8	-3,7	-5,9	1,57 K	21,65 M	-	-	2:1	1.591,15
++ARG	MUXC	McEwen Mining Inc (Cable)	0,00	+1,7	-	-	-	-	
++8,65
++10,23
++-	-	-
++ARG	NATU3	NATURA &CO HOLDING S.A. CEDEAR	2.622,50	-2,9	+3,8	+29,8	36	95,02 K	-	-	1:1	-
++ARG	NBIS	NEBIUS GROUP N V GDS ARS	11.320,00	-12,6	-29,0	-	294,67 K	3,46 MM	-	-	27:1	1.610,50
++ARG	NBISC	NEBIUS GROUP N V GDS ARS (Cable)	7,55	+3,4	-	-	6	45	
++7,30
++8,82
++-	-	-
++ARG	NEC1	Nec Corporation	0,01	-	-	-	-	-	-	-	1:3	-
++ARG	NEE	NextEra Energy, Inc.	7.545,00	+0,7	+4,5	-	31,79 K	238,04 M	-	-	19:1	1.604,06
++ARG	NEM	Newmont Corporation	49.420,00	-1,1	+1,6	-4,3	2,71 K	135,07 M	-	-	3:1	1.590,97
++ARG	NEMC	Newmont Corporation (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	NFLX	Netflix Inc.	2.342,00	+3,5	+0,0	-21,5	247,24 K	575,77 M	-	-	48:1	1.603,42
++ARG	NFLXC	NETFLIX INC CEDEAR EACH 48 REP	2,02	-	-	-	-	-	-	-	-	-
++ARG	NFLXC	NETFLIX INC CEDEAR EACH 48 REP	2,02	-	-	-	-	-	-	-	-	-
++ARG	NG	Novagold Resources INC.	37.660,00	+0,8	+0,3	-35,0	389	14,80 M	-	-	1:4	1.571,79
++ARG	NGG	National Grid Plc	65.925,00	+1,3	+1,9	+11,1	201	13,26 M	-	-	2:1	-
++ARG	NIO	NIO Inc.	1.795,00	-1,9	-9,4	-15,2	101,25 K	182,36 M	-	-	4:1	1.595,56
++ARG	NIOC	NIO INC CEDEAR EACH 4 REP 1 ADR	1,16	-	-	-	-	-	-	-	-	-
++ARG	NIOC	NIO INC CEDEAR EACH 4 REP 1 ADR	1,16	-	-	-	-	-	-	-	-	-
++ARG	NKE	Nike Inc.	5.560,00	+3,1	+3,7	-28,1	33,51 K	185,05 M	-	-	12:1	1.602,37
++ARG	NKEC	NIKE INC CEDEAR EACH 12 REP 1 C	5,10	-	-	-	-	-	-	-	-	-
++ARG	NKEC	NIKE INC CEDEAR EACH 12 REP 1 C	5,10	-	-	-	-	-	-	-	-	-
++ARG	NMR	Nomura Holdings Inc	15.690,00	+1,7	+14,4	+22,0	14	219,71 K	-	-	1:1	1.599,39
++ARG	NMRC	-	-	-	-	-	-	-	-	-	-	-
++ARG	NOKA	Nokia Corporation	14.430,00	-6,2	-29,7	+45,0	4,19 K	61,37 M	-	-	1:1	1.605,12
++ARG	NOKAC	Nokia Corporation (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	NOW	SERVICENOW INC	900,00	+5,8	+0,1	-34,2	770,17 K	678,17 M	-	-	172:1	1.582,32
++ARG	NOWC	SERVICENOW INC (Cable)	0,00	-11,0	-6,0	-	-	-	
++0,55
++0,81
++-	-
++ARG	NSAN	Nissan Motor Co. Ltd	-	-	-	-	-	-	-	-	1:1	-
++ARG	NSANC	-	-	-	-	-	-	-	-	-	-	-
++ARG	NTCO	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	NTCOC	-	-	-	-	-	-	-	-	-	-	-
++ARG	NTES	Netease Inc	13.680,00	+1,0	-4,2	-10,3	123	1,68 M	-	-	14:1	-
++ARG	NTESC	Netease Inc (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	NU	NU HOLDINGS LTD CEDEAR EACH 2 R	11.230,00	-0,3	+8,1	-12,9	309,45 K	3,49 MM	-	-	2:1	1.594,04
++ARG	NUC	NU HOLDINGS LTD CEDEAR EACH 2 R	6,99	-	-	-	-	-	-	-	-	-
++ARG	NUC	NU HOLDINGS LTD CEDEAR EACH 2 R	6,99	-	-	-	-	-	-	-	-	-
++ARG	NUE	Nucor Corp	24.760,00	+4,3	+14,1	+58,2	278	6,85 M	-	-	16:1	-
++ARG	NUEC	Nucor Corp (Cable)	-	-	-	-	-	-	-	-	-	-
++ARG	NVDA	Nvidia Corporation	13.740,00	+0,1	+7,3	+14,5	196,08 K	2,72 MM	-	-	24:1	1.594,59
++ARG	NVDAC	NVIDIA CORP CEDEAR EACH 24 REP	7,00	-	-	-	-	-	-	-	-	-
++ARG	NVDAC	NVIDIA CORP CEDEAR EACH 24 REP	7,00	-	-	-	-	-	-	-	-	-
++ARG	NVO	NOVO NORDISK A/S	11.170,00	+2,2	+3,9	-	1,66 K	18,58 M	-	-	7:1	1.596,04
++ARG	NVS	Novartis Ag	61.750,00	-0,1	+0,7	+16,3	107	6,63 M	-	-	4:1	1.593,55
++ARG	NVSC	Novartis Ag (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	NXE	Nexgen Energy LTD	14.570,00	-2,2	-1,6	+4,4	1,69 K	25,04 M	-	-	1:1	-
++ARG	O	REALTY INCOME CORP GDS ARS	8.080,00	+2,6	+8,2	-	6,75 K	54,07 M	-	-	13:1	1.603,75
++ARG	OC	REALTY INCOME CORP GDS ARS (Cable)	5,09	+1,0	+4,7	-	41	209	
++4,61
++5,12
++-	-
++ARG	OGZDC	-	-	-	-	-	-	-	-	-	-	-
++ARG	OKLO	OKLO INC CEDEAR EACH 29 REPR RA	2.305,00	-7,5	-21,1	-41,5	103,27 K	241,98 M	-	-	28:1	1.599,50
++ARG	ONDS	Ondas Holdings Inc.	6.285,00	+0,4	-2,6	-	27,83 K	175,62 M	-	-	2:1	1.605,30
++ARG	ORAN	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	ORANC	-	-	-	-	-	-	-	-	-	-	-
++ARG	ORCL	Oracle Corporation	61.350,00	-3,1	-20,1	-38,8	47,51 K	2,96 MM	-	-	3:1	1.602,53
++ARG	ORCLC	ORACLE CORP CEDEAR EACH REPR 1/	71,00	+8,0	-	-	40	2,76 K	-	-	-	-
++ARG	ORLY	Oreilly Automotive Inc	610,00	-1,1	-2,7	-5,3	1,68 K	1,03 M	-	-	222:1	-
++ARG	ORLYC	Oreilly Automotive Inc (Cable)	0,00	+1,5	-	-	-	-	
++0,40
++0,45
++-	-	-
++ARG	OXY	Occidental Petroleum Corp.	18.230,00	-0,1	+20,3	+45,3	4,05 K	73,83 M	-	-	5:1	1.590,75
++ARG	OXYC	OCCIDENTAL PETROLEUM CORP CEDEA	9,56	+6,1	-	-	1	10	-	-	-	-
++ARG	PAAS	Pan American Silver Corp.	23.440,00	+0,6	+0,4	-12,5	3,16 K	74,15 M	-	-	3:1	1.589,95
++ARG	PAASC	PAN AMERICAN SILVER CORP CEDEAR	22,18	-	-	-	-	-	-	-	-	-
++ARG	PAC	Grupo Aeroportuario del Pacifico S.A.B. de C.V.	21.670,00	+1,4	-12,2	-17,3	94	2,04 M	-	-	16:1	-
++ARG	PAGS	Pagseguro Digital Ltd	4.892,50	-1,9	+4,0	-0,5	7,70 K	37,91 M	-	-	3:1	1.588,47
++ARG	PANW	Palo Alto Networks Inc	10.330,00	+0,3	+2,3	+81,2	9,66 K	100,30 M	-	-	50:1	1.591,43
++ARG	PANWC	PALO ALTO NETWORKS INC CEDEAR E	0,00	-2,3	+0,6	-	5	33	
++2,93
++6,83
++-	-	-
++ARG	PATH	UIPATH INC	8.615,00	+6,3	+1,2	-32,1	6,11 K	51,73 M	-	-	2:1	1.589,48
++ARG	PATHC	UIPATH INC (Cable)	0,00	-17,4	-	-	-	-	
++5,37
++6,50
++-	-	-
++ARG	PBI	Pitney Bowes Inc	28.400,00	+0,5	+2,7	+72,8	20	569,00 K	-	-	1:1	1.588,37
++ARG	PBR	Petrobras (ADR)	29.940,00	-0,6	+18,9	+65,4	29,98 K	900,13 M	-	-	1:1	1.592,53
++ARG	PBRC	PETROLEO BRASILEIRO SA PETROBRA	13,00	-	-	-	-	-	-	-	-	-
++ARG	PBRC	PETROLEO BRASILEIRO SA PETROBRA	13,00	-	-	-	-	-	-	-	-	-
++ARG	PCAR	Paccar Inc.	70.625,00	+2,3	+12,9	+25,8	293	20,68 M	-	-	3:1	1.601,11
++ARG	PCRF	-	-	-	-	-	-	-	-	-	2:1	-
++ARG	PCRFC	-	-	-	-	-	-	-	-	-	-	-
++ARG	PDDC	PDD HOLDINGS INC CEDEAR EACH 2	0,00	-7,7	-	-	-	-	
++3,85
++4,17
++-	-	-
++ARG	PEP	Pepsico Inc	12.170,00	+2,4	+3,5	-1,1	38,50 K	465,02 M	-	-	18:1	1.601,12
++ARG	PEPC	PEPSICO INC CEDEAR EACH 18 REP	9,31	-	-	-	-	-	-	-	-	-
++ARG	PEPC	PEPSICO INC CEDEAR EACH 18 REP	9,31	-	-	-	-	-	-	-	-	-
++ARG	PETR3	Petrobras - Petróleo Brasileiro S.A.	14.920,00	-1,4	+17,7	+64,2	1,83 K	27,40 M	-	-	1:1	-
++ARG	PETRC	-	0,00	-	-	-	-	-	-	-	-	-
++ARG	PFE	Pfizer Inc.	9.795,00	+0,5	+4,2	+3,3	22,11 K	216,57 M	-	-	4:1	1.597,23
++ARG	PFEC	PFIZER INC CEDEAR EACH 4 REP 1	6,00	-	-	-	-	-	-	-	-	-
++ARG	PFEC	PFIZER INC CEDEAR EACH 4 REP 1	6,00	-	-	-	-	-	-	-	-	-
++ARG	PG	Procter & Gamble	15.670,00	+1,9	+2,7	+7,3	15,54 K	243,04 M	-	-	15:1	1.595,83
++ARG	PGC	PROCTER & GAMBLE CO CEDEAR EACH	10,93	-	-	-	-	-	-	-	-	-
++ARG	PGC	PROCTER & GAMBLE CO CEDEAR EACH	10,93	-	-	-	-	-	-	-	-	-
++ARG	PHG	Koninklijke Philips N.V.	8.350,00	+0,9	-1,5	+0,1	4	33,45 K	-	-	5:1	1.595,34
++ARG	PHGC	-	-	-	-	-	-	-	-	-	-	-
++ARG	PINS	Pinterest	5.085,00	+3,4	+8,8	-9,9	455	2,29 M	-	-	7:1	1.617,95
++ARG	PINSC	Pinterest (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	PKS	Posco Holdings Inc.	27.940,00	-0,9	+4,3	+2,4	8,10 K	227,07 M	-	-	3:1	1.601,45
++ARG	PLTR	Palantir Technologies Inc	65.475,00	+0,6	+6,9	-29,3	17,10 K	1,13 MM	-	-	3:1	1.603,38
++ARG	PLTRC	PALANTIR TECH INC CEDEAR EACH 3	59,30	+0,3	-	-	23	1,36 K	-	-	-	-
++ARG	PLTRC	PALANTIR TECH INC CEDEAR EACH 3	59,30	+0,3	-	-	23	1,36 K	-	-	-	-
++ARG	PM	Philip Morris International	17.220,00	+2,5	+9,5	+25,7	1,12 K	19,28 M	-	-	18:1	1.601,86
++ARG	PMC	Philip Morris International (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	PRIO3	Petro Rio S.A.	9.235,00	-2,0	+17,6	+62,3	633	5,93 M	-	-	2:1	-
++ARG	PSO	-	-	-	-	-	-	-	-	-	1:1	-
++ARG	PSQ	PROSHARES SHORT QQQ	5.385,00	+1,8	+10,5	-5,1	54,24 K	289,65 M	-	-	8:1	1.592,61
++ARG	PSQC	PROSHARES TRUST CEDEAR EACH 8 R	0,00	-3,9	-	-	-	-	
++3,94
++4,10
++-	-	-
++ARG	PSX	Phillips 66	54.925,00	+0,7	+24,5	+67,9	281	15,58 M	-	-	6:1	1.596,97
++ARG	PTR	-	-	-	-	-	-	-	-	-	4:1	-
++ARG	PTRC	-	-	-	-	-	-	-	-	-	-	-
++ARG	PYPL	Paypal Holdings Inc.	11.190,00	+1,3	+33,1	-0,7	8,68 K	96,66 M	-	-	8:1	1.596,58
++ARG	PYPLC	PAYPAL HOLDINGS INC CEDEAR EACH	5,00	-	-	-	-	-	-	-	-	-
++ARG	PYPLC	PAYPAL HOLDINGS INC CEDEAR EACH	5,00	-	-	-	-	-	-	-	-	-
++ARG	QCOM	Qualcomm Inc.	24.150,00	-1,2	-8,0	+0,7	22,10 K	539,67 M	-	-	11:1	1.588,63
++ARG	QCOMC	QUALCOMM INC CEDEAR EACH 11 REP	12,00	-	-	+21,0	-	-	-	-	-	-
++ARG	QCOMC	QUALCOMM INC CEDEAR EACH 11 REP	12,00	-	-	+21,0	-	-	-	-	-	-
++ARG	QQQ	INVESCO QQQ TRUST	54.600,00	-0,5	-3,4	+14,7	97,89 K	5,37 MM	-	-	20:1	1.596,58
++ARG	QQQC	INVESCO QQQ TRUST CEDEAR EACH 2	30,37	-	-	-	-	-	-	-	-	-
++ARG	QQQC	INVESCO QQQ TRUST CEDEAR EACH 2	30,37	-	-	-	-	-	-	-	-	-
++ARG	RACE	Ferrari	6.910,00	+0,9	-1,3	+0,7	3,89 K	26,80 M	-	-	83:1	1.592,52
++ARG	RACEC	FERRARI N V CEDEAR EACH 83 REP	4,00	-	-	-	-	-	-	-	-	-
++ARG	RACEC	FERRARI N V CEDEAR EACH 83 REP	4,00	-	-	-	-	-	-	-	-	-
++ARG	RBLX	Roblox Corp.	37.860,00	+0,5	-10,9	-39,6	2,63 K	100,40 M	-	-	2:1	1.590,76
++ARG	RENT3	Localiza Rent A Car S.A.	5.820,00	+3,1	-7,5	-4,6	347	2,02 M	-	-	2:1	-
++ARG	RGTI	RIGETTI COMPUTING INC	11.350,00	-3,7	-25,1	-32,8	19,91 K	229,33 M	-	-	2:1	1.594,10
++ARG	RGTIC	RIGETTI COMPUTING INC CEDEAR EA	8,65	-	-	-	-	-	-	-	-	-
++ARG	RIO	Rio Tinto Plc	18.260,00	+0,9	-1,6	+18,6	7,95 K	145,28 M	-	-	8:1	1.597,10
++ARG	RIOC	Rio Tinto Plc (Cable)	0,00	-7,3	-	-	-	-	
++0,01
++12,80
++-	-	-
++ARG	RIOC	Rio Tinto Plc (Cable)	0,00	-7,3	-	-	-	-	
++0,01
++12,80
++-	-	-
++ARG	RIOT	Riot Platforms	11.980,00	-4,5	-15,9	+81,0	24,08 K	293,51 M	-	-	3:1	1.596,62
++ARG	RIOTC	RIOT PLATFORMS INC RIOT PLATFOR	5,36	-	-	-	-	-	-	-	-	-
++ARG	RIOTC	RIOT PLATFORMS INC RIOT PLATFOR	5,36	-	-	-	-	-	-	-	-	-
++ARG	RKLB	ROCKET LAB CORPORATION CEDEAR E	8.525,00	-7,0	-35,6	-6,1	66,03 K	570,77 M	-	-	12:1	1.610,77
++ARG	RKLBC	ROCKET LAB CORPORATION CEDEAR E (Cable)	0,00	-4,0	-	-	-	-	
++5,57
++9,17
++-	-	-
++ARG	ROKU	Roku	17.470,00	+1,4	+5,6	+33,0	57	992,87 K	-	-	13:1	1.616,98
++ARG	ROST	Ross Stores Inc.	95.000,00	+3,0	+14,7	+36,6	11	1,04 M	-	-	4:1	1.592,29
++ARG	RSP	Invesco S&P 500 eql wght ETF	11.400,00	+1,9	+2,5	-	16,21 K	184,38 M	-	-	30:1	1.601,35
++ARG	RSPC	Invesco S&P 500 eql wght ETF (Cable)	6,95	-4,1	-	-	81	588	
++6,95
++7,50
++-	-
++ARG	RTX	Raytheon Technologies Corp	67.975,00	+2,5	+13,3	+21,4	1,63 K	110,54 M	-	-	5:1	1.606,97
++ARG	RTXC	Raytheon Technologies Corp (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	SAN	Banco Santander S.A	86.700,00	+3,5	+0,8	+20,4	58	5,01 M	-	-	1:4	1.607,94
++ARG	SANC	Banco Santander S.A (Cable)	0,00	+0,5	-	-	-	-	
++11,69
++56,40
++-	-	-
++ARG	SAP	Sap Se	42.700,00	+10,4	+6,5	-31,5	4,17 K	174,21 M	-	-	6:1	1.601,35
++ARG	SAPC	Sap Se (Cable)	0,00	-	-	-	-	-	
++3,63
++32,65
++-	-	-
++ARG	SATL	Satellogic Inc.	5.770,00	-4,2	-36,2	+101,9	101,56 K	585,03 M	-	-	1:1	1.602,42
++ARG	SATLC	Satellogic Inc. (Cable)	0,00	-6,4	+99,2	-	-	-	
++3,55
++7,14
++-	-	-
++ARG	SBS	Companhia de Saneamento Básico do Estado de São Paulo–Sabesp	17.960,00	-1,0	-0,4	-76,8	20	359,20 K	-	-	1:2	1.592,20
++ARG	SBSP3	Cia Saneamento Básico de SP	9.180,00	+2,5	+2,0	-74,5	2	18,36 K	-	-	1:1	-
++ARG	SBUX	Starbucks Corporation	13.730,00	+1,2	+3,4	+27,5	621	8,59 M	-	-	12:1	1.594,97
++ARG	SBUXC	STARBUCKS CORP CEDEAR EACH 12 R	8,03	-	-	-	-	-	-	-	-	-
++ARG	SBUXC	STARBUCKS CORP CEDEAR EACH 12 R	8,03	-	-	-	-	-	-	-	-	-
++ARG	SCCO	Southern Copper Corp	143.975,00	-0,3	+5,8	+29,5	1,13 K	163,11 M	-	-	2:1	1.605,07
++ARG	SCHW	Charles Schwab	9.850,00	-	-	-	-	-	-	-	13:1	1.257,86
++ARG	SDA	SunCar Technology Group Inc	610,00	-3,5	-4,7	-59,4	5,07 K	3,12 M	-	-	2:1	-
++ARG	SE	Sea Ltd.	4.977,50	+1,1	+5,9	-18,9	9,70 K	47,73 M	-	-	32:1	1.590,41
++ARG	SEC	SEA LIMITED CEDEAR EACH 32 REP	0,00	+8,8	+0,7	-	-	-	
++2,30
++3,70
++-	-	-
++ARG	SH	PROSHARES SHORT S&P500	6.670,00	+0,5	+3,4	-2,1	62,44 K	414,66 M	-	-	8:1	1.592,84
++ARG	SHC	PROSHARES TRUST GDR EACH REPR 8	4,42	-0,5	-	-	2	9	-	-	-	-
++ARG	SHEL	Royal Dutch Shell Plc	70.500,00	+1,1	+16,5	+26,2	255	17,97 M	-	-	2:1	-
++ARG	SHELC	SHELL PLC CEDEAR EACH REP 0.5 '	35,15	-	-0,1	+393,7	3	105	-	-	-	-
++ARG	SHELC	SHELL PLC CEDEAR EACH REP 0.5 '	35,15	-	-0,1	+393,7	3	105	-	-	-	-
++ARG	SHOP	Shopify Inc.	1.683,00	+2,4	+2,0	-28,1	37,69 K	63,09 M	-	-	107:1	1.587,18
++ARG	SHOPC	SHOPIFY INC CEDEAR EA 107 RE 1	1,10	-	-	-	-	-	-	-	-	-
++ARG	SHOPC	SHOPIFY INC CEDEAR EA 107 RE 1	1,10	-	-	-	-	-	-	-	-	-
++ARG	SHPW	-	-	-	-	-	-	-	-	-	1:2	-
++ARG	SI	-	-	-	-	-	-	-	-	-	10:1	-
++ARG	SIDC	Companhia Siderúrgica Nacional (Cable)	0,00	-	-	-	-	-	-	-	-	-
++ARG	SIEGC	-	-	-	-	-	-	-	-	-	-	-
++ARG	SIEGY	Siemens Ag Adr	3.400,00	-	-	-	-	-	-	-	3:1	-
++ARG	SLB	Schlumberger Ltd	27.820,00	+11,7	+15,2	+42,6	7,39 K	202,02 M	-	-	3:1	1.594,93
++ARG	SLBC	SLB LIMITED CEDEAR EACH 3 REPR	0,01	-	-	-	-	-	
++15,80
++18,62
++-	-	-
++ARG	SLV	iShares SILVER TRUST	14.000,00	+1,7	+1,9	-18,7	42,83 K	601,71 M	-	-	6:1	1.595,18
++ARG	SLVC	ISHARES SILVER TRUST CEDEAR EAC	11,60	-	-	-	-	-	-	-	-	-
++ARG	SLVC	ISHARES SILVER TRUST CEDEAR EAC	11,60	-	-	-	-	-	-	-	-	-
++ARG	SMH	VAN ECK SEMICONDUCTOR ETF	17.910,00	-2,1	-13,1	+60,6	24,95 K	450,81 M	-	-	50:1	1.596,83
++ARG	SMHC	VANECK ETF TR CEDEAR EACH 50 RE	7,90	+9,8	-	-	201	1,59 K	-	-	-	-
++ARG	SMSN	Samsung Electronics Co. Ltd.	318,48	-	-	-	-	-	-	-	14:1	-
++ARG	SNA	Snap-On Inc	107.975,00	+3,0	+2,8	+21,7	22	2,36 M	-	-	6:1	-
++ARG	SNAP	Snap Inc.	6.935,00	-0,8	+0,6	-43,4	8,55 K	59,08 M	-	-	1:1	1.594,25
++ARG	SNDK	SANDISK CORP GDS ARS	13.510,00	-9,6	-35,2	-	267,16 K	3,67 MM	-	-	170:1	1.602,70
++ARG	SNDKC	SANDISK CORP GDS ARS (Cable)	8,98	-6,4	-34,7	-	54	497	
++8,38
++14,25
++-	-
++ARG	SNOW	Snowflake Inc.	14.240,00	+1,4	+7,4	+26,1	5,24 K	74,39 M	-	-	30:1	1.598,20
++ARG	SNOWC	Snowflake Inc. (Cable)	9,60	-	-	-3,0	15	144	-	-	-	-
++ARG	SNP	-	-	-	-	-	-	-	-	-	3:1	-
++ARG	SNPC	-	-	-	-	-	-	-	-	-	-	-
++ARG	SONY	Sony Group Corporation	4.180,00	+2,6	+6,9	-14,7	3,08 K	12,88 M	-	-	8:1	1.587,09
++ARG	SONYC	Sony Group Corporation (Cable)	0,00	-	-	-	-	-	
++0,01
++2,88
++-	-	-
++ARG	SPCE	Virgin Galactic	7.960,00	-4,4	-10,5	-20,4	4,42 K	35,53 M	-	-	1:2	1.592,00
++ARG	SPCX	Space Exploration Technologies	3.665,00	-2,1	-31,4	-	514,56 K	1,86 MM	-	-	50:1	1.616,39
++ARG	SPCXC	Space Exploration Technologies (Cable)	0,00	-
+<truncated 13571 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.

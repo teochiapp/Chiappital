@@ -99,9 +99,10 @@ class YahooFinanceService {
 
       await this.waitForRateLimit();
 
-      const response = await fetch(
-        `${this.baseURL}/chart/${symbol}?interval=${interval}&range=${range}`
-      );
+      const targetUrl = `${this.baseURL}/chart/${symbol}?interval=${interval}&range=${range}`;
+      
+      // Utilizamos corsproxy.io como proxy alternativo
+      const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

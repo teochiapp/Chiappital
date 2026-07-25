@@ -44,6 +44,8 @@ const HabitsPage = () => {
     let streak = 0;
     const d = new Date();
     const days = habit.days_of_week || [0,1,2,3,4,5,6];
+    // Fecha de creación (solo la parte de fecha)
+    const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     
     while (true) {
       if (!days.includes(d.getDay())) {
@@ -51,6 +53,8 @@ const HabitsPage = () => {
         continue;
       }
       const ds = getUTC3DateString(d);
+      // No contar días anteriores a la creación del hábito
+      if (createdAt && ds < createdAt) break;
       if ((habit.completions || []).includes(ds)) {
         streak++;
         d.setDate(d.getDate() - 1);
@@ -70,12 +74,16 @@ const HabitsPage = () => {
     let completed = 0;
     let scheduled = 0;
     const days = habit.days_of_week || [0,1,2,3,4,5,6];
+    const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     for (let i = 0; i < 30; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
+      const ds = getUTC3DateString(d);
+      // Ignorar días anteriores a la creación del hábito
+      if (createdAt && ds < createdAt) continue;
       if (days.includes(d.getDay())) {
         scheduled++;
-        if ((habit.completions || []).includes(getUTC3DateString(d))) completed++;
+        if ((habit.completions || []).includes(ds)) completed++;
       }
     }
     return scheduled === 0 ? 0 : Math.round((completed / scheduled) * 100);
@@ -302,7 +310,15 @@ const HabitsPage = () => {
               {calendarDays.map(dateStr => {
                 const dDate = new Date(dateStr + 'T12:00:00');
                 const dayOfWeek = dDate.getDay();
-                const scheduledHabits = habits.filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(dayOfWeek));
+                // Solo incluir hábitos que ya existían en esa fecha
+                const scheduledHabits = habits.filter(h => {
+                  if (!(h.days_of_week || [0,1,2,3,4,5,6]).includes(dayOfWeek)) return false;
+                  if (h.created_at) {
+                    const createdDate = h.created_at.split('T')[0];
+                    if (dateStr < createdDate) return false;
+                  }
+                  return true;
+                });
                 
                 const totalDone = scheduledHabits.filter(h => (h.completions || []).includes(dateStr)).length;
                 const pct = scheduledHabits.length > 0 ? totalDone / scheduledHabits.length : 0;

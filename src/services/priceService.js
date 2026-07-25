@@ -235,6 +235,112 @@ class PriceService {
   clearCache() {
     this.cache.clear();
   }
+
+  // Método síncrono para leer desde la caché de localStorage (usado para inicializar al instante)
+  getCachedEma21Distance(symbol, currentPrice) {
+    if (!currentPrice || currentPrice <= 0) return null;
+    
+    if (this.config && this.config.demoMode) {
+      const charSum = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return ((charSum * 17) % 300) / 10 - 15;
+    }
+
+    const safeSymbol = symbol.toUpperCase();
+    const CACHE_KEY = `ema21_${safeSymbol}`;
+    const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 horas
+
+    try {
+      const stored = localStorage.getItem(CACHE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Date.now() - parsed.timestamp < CACHE_TTL) {
+          const cachedEma = parsed.ema;
+          // console.log(`[CACHE HIT] EMA21 para ${safeSymbol}:`, cachedEma);
+          return ((currentPrice - cachedEma) / cachedEma) * 100;
+        } else {
+          // console.log(`[CACHE EXPIRED] EMA21 para ${safeSymbol}`);
+        }
+      }
+    } catch (e) {
+      console.warn('Error leyendo caché:', e);
+    }
+    
+    return null;
+  }
+
+  // Calcular la distancia porcentual a la EMA 21 usando histórico
+  async getEma21Distance(symbol, currentPrice) {
+    if (!currentPrice || currentPrice <= 0) return null;
+    
+    // Si estamos en demoMode, devolver valor simulado determinístico
+    if (this.config && this.config.demoMode) {
+      const charSum = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return ((charSum * 17) % 300) / 10 - 15;
+    }
+
+    const safeSymbol = symbol.toUpperCase();
+    const CACHE_KEY = `ema21_${safeSymbol}`;
+    const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 horas de cache
+
+    // 1. Revisar si tenemos la EMA guardada en localStorage
+    try {
+      const stored = localStorage.getItem(CACHE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Date.now() - parsed.timestamp < CACHE_TTL) {
+          const cachedEma = parsed.ema;
+          return ((currentPrice - cachedEma) / cachedEma) * 100;
+        }
+      }
+    } catch (e) {}
+
+    try {
+      // Pedimos 3 meses para tener al menos ~63 días hábiles
+      const candles = await yahooFinanceService.getCandles(symbol, '1d', '3mo');
+      
+      if (!candles || candles.length < 21) {
+        return null;
+      }
+
+      // Filtrar cierres válidos
+      const closes = candles.map(c => c.close).filter(c => c && !isNaN(c));
+      
+      if (closes.length < 21) return null;
+
+      const N = 21;
+      const k = 2 / (N + 1);
+      
+      // SMA inicial como semilla
+      let sum = 0;
+      for (let i = 0; i < N; i++) {
+        sum += closes[i];
+      }
+      let ema = sum / N;
+      
+      // Aplicar fórmula EMA
+      for (let i = N; i < closes.length; i++) {
+        ema = closes[i] * k + ema * (1 - k);
+      }
+      
+      // 2. Guardar el valor puro de la EMA en localStorage
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          ema: ema,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // Ignorar si el almacenamiento está lleno
+      }
+      
+      // Calcular distancia vs precio actual de la tabla
+      const distancePercent = ((currentPrice - ema) / ema) * 100;
+      
+      return distancePercent;
+    } catch (error) {
+      console.warn(`⚠️ No se pudo calcular EMA 21 para ${symbol}:`, error.message);
+      return null;
+    }
+  }
 }
 
 export default new PriceService();
