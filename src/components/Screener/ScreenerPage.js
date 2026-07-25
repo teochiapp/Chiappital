@@ -346,7 +346,7 @@ const ScreenerPage = () => {
       if (strA > strB) return sortDir === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [stockData, filterRegion, filterSector, sortKey, sortDir]);
+  }, [stockData, filterRegion, filterSector, sortKey, sortDir, groupMode]);
 
   // Agrupar datos filtrados según el modo activo
   const groupedData = useMemo(() => {

@@ -611,7 +611,6 @@ class SymbolSearchService {
         { symbol: 'STNE', name: 'StoneCo Ltd', sector: 'Financiero', region: 'BR', currency: 'USD', type: 'Equity' },
         { symbol: 'STLA', name: 'Stellantis', sector: 'Consumo Discrecional', region: 'EU', currency: 'USD', type: 'Equity' },
         { symbol: 'SWKS', name: 'Skyworks Solutions', sector: 'Semiconductores', region: 'US', currency: 'USD', type: 'Equity' },
-        { symbol: 'SMSN', name: 'Samsung Electronics', sector: 'Semiconductores', region: 'KR', currency: 'USD', type: 'Equity' },
         { symbol: 'SYY', name: 'Sysco Corp.', sector: 'Consumo Básico', region: 'US', currency: 'USD', type: 'Equity' },
 
         { symbol: 'UL', name: 'Unilever PLC', sector: 'Consumo Básico', region: 'EU', currency: 'USD', type: 'Equity' },
