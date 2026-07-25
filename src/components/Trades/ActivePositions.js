@@ -452,11 +452,13 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
       const symbol = getTradeAttr(trade, 'symbol');
       if (!symbol) return;
 
+      const currentPrice = getPrice(symbol);
+      // Wait until we have a valid price before attempting to calculate EMA distance
+      if (!currentPrice || currentPrice <= 0) return;
+
       // Evitar refetch si ya está en progreso o calculado en esta sesión
       if (ema21Fetched.current.has(symbol)) return;
       ema21Fetched.current.add(symbol);
-
-      const currentPrice = getPrice(symbol);
 
       // Intentar leer desde localStorage primero (sincrónico, rápido)
       const cached = priceService.getCachedEma21Distance(symbol, currentPrice);
