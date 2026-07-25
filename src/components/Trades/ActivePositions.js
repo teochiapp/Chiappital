@@ -1,12 +1,13 @@
 // components/Trades/ActivePositions.js - Componente para posiciones activas
-import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect, useRef } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw, Activity } from 'lucide-react';
 import CloseTradeModal from './CloseTradeModal';
 import EditTradeModal from './EditTradeModal';
 import { useRealTimePrices } from '../../hooks/useRealTimePrices';
 import companyLogoService from '../../services/companyLogoService';
+import priceService from '../../services/priceService';
 import { getStrategyDisplayName } from './TradeForm';
 import { colors, componentColors, getTradingColor, withOpacity } from '../../styles/colors';
 
@@ -335,11 +336,73 @@ const RecommendationLabel = styled.div`
   align-items: center;
 `;
 
+// Animación del spinner
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+`;
+
+const EmaBadgeWrapper = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: ${props => {
+    if (props.$loading) return 'rgba(255,255,255,0.04)';
+    if (props.$value === null) return 'rgba(255,255,255,0.04)';
+    return props.$value >= 0
+      ? 'rgba(74, 222, 128, 0.08)'
+      : 'rgba(248, 113, 113, 0.08)';
+  }};
+  border: 1px solid ${props => {
+    if (props.$loading) return 'rgba(255,255,255,0.1)';
+    if (props.$value === null) return 'rgba(255,255,255,0.1)';
+    return props.$value >= 0
+      ? 'rgba(74, 222, 128, 0.25)'
+      : 'rgba(248, 113, 113, 0.25)';
+  }};
+`;
+
+const EmaSpinner = styled.div`
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-top-color: #94a3b8;
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+  flex-shrink: 0;
+`;
+
+const EmaLabel = styled.span`
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+`;
+
+const EmaValue = styled.span`
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: auto;
+  color: ${props => {
+    if (props.$value === null) return '#64748b';
+    if (Math.abs(props.$value) < 1) return '#fbbf24'; // muy cerca → amarillo
+    return props.$value >= 0 ? '#4ade80' : '#f87171';
+  }};
+`;
+
 const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTrade }) => {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [companyLogos, setCompanyLogos] = useState(new Map());
+  // EMA 21: { [symbol]: { value: number|null, loading: boolean } }
+  const [ema21Map, setEma21Map] = useState({});
+  const ema21Fetched = useRef(new Set()); // evita re-fetch duplicado
   
   // Hook para precios en tiempo real
   const { 
@@ -379,6 +442,43 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
 
     loadLogos();
   }, [openTrades]);
+
+  // Calcular EMA 21 para cada posición activa
+  // Se ejecuta cuando cambian los precios (necesitamos currentPrice para el cálculo)
+  useEffect(() => {
+    if (!openTrades || openTrades.length === 0) return;
+
+    const fetchEma = async (trade) => {
+      const symbol = getTradeAttr(trade, 'symbol');
+      if (!symbol) return;
+
+      // Evitar refetch si ya está en progreso o calculado en esta sesión
+      if (ema21Fetched.current.has(symbol)) return;
+      ema21Fetched.current.add(symbol);
+
+      const currentPrice = getPrice(symbol);
+
+      // Intentar leer desde localStorage primero (sincrónico, rápido)
+      const cached = priceService.getCachedEma21Distance(symbol, currentPrice);
+      if (cached !== null) {
+        setEma21Map(prev => ({ ...prev, [symbol]: { value: cached, loading: false } }));
+        return;
+      }
+
+      // Marcar como cargando solo si no había cache
+      setEma21Map(prev => ({ ...prev, [symbol]: { value: null, loading: true } }));
+
+      try {
+        const distance = await priceService.getEma21Distance(symbol, currentPrice);
+        setEma21Map(prev => ({ ...prev, [symbol]: { value: distance, loading: false } }));
+      } catch (err) {
+        setEma21Map(prev => ({ ...prev, [symbol]: { value: null, loading: false } }));
+      }
+    };
+
+    openTrades.forEach(trade => fetchEma(trade));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTrades, prices]); // re-evaluar cuando lleguen los precios reales
 
   // Función para adaptar estructura de Strapi
   const getTradeAttr = (trade, attr) => {
@@ -700,6 +800,32 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                     {getTradeAttr(trade, 'take_profit') ? formatCurrency(getTradeAttr(trade, 'take_profit')) : 'N/A'}
                   </DetailValue>
                 </DetailItem>
+
+                {/* Distancia a EMA 21 */}
+                {(() => {
+                  const symbol = getTradeAttr(trade, 'symbol');
+                  const emaState = ema21Map[symbol];
+                  const isLoading = emaState?.loading ?? true;
+                  const emaValue = emaState?.value ?? null;
+
+                  return (
+                    <EmaBadgeWrapper $value={emaValue} $loading={isLoading}>
+                      {isLoading
+                        ? <EmaSpinner />
+                        : <Activity size={14} color={emaValue === null ? '#64748b' : emaValue >= 0 ? '#4ade80' : '#f87171'} />
+                      }
+                      <EmaLabel>Dist. EMA 21</EmaLabel>
+                      <EmaValue $value={emaValue}>
+                        {isLoading
+                          ? 'Calculando…'
+                          : emaValue !== null
+                            ? `${emaValue >= 0 ? '+' : ''}${emaValue.toFixed(2)}%`
+                            : '—'
+                        }
+                      </EmaValue>
+                    </EmaBadgeWrapper>
+                  );
+                })()}
 
               </PositionDetails>
 

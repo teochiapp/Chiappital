@@ -1,10 +1,25 @@
 // services/yahooFinanceService.js - Servicio para Yahoo Finance API (GRATUITA)
+
+// En desarrollo usamos el proxy del dev server de CRA (src/setupProxy.js)
+// para evitar CORS. En producción usamos proxies públicos en cascada.
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 class YahooFinanceService {
   constructor() {
     this.baseURL = 'https://query1.finance.yahoo.com/v8/finance';
+    this.devProxyBase = '/api/yahoo'; // mapeado en setupProxy.js → query1.finance.yahoo.com/v8/finance
     this.cache = new Map();
     this.lastCallTime = 0;
     this.minIntervalBetweenCalls = 500; // 500ms entre llamadas
+
+    // Proxies CORS públicos — se usan en cascada en producción.
+    // Solo se intentan si el proxy de dev o el proxy anterior fallaron.
+    this.corsProxies = [
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+      (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
+      (url) => `https://cors-anywhere.herokuapp.com/${url}`,
+    ];
   }
 
   // Rate limiting
@@ -20,16 +35,16 @@ class YahooFinanceService {
     this.lastCallTime = Date.now();
   }
 
-  // Verificar cache
-  getFromCache(key) {
+  // Verificar cache en memoria (sesión)
+  getFromCache(key, ttlMs = 60000) {
     const cached = this.cache.get(key);
-    if (cached && Date.now() - cached.timestamp < 60000) { // Cache válido por 60 segundos
+    if (cached && Date.now() - cached.timestamp < ttlMs) {
       return cached.data;
     }
     return null;
   }
 
-  // Guardar en cache
+  // Guardar en cache en memoria
   setCache(key, data) {
     this.cache.set(key, {
       data,
@@ -37,35 +52,112 @@ class YahooFinanceService {
     });
   }
 
+  // Verificar cache persistente en sessionStorage (sobrevive F5)
+  getFromSessionCache(key, ttlMs) {
+    try {
+      const raw = sessionStorage.getItem(`yf_${key}`);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.timestamp < ttlMs) {
+        return parsed.data;
+      }
+    } catch (e) {/* ignorar */}
+    return null;
+  }
+
+  // Guardar en sessionStorage
+  setSessionCache(key, data) {
+    try {
+      sessionStorage.setItem(`yf_${key}`, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (e) {/* ignorar si está lleno */}
+  }
+
+  // Obtiene la URL correcta del endpoint según el entorno:
+  // - dev  → /api/yahoo/chart/AAPL  (ruteado por setupProxy.js sin CORS)
+  // - prod → URL pública de Yahoo (se pasa a fetchWithCorsProxies)
+  getYahooPath(path) {
+    if (IS_DEV) {
+      return `${this.devProxyBase}${path}`;
+    }
+    return `${this.baseURL}${path}`;
+  }
+
+  // Fetch a través de múltiples proxies CORS en cascada (solo producción).
+  // En dev este método no debería llamarse porque getYahooPath ya da una URL local.
+  async fetchWithCorsProxies(targetUrl) {
+    for (let i = 0; i < this.corsProxies.length; i++) {
+      const proxyUrl = this.corsProxies[i](targetUrl);
+      try {
+        const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+        if (response.ok) {
+          console.log(`✅ CORS proxy [${i}] funcionó para: ${targetUrl.split('/').pop()}`);
+          return response;
+        }
+        console.warn(`⚠️ CORS proxy [${i}] devolvió ${response.status}, probando siguiente...`);
+      } catch (err) {
+        console.warn(`⚠️ CORS proxy [${i}] falló (${err.message}), probando siguiente...`);
+      }
+    }
+    throw new Error('Todos los proxies CORS fallaron para: ' + targetUrl);
+  }
+
+  // Fetch universal: dev usa proxy local, prod usa cascada pública.
+  // Nunca hace fetch directo a Yahoo Finance (siempre falla por CORS en browser).
+  async fetchYahoo(path) {
+    if (IS_DEV) {
+      // El dev server de CRA reescribe /api/yahoo → query1.finance.yahoo.com/v8/finance
+      const devUrl = `${this.devProxyBase}${path}`;
+      const res = await fetch(devUrl, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status} (dev proxy)`);
+      // Verificar que la respuesta sea JSON y no HTML (bot-detection de Yahoo)
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json') && !ct.includes('text/plain')) {
+        const preview = await res.text();
+        throw new Error(`Yahoo devolvió contenido no-JSON (${ct}). Reiniciá el servidor. Preview: ${preview.slice(0, 80)}`);
+      }
+      return res;
+    }
+    // Producción: ir directo a proxies públicos (Yahoo bloquea fetch directo por CORS)
+    const targetUrl = `${this.baseURL}${path}`;
+    return this.fetchWithCorsProxies(targetUrl);
+  }
+
   // Obtener cotización en tiempo real
   async getQuote(symbol) {
-    try {
-      const cacheKey = `quote_${symbol}`;
-      const cachedData = this.getFromCache(cacheKey);
-      if (cachedData) {
-        console.log(`📦 Yahoo Finance - Cache hit para ${symbol}`);
-        return cachedData;
-      }
+    const cacheKey = `quote_${symbol}`;
+    const QUOTE_TTL = 4 * 60 * 60 * 1000; // 4 horas
 
+    // Nivel 1: cache en memoria
+    const memCached = this.getFromCache(cacheKey, QUOTE_TTL);
+    if (memCached) {
+      console.log(`📦 [MEM] Quote para ${symbol} desde caché en memoria`);
+      return memCached;
+    }
+
+    // Nivel 2: sessionStorage (sobrevive F5)
+    const sessionCached = this.getFromSessionCache(cacheKey, QUOTE_TTL);
+    if (sessionCached) {
+      console.log(`📦 [SESSION] Quote para ${symbol} desde sessionStorage`);
+      this.setCache(cacheKey, sessionCached);
+      return sessionCached;
+    }
+
+    try {
       await this.waitForRateLimit();
 
-      const response = await fetch(
-        `${this.baseURL}/chart/${symbol}?interval=1m&range=1d`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
+      const res = await this.fetchYahoo(`/chart/${symbol}?interval=1m&range=1d`);
+      const data = await res.json();
+
       if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
         throw new Error('No data available for this symbol');
       }
 
       const result = data.chart.result[0];
       const meta = result.meta;
-      
+
       const quote = {
         symbol: symbol,
         price: meta.regularMarketPrice || meta.previousClose,
@@ -78,9 +170,11 @@ class YahooFinanceService {
         timestamp: meta.regularMarketTime
       };
 
+      // Guardar en ambos niveles de caché
       this.setCache(cacheKey, quote);
+      this.setSessionCache(cacheKey, quote);
       console.log(`✅ Yahoo Finance - Precio obtenido para ${symbol}: $${quote.price}`);
-      
+
       return quote;
     } catch (error) {
       console.error(`❌ Yahoo Finance - Error fetching quote for ${symbol}:`, error);
@@ -89,26 +183,33 @@ class YahooFinanceService {
   }
 
   // Obtener datos históricos (candlesticks)
-  async getCandles(symbol, interval = '1d', range = '1mo') {
-    try {
-      const cacheKey = `candles_${symbol}_${interval}_${range}`;
-      const cachedData = this.getFromCache(cacheKey);
-      if (cachedData) {
-        return cachedData;
-      }
+  // Cache en dos niveles:
+  //  1. Memoria (in-process, ultra-rápido)
+  //  2. sessionStorage (sobrevive F5 dentro de la misma pestaña)
+  async getCandles(symbol, interval = '1d', range = '3mo') {
+    const cacheKey = `candles_${symbol}_${interval}_${range}`;
+    const SESSION_TTL = 12 * 60 * 60 * 1000; // 12 horas
 
+    // Nivel 1: cache en memoria
+    const memCached = this.getFromCache(cacheKey, SESSION_TTL);
+    if (memCached) {
+      console.log(`📦 [MEM] Candles para ${symbol} desde caché en memoria`);
+      return memCached;
+    }
+
+    // Nivel 2: sessionStorage (sobrevive F5)
+    const sessionCached = this.getFromSessionCache(cacheKey, SESSION_TTL);
+    if (sessionCached) {
+      console.log(`📦 [SESSION] Candles para ${symbol} desde sessionStorage`);
+      this.setCache(cacheKey, sessionCached); // re-poblar memoria
+      return sessionCached;
+    }
+
+    try {
       await this.waitForRateLimit();
 
-      const targetUrl = `${this.baseURL}/chart/${symbol}?interval=${interval}&range=${range}`;
-      
-      // Utilizamos corsproxy.io como proxy alternativo
-      const response = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const res = await this.fetchYahoo(`/chart/${symbol}?interval=${interval}&range=${range}`);
+      const data = await res.json();
       
       if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
         throw new Error('No data available for this symbol');
@@ -127,7 +228,9 @@ class YahooFinanceService {
         volume: quotes.volume[index]
       }));
 
+      // Guardar en ambos niveles de caché
       this.setCache(cacheKey, candles);
+      this.setSessionCache(cacheKey, candles);
       
       return candles;
     } catch (error) {

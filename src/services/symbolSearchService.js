@@ -585,6 +585,7 @@ class SymbolSearchService {
         { symbol: 'CPER', name: 'United States Copper Index Fund', sector: 'ETF', macroCategory: 'Materias Primas', region: 'US', currency: 'USD', type: 'ETF' },
         { symbol: 'USO', name: 'United States Oil Fund', sector: 'ETF', macroCategory: 'Materias Primas', region: 'US', currency: 'USD', type: 'ETF' },
         { symbol: 'UNG', name: 'United States Natural Gas Fund', sector: 'ETF', macroCategory: 'Materias Primas', region: 'US', currency: 'USD', type: 'ETF' },
+              { symbol: 'SPCX', name: 'SpaceX', sector: 'Industrial', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       ];
     }
 

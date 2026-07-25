@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Map, Briefcase, ExternalLink } from 'lucide-react';
+import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Map, Briefcase, ExternalLink, Zap, X, Target, ChevronRight } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
@@ -64,6 +64,15 @@ const ScreenerPage = () => {
   const [groupMode, setGroupMode]   = useState('general'); // 'region' | 'sector' | 'general'
   const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
+  // ── Scan Rápido ──────────────────────────────────────────────────────────────
+  const [showScan, setShowScan]         = useState(false);
+  const [scanRegion, setScanRegion]     = useState('ALL');
+  const [scanSector, setScanSector]     = useState('ALL');
+  const [scanThreshold, setScanThreshold] = useState(1.0); // %
+  const [scanResults, setScanResults]   = useState([]);
+  const [scanRan, setScanRan]           = useState(false);
+  const [scanLoading, setScanLoading]   = useState(false);
+
   useEffect(() => { fetchScreenerData(false); }, []);
 
   const fetchScreenerData = useCallback(async (forceRefresh = false) => {
@@ -126,6 +135,47 @@ const ScreenerPage = () => {
   };
 
   const handleRefresh = () => fetchScreenerData(true);
+
+  // ── Ejecutar Scan Rápido ─────────────────────────────────────────────────────
+  const runQuickScan = useCallback(() => {
+    setScanLoading(true);
+    setScanRan(false);
+
+    // Pequeño timeout para que el spinner se vea
+    setTimeout(() => {
+      let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
+
+      if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
+      if (scanSector !== 'ALL') pool = pool.filter(s => s.sector === scanSector);
+
+      const results = pool
+        .filter(s => s.emaDistance !== null && Math.abs(s.emaDistance) <= scanThreshold)
+        .sort((a, b) => Math.abs(a.emaDistance) - Math.abs(b.emaDistance));
+
+      setScanResults(results);
+      setScanRan(true);
+      setScanLoading(false);
+    }, 300);
+  }, [stockData, scanRegion, scanSector, scanThreshold]);
+
+  // Sectores disponibles para el scan (según región seleccionada en el scan)
+  const scanSectors = useMemo(() => {
+    let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
+    if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
+    const unique = [...new Set(pool.map(s => s.sector).filter(Boolean))];
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [stockData, scanRegion]);
+
+  // Contar cuántos símbolos en el universo actual ya tienen EMA calculada
+  const emaReadyCount = useMemo(() => {
+    let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
+    if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
+    if (scanSector !== 'ALL') pool = pool.filter(s => s.sector === scanSector);
+    return {
+      ready: pool.filter(s => s.emaDistance !== null).length,
+      total: pool.length,
+    };
+  }, [stockData, scanRegion, scanSector]);
 
   const formatLastUpdate = () => {
     if (!lastUpdate) return null;
@@ -246,10 +296,16 @@ const ScreenerPage = () => {
             <Sub>Precios con caché inteligente · {visibleData.length} instrumentos</Sub>
           </TitleArea>
           <RefreshWrapper>
-            <RefreshBtn onClick={handleRefresh} disabled={loading}>
-              <RefreshCw size={14} className={loading ? 'spin' : ''} />
-              Actualizar
-            </RefreshBtn>
+            <HeaderBtns>
+              <RefreshBtn onClick={handleRefresh} disabled={loading}>
+                <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                Actualizar
+              </RefreshBtn>
+              <ScanBtn onClick={() => setShowScan(true)} disabled={loading}>
+                <Zap size={14} />
+                Scan Rápido
+              </ScanBtn>
+            </HeaderBtns>
             {lastUpdate && (
               <UpdateLabel><Clock size={10} />{formatLastUpdate()}</UpdateLabel>
             )}
@@ -414,6 +470,135 @@ const ScreenerPage = () => {
         )}
 
       </StyledContainer>
+
+      {/* ── Panel Scan Rápido ─────────────────────────────────── */}
+      {showScan && (
+        <ScanOverlay onClick={() => setShowScan(false)}>
+          <ScanPanel onClick={e => e.stopPropagation()}>
+
+            {/* Header del panel */}
+            <ScanPanelHeader>
+              <ScanPanelTitle>
+                <Zap size={18} color="#f59e0b" />
+                Scan Rápido — EMA 21
+              </ScanPanelTitle>
+              <ScanCloseBtn onClick={() => setShowScan(false)}>
+                <X size={18} />
+              </ScanCloseBtn>
+            </ScanPanelHeader>
+
+            <ScanBody>
+              {/* Descripción */}
+              <ScanDescription>
+                Filtra por País y Sector, luego busca acciones con distancia a EMA 21 dentro del umbral — zona de potencial punto de compra.
+              </ScanDescription>
+
+              {/* Filtro País */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><Globe size={12} /> País</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={scanRegion === 'ALL'} onClick={() => { setScanRegion('ALL'); setScanSector('ALL'); }}>
+                    Todos
+                  </Pill>
+                  {regions.map(r => (
+                    <Pill key={r} $active={scanRegion === r} onClick={() => { setScanRegion(r); setScanSector('ALL'); }}>
+                      <RegionFlag code={r} showName />
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
+
+              {/* Filtro Sector */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><Layers size={12} /> Sector</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={scanSector === 'ALL'} onClick={() => setScanSector('ALL')}>
+                    Todos
+                  </Pill>
+                  {scanSectors.map(s => (
+                    <Pill key={s} $active={scanSector === s} onClick={() => setScanSector(s)}>
+                      {s}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
+
+              {/* Umbral EMA */}
+              <ScanFilterBlock>
+                <ScanFilterLabel>
+                  <Target size={12} /> Distancia máx. EMA 21
+                  <ScanThresholdValue>±{scanThreshold.toFixed(1)}%</ScanThresholdValue>
+                </ScanFilterLabel>
+                <ScanSliderRow>
+                  <ScanSliderLabel>0.5%</ScanSliderLabel>
+                  <ScanSlider
+                    type="range"
+                    min="0.5" max="5" step="0.5"
+                    value={scanThreshold}
+                    onChange={e => setScanThreshold(parseFloat(e.target.value))}
+                  />
+                  <ScanSliderLabel>5%</ScanSliderLabel>
+                </ScanSliderRow>
+                <EmaReadyNote>
+                  {emaReadyCount.ready} de {emaReadyCount.total} acciones tienen EMA calculada en este universo
+                </EmaReadyNote>
+              </ScanFilterBlock>
+
+              {/* Botón ejecutar */}
+              <ScanRunBtn onClick={runQuickScan} disabled={scanLoading}>
+                {scanLoading
+                  ? <><RefreshCw size={15} className="spin" /> Escaneando...</>
+                  : <><Zap size={15} /> Ejecutar Scan</>}
+              </ScanRunBtn>
+
+              {/* Resultados */}
+              {scanRan && (
+                <ScanResultsSection>
+                  <ScanResultsHeader>
+                    <ScanResultsTitle>
+                      {scanResults.length > 0
+                        ? <>✅ {scanResults.length} acción{scanResults.length !== 1 ? 'es' : ''} cerca de EMA 21</>
+                        : <>❌ Sin resultados dentro de ±{scanThreshold}%</>}
+                    </ScanResultsTitle>
+                    {scanResults.length === 0 && emaReadyCount.ready < emaReadyCount.total && (
+                      <ScanResultsHint>
+                        {emaReadyCount.total - emaReadyCount.ready} acciones aún calculando EMA — volvé a scanear en unos segundos.
+                      </ScanResultsHint>
+                    )}
+                  </ScanResultsHeader>
+
+                  {scanResults.map(s => (
+                    <ScanResultRow key={s.symbol}>
+                      <ScanResultLeft>
+                        <ScanResultSymbol>{s.symbol}</ScanResultSymbol>
+                        <ScanResultName>{s.name}</ScanResultName>
+                        <ScanResultMeta>
+                          <RegionFlag code={s.region} showName={false} />
+                          {s.sector && s.sector !== 'General' && <ScanResultSector>{s.sector}</ScanResultSector>}
+                        </ScanResultMeta>
+                      </ScanResultLeft>
+                      <ScanResultRight>
+                        <ScanResultPrice>{s.price ? `$${s.price.toFixed(2)}` : '—'}</ScanResultPrice>
+                        <ScanEmaChip $pos={s.emaDistance >= 0} $close={Math.abs(s.emaDistance) < 0.5}>
+                          {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}% EMA21
+                        </ScanEmaChip>
+                        <ScanTVLink
+                          href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Ver en TradingView"
+                        >
+                          <ChevronRight size={14} />
+                        </ScanTVLink>
+                      </ScanResultRight>
+                    </ScanResultRow>
+                  ))}
+                </ScanResultsSection>
+              )}
+            </ScanBody>
+          </ScanPanel>
+        </ScanOverlay>
+      )}
     </Layout>
   );
 };
@@ -454,6 +639,8 @@ const Sub = styled.p`color:#475569;font-size:.85rem;margin:0;`;
 
 const RefreshWrapper = styled.div`display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;`;
 
+const HeaderBtns = styled.div`display:flex;gap:.5rem;align-items:center;`;
+
 const RefreshBtn = styled.button`
   display:flex;align-items:center;gap:.4rem;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
@@ -462,6 +649,315 @@ const RefreshBtn = styled.button`
   &:hover{background:rgba(255,255,255,.1);}
   &:disabled{opacity:.5;cursor:not-allowed;}
   .spin{animation:${spin} 1s linear infinite;}
+`;
+
+const ScanBtn = styled.button`
+  display:flex;align-items:center;gap:.4rem;
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.15));
+  border: 1px solid rgba(245,158,11,0.35);
+  color: #f59e0b;
+  padding:.4rem .9rem;border-radius:8px;font-size:.85rem;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  &:hover{
+    background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(234,88,12,0.25));
+    border-color: rgba(245,158,11,0.6);
+    box-shadow: 0 0 12px rgba(245,158,11,0.2);
+  }
+  &:disabled{opacity:.5;cursor:not-allowed;}
+  .spin{animation:${spin} 1s linear infinite;}
+`;
+
+// ─── Scan Panel ───────────────────────────────────────────────────────────────
+const ScanOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const ScanPanel = styled.div`
+  width: min(480px, 100vw);
+  height: 100%;
+  background: #0f172a;
+  border-left: 1px solid rgba(245,158,11,0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.25s ease-out;
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+`;
+
+const ScanPanelHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: #111827;
+  flex-shrink: 0;
+`;
+
+const ScanPanelTitle = styled.h2`
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ScanCloseBtn = styled.button`
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  border-radius: 8px;
+  padding: 0.35rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all .2s;
+  &:hover { background: rgba(255,255,255,0.1); color: white; }
+`;
+
+const ScanBody = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+`;
+
+const ScanDescription = styled.p`
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.5;
+`;
+
+const ScanFilterBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ScanFilterLabel = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #334155;
+`;
+
+const ScanThresholdValue = styled.span`
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0;
+  text-transform: none;
+`;
+
+const ScanSliderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const ScanSliderLabel = styled.span`
+  font-size: 0.7rem;
+  color: #334155;
+  white-space: nowrap;
+`;
+
+const ScanSlider = styled.input`
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #f59e0b 0%,
+    #f59e0b ${p => ((p.value - 0.5) / 4.5) * 100}%,
+    rgba(255,255,255,0.1) ${p => ((p.value - 0.5) / 4.5) * 100}%,
+    rgba(255,255,255,0.1) 100%
+  );
+  outline: none;
+  cursor: pointer;
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #f59e0b;
+    cursor: pointer;
+    border: 2px solid #0f172a;
+    box-shadow: 0 0 6px rgba(245,158,11,0.5);
+  }
+`;
+
+const EmaReadyNote = styled.div`
+  font-size: 0.72rem;
+  color: #334155;
+  font-style: italic;
+`;
+
+const ScanRunBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Unbounded', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  .spin { animation: ${spin} 1s linear infinite; }
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(245,158,11,0.35);
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+`;
+
+const ScanResultsSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ScanResultsHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+`;
+
+const ScanResultsTitle = styled.div`
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e2e8f0;
+`;
+
+const ScanResultsHint = styled.div`
+  font-size: 0.72rem;
+  color: #475569;
+`;
+
+const ScanResultRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.15s;
+  &:hover {
+    background: rgba(245,158,11,0.05);
+    border-color: rgba(245,158,11,0.2);
+  }
+`;
+
+const ScanResultLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+`;
+
+const ScanResultSymbol = styled.span`
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: white;
+`;
+
+const ScanResultName = styled.span`
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+`;
+
+const ScanResultMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+`;
+
+const ScanResultSector = styled.span`
+  font-size: 0.65rem;
+  color: #334155;
+  background: rgba(255,255,255,0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+`;
+
+const ScanResultRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+`;
+
+const ScanResultPrice = styled.span`
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+`;
+
+const ScanEmaChip = styled.span`
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  background: ${p => p.$close
+    ? 'rgba(245,158,11,0.15)'
+    : p.$pos ? 'rgba(52,211,153,0.12)' : 'rgba(244,63,94,0.12)'};
+  color: ${p => p.$close ? '#f59e0b' : p.$pos ? '#34d399' : '#f43f5e'};
+  border: 1px solid ${p => p.$close
+    ? 'rgba(245,158,11,0.3)'
+    : p.$pos ? 'rgba(52,211,153,0.25)' : 'rgba(244,63,94,0.25)'};
+`;
+
+const ScanTVLink = styled.a`
+  color: #2962FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: rgba(41,98,255,0.1);
+  border-radius: 6px;
+  transition: all 0.2s;
+  margin-top: 0.1rem;
+  &:hover { background: rgba(41,98,255,0.2); transform: scale(1.1); }
 `;
 
 const UpdateLabel = styled.div`
