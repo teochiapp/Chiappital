@@ -243,11 +243,16 @@ class PriceService {
   // Limpiar cache manualmente si es necesario
   clearCache() {
     this.cache.clear();
-    // Limpiar también las entradas de localStorage para precios
+    // Limpiar también las entradas de localStorage para precios y sessionStorage para cotizaciones
     try {
       Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('price_')) {
+        if (key.startsWith('price_') || key.startsWith('ema21_')) {
           localStorage.removeItem(key);
+        }
+      });
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('yf_')) {
+          sessionStorage.removeItem(key);
         }
       });
     } catch (e) {}

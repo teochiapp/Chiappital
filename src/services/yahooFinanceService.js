@@ -211,15 +211,16 @@ class YahooFinanceService {
       const result = data.chart.result[0];
       const meta = result.meta;
 
+      const prevClose = meta.chartPreviousClose || meta.previousClose;
       const quote = {
         symbol: symbol,
-        price: meta.regularMarketPrice || meta.previousClose,
-        change: meta.regularMarketPrice - meta.previousClose,
-        changePercent: ((meta.regularMarketPrice - meta.previousClose) / meta.previousClose) * 100,
+        price: meta.regularMarketPrice || prevClose,
+        change: meta.regularMarketPrice - prevClose,
+        changePercent: ((meta.regularMarketPrice - prevClose) / prevClose) * 100,
         high: meta.regularMarketDayHigh,
         low: meta.regularMarketDayLow,
-        open: meta.regularMarketOpen || meta.previousClose,
-        previousClose: meta.previousClose,
+        open: meta.regularMarketOpen || prevClose,
+        previousClose: prevClose,
         timestamp: meta.regularMarketTime
       };
 
