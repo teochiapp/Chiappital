@@ -2,18 +2,28 @@ const readline = require('readline');
 
 // Lista de palabras
 const words = [
-  { word: 'Burrice', translation: 'Estupidez / Tontería', language: 'portugués', notes: 'Ex: Que burrice esquecer a chave dentro de casa!' },
-  { word: 'Franzino', translation: 'Enclenque / Debilucho', language: 'portugués', notes: 'Ex: Ele era um menino franzino, mas muito inteligente.' },
-  { word: 'Mole', translation: 'Blando / Suave', language: 'portugués', notes: 'Ex: O colchão dessa cama é muito mole.' },
-  { word: 'Quicar', translation: 'Rebotar', language: 'portugués', notes: 'Ex: A bola começou a quicar no chão.' },
-  { word: 'Folha', translation: 'Hoja (de árbol o papel)', language: 'portugués', notes: 'Ex: Pegue uma folha de papel e anote a senha.' },
-  { word: 'Gorjeta', translation: 'Propina', language: 'portugués', notes: 'Ex: Nós deixamos uma boa gorjeta para o garçom.' },
-  { word: 'Ofegava', translation: 'Jadeaba', language: 'portugués', notes: 'Ex: Ele ofegava depois de correr dez quilômetros.' },
-  { word: 'Lareira', translation: 'Chimenea / Hogar', language: 'portugués', notes: 'Ex: No inverno, gosto de ler perto da lareira.' },
-  { word: 'Dica', translation: 'Consejo / Pista / Tip', language: 'portugués', notes: 'Ex: Posso te dar uma dica sobre o livro?' },
-  { word: 'Nojento', translation: 'Asqueroso / Repugnante', language: 'portugués', notes: 'Ex: Esse inseto é muito nojento!' },
-  { word: 'Grasnaram', translation: 'Graznaron (aves)', language: 'portugués', notes: 'Ex: Os corvos grasnaram nas árvores escuras.' },
-  { word: 'Para cima', translation: 'Hacia arriba', language: 'portugués', notes: 'Ex: Olhe para cima, o céu está lindo!' }
+  { word: 'De graça', translation: 'Gratis', language: 'portugués', notes: 'Ex: Ele conseguiu os ingressos de graça.' },
+  { word: 'Ferrugem', translation: 'Óxido / Herrumbre', language: 'portugués', notes: 'Ex: A bicicleta velha estava coberta de ferrugem.' },
+  { word: 'Grudados', translation: 'Pegados', language: 'portugués', notes: 'Ex: Os dois amigos estão sempre grudados.' },
+  { word: 'Moleque', translation: 'Chico / Niño / Pibe', language: 'portugués', notes: 'Ex: Aquele moleque não para quieto!' },
+  { word: 'Lençóis', translation: 'Sábanas', language: 'portugués', notes: 'Ex: Preciso trocar os lençóis da cama.' },
+  { word: 'Reféns', translation: 'Rehenes', language: 'portugués', notes: 'Ex: Os ladrões fizeram três pessoas reféns.' },
+  { word: 'Bolhas', translation: 'Burbujas / Ampollas', language: 'portugués', notes: 'Ex: Meu sapato novo me deu bolhas nos pés.' },
+  { word: 'Remexeu', translation: 'Removió / Hurgó', language: 'portugués', notes: 'Ex: Ele remexeu na gaveta procurando as chaves.' },
+  { word: 'Estragado', translation: 'Arruinado / Echado a perder', language: 'portugués', notes: 'Ex: O leite ficou fora da geladeira e está estragado.' },
+  { word: 'Pombo', translation: 'Paloma', language: 'portugués', notes: 'Ex: Tinha um pombo na praça comendo migalhas.' },
+  { word: 'Carimbado', translation: 'Sellado', language: 'portugués', notes: 'Ex: Meu passaporte já foi carimbado.' },
+  { word: 'Barganhar', translation: 'Regatear', language: 'portugués', notes: 'Ex: Ele conseguiu barganhar um bom preço no mercado.' },
+  { word: 'Calçada', translation: 'Acera / Vereda', language: 'portugués', notes: 'Ex: Não ande na rua, use a calçada.' },
+  { word: 'Magrelo', translation: 'Flacucho', language: 'portugués', notes: 'Ex: Ele é muito alto e magrelo.' },
+  { word: 'Agourento', translation: 'Siniestro / De mal agüero', language: 'portugués', notes: 'Ex: Aquele corvo tem um olhar agourento.' },
+  { word: 'Vazou', translation: 'Se filtró / Se fugó', language: 'portugués', notes: 'Ex: A água do cano quebrado vazou pela casa toda.' },
+  { word: 'Rarefeito', translation: 'Enrarecido / Poco denso', language: 'portugués', notes: 'Ex: O ar na montanha é muito rarefeito.' },
+  { word: 'Degraus', translation: 'Escalones', language: 'portugués', notes: 'Ex: Cuidado ao descer os degraus da escada.' },
+  { word: 'Cuspir', translation: 'Escupir', language: 'portugués', notes: 'Ex: É falta de educação cuspir no chão.' },
+  { word: 'Jujuba', translation: 'Gomita (dulce)', language: 'portugués', notes: 'Ex: Eu adoro comer jujuba de morango.' },
+  { word: 'Espirra', translation: 'Estornuda / Salpica', language: 'portugués', notes: 'Ex: Ele tem alergia e espirra o tempo todo.' },
+  { word: 'Magoou', translation: 'Lastimó / Ofendió / Hirió', language: 'portugués', notes: 'Ex: O que você disse me magoou muito.' }
 ];
 
 const rl = readline.createInterface({

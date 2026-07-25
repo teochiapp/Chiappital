@@ -138,23 +138,19 @@ const ScreenerPage = () => {
 
   // Listas únicas de regiones y sectores
   const regions = useMemo(() => {
-    const data = groupMode === 'general' ? stockData : stockData.filter(s => s.type !== 'ETF');
+    const data = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     const unique = [...new Set(data.map(s => s.region).filter(Boolean))];
     return unique.sort();
-  }, [stockData, groupMode]);
+  }, [stockData]);
 
   const sectors = useMemo(() => {
-    const data = groupMode === 'general' ? stockData : stockData.filter(s => s.type !== 'ETF');
+    const data = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     const pool = filterRegion === 'ALL'
       ? data
       : data.filter(s => s.region === filterRegion);
     const unique = [...new Set(pool.map(s => s.sector).filter(Boolean))];
-    return unique.sort((a, b) => {
-      if (a === 'ETF') return -1;
-      if (b === 'ETF') return 1;
-      return a.localeCompare(b);
-    });
-  }, [stockData, filterRegion, groupMode]);
+    return unique.sort((a, b) => a.localeCompare(b));
+  }, [stockData, filterRegion]);
 
   // Datos filtrados + ordenados
   const visibleData = useMemo(() => {
@@ -162,7 +158,7 @@ const ScreenerPage = () => {
     
     // Si no estamos en General, excluimos los ETFs
     if (groupMode !== 'general') {
-      d = d.filter(s => s.type !== 'ETF');
+      d = d.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     }
     
     if (filterRegion !== 'ALL') d = d.filter(s => s.region === filterRegion);
@@ -345,7 +341,7 @@ const ScreenerPage = () => {
                         </Th>
                         <Th $w="auto">Nombre</Th>
                         {groupMode === 'region' ? (
-                          <Th $w="130px" $sort onClick={() => handleSort('sector')}>
+                          <Th $w="170px" $sort onClick={() => handleSort('sector')}>
                             Sector <SortIcon col="sector" />
                           </Th>
                         ) : (
@@ -371,7 +367,7 @@ const ScreenerPage = () => {
                           <Td $w="105px"><SymTxt>{s.symbol}</SymTxt></Td>
                           <Td $w="auto"><NameTxt>{s.name}</NameTxt></Td>
                           {groupMode === 'region' ? (
-                            <Td $w="130px"><SectorBadge>{s.sector}</SectorBadge></Td>
+                            <Td $w="170px"><SectorBadge>{s.sector}</SectorBadge></Td>
                           ) : (
                             <Td $w="90px"><RegionFlag code={s.region} showName /></Td>
                           )}
