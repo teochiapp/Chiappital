@@ -70,8 +70,8 @@ const ScreenerPage = () => {
 
   // ── Scan Rápido ──────────────────────────────────────────────────────────────
   const [showScan, setShowScan]         = useState(false);
-  const [scanRegion, setScanRegion]     = useState('ALL');
-  const [scanSector, setScanSector]     = useState('ALL');
+  const [selectedScanRegions, setSelectedScanRegions] = useState([]);
+  const [selectedScanSectors, setSelectedScanSectors] = useState([]);
   const [scanThreshold, setScanThreshold] = useState(1.0); // %
   const [scanResults, setScanResults]   = useState([]);
   const [scanRan, setScanRan]           = useState(false);
@@ -175,29 +175,29 @@ const ScreenerPage = () => {
     setTimeout(() => {
       let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
 
-      if (scanRegion !== 'ALL') {
-        pool = pool.filter(s => s.region === scanRegion);
-      } else {
-        // Filtrar para que la región de la acción sea alcista
-        pool = pool.filter(s => {
-          const mappedId = MAP_REGION[s.region];
-          if (!mappedId) return false;
-          const rData = countryData?.[mappedId] || {};
-          const trend = rData.dailyTrend || rData.trend || 'lateral';
-          return trend === 'alcista';
-        });
-      }
+      const isRegionSelected = selectedScanRegions.length > 0;
+      const isSectorSelected = selectedScanSectors.length > 0;
 
-      if (scanSector !== 'ALL') {
-        pool = pool.filter(s => s.sector === scanSector);
+      if (isRegionSelected && isSectorSelected) {
+        pool = pool.filter(s => selectedScanRegions.includes(s.region) || selectedScanSectors.includes(s.sector));
+      } else if (isRegionSelected) {
+        pool = pool.filter(s => selectedScanRegions.includes(s.region));
+      } else if (isSectorSelected) {
+        pool = pool.filter(s => selectedScanSectors.includes(s.sector));
       } else {
-        // Filtrar para que el sector de la acción sea alcista
+        // Ninguno seleccionado: filtrar los que sean de país alcista o sector alcista
         pool = pool.filter(s => {
-          const mappedId = MAP_SECTOR[s.sector];
-          if (!mappedId) return false;
-          const sData = sectorData?.[mappedId] || {};
-          const trend = sData.dailyTrend || sData.trend || 'lateral';
-          return trend === 'alcista';
+          const mappedRegId = MAP_REGION[s.region];
+          const rData = mappedRegId ? countryData?.[mappedRegId] || {} : {};
+          const rTrend = rData.dailyTrend || rData.trend || 'lateral';
+          const passRegion = rTrend === 'alcista';
+
+          const mappedSecId = MAP_SECTOR[s.sector];
+          const sData = mappedSecId ? sectorData?.[mappedSecId] || {} : {};
+          const sTrend = sData.dailyTrend || sData.trend || 'lateral';
+          const passSector = sTrend === 'alcista';
+
+          return passRegion || passSector;
         });
       }
 
@@ -209,7 +209,7 @@ const ScreenerPage = () => {
       setScanRan(true);
       setScanLoading(false);
     }, 300);
-  }, [stockData, scanRegion, scanSector, scanThreshold, countryData, sectorData]);
+  }, [stockData, selectedScanRegions, selectedScanSectors, scanThreshold, countryData, sectorData]);
 
   // ── MAPEOS LAB ──────────────────────────────────────────────────────────────
   const MAP_REGION = {
@@ -242,10 +242,9 @@ const ScreenerPage = () => {
     'Energy': 'xle',
   };
 
-  // Sectores disponibles para el scan (según región seleccionada en el scan y si son ALCISTAS)
+  // Sectores disponibles para el scan (independientes y solo ALCISTAS)
   const scanSectors = useMemo(() => {
     let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
-    if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
     
     // Sectores únicos en el universo actual
     const unique = [...new Set(pool.map(s => s.sector).filter(Boolean))];
@@ -260,7 +259,7 @@ const ScreenerPage = () => {
     });
 
     return bullSectors.sort((a, b) => a.localeCompare(b));
-  }, [stockData, scanRegion, sectorData]);
+  }, [stockData, sectorData]);
 
   // Regiones disponibles para el scan (solo las ALCISTAS)
   const scanRegions = useMemo(() => {
@@ -281,13 +280,35 @@ const ScreenerPage = () => {
   // Contar cuántos símbolos en el universo actual ya tienen EMA calculada
   const emaReadyCount = useMemo(() => {
     let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
-    if (scanRegion !== 'ALL') pool = pool.filter(s => s.region === scanRegion);
-    if (scanSector !== 'ALL') pool = pool.filter(s => s.sector === scanSector);
+    
+    const isRegionSelected = selectedScanRegions.length > 0;
+    const isSectorSelected = selectedScanSectors.length > 0;
+
+    if (isRegionSelected && isSectorSelected) {
+      pool = pool.filter(s => selectedScanRegions.includes(s.region) || selectedScanSectors.includes(s.sector));
+    } else if (isRegionSelected) {
+      pool = pool.filter(s => selectedScanRegions.includes(s.region));
+    } else if (isSectorSelected) {
+      pool = pool.filter(s => selectedScanSectors.includes(s.sector));
+    } else {
+      pool = pool.filter(s => {
+        const mappedRegId = MAP_REGION[s.region];
+        const rData = mappedRegId ? countryData?.[mappedRegId] || {} : {};
+        const passRegion = (rData.dailyTrend || rData.trend || 'lateral') === 'alcista';
+        
+        const mappedSecId = MAP_SECTOR[s.sector];
+        const sData = mappedSecId ? sectorData?.[mappedSecId] || {} : {};
+        const passSector = (sData.dailyTrend || sData.trend || 'lateral') === 'alcista';
+        
+        return passRegion || passSector;
+      });
+    }
+
     return {
       ready: pool.filter(s => s.emaDistance !== null).length,
       total: pool.length,
     };
-  }, [stockData, scanRegion, scanSector]);
+  }, [stockData, selectedScanRegions, selectedScanSectors, countryData, sectorData]);
 
   const formatLastUpdate = () => {
     if (!lastUpdate) return null;
@@ -610,11 +631,17 @@ const ScreenerPage = () => {
               <ScanFilterBlock>
                 <ScanFilterLabel><Globe size={12} /> País (Solo Alcistas)</ScanFilterLabel>
                 <PillGroup>
-                  <Pill $active={scanRegion === 'ALL'} onClick={() => { setScanRegion('ALL'); setScanSector('ALL'); }}>
+                  <Pill $active={selectedScanRegions.length === 0} onClick={() => setSelectedScanRegions([])}>
                     Todos
                   </Pill>
                   {scanRegions.map(r => (
-                    <Pill key={r} $active={scanRegion === r} onClick={() => { setScanRegion(r); setScanSector('ALL'); }}>
+                    <Pill key={r} $active={selectedScanRegions.includes(r)} onClick={() => {
+                      if (selectedScanRegions.includes(r)) {
+                        setSelectedScanRegions(selectedScanRegions.filter(x => x !== r));
+                      } else {
+                        setSelectedScanRegions([...selectedScanRegions, r]);
+                      }
+                    }}>
                       <RegionFlag code={r} showName />
                     </Pill>
                   ))}
@@ -626,11 +653,17 @@ const ScreenerPage = () => {
               <ScanFilterBlock>
                 <ScanFilterLabel><Layers size={12} /> Sector (Solo Alcistas)</ScanFilterLabel>
                 <PillGroup>
-                  <Pill $active={scanSector === 'ALL'} onClick={() => setScanSector('ALL')}>
+                  <Pill $active={selectedScanSectors.length === 0} onClick={() => setSelectedScanSectors([])}>
                     Todos
                   </Pill>
                   {scanSectors.map(s => (
-                    <Pill key={s} $active={scanSector === s} onClick={() => setScanSector(s)}>
+                    <Pill key={s} $active={selectedScanSectors.includes(s)} onClick={() => {
+                      if (selectedScanSectors.includes(s)) {
+                        setSelectedScanSectors(selectedScanSectors.filter(x => x !== s));
+                      } else {
+                        setSelectedScanSectors([...selectedScanSectors, s]);
+                      }
+                    }}>
                       {s}
                     </Pill>
                   ))}
