@@ -9,8 +9,9 @@ import { colors } from '../../styles/colors';
 import CreateAlertModal from './CreateAlertModal';
 
 const AlertsPage = () => {
-  const { alerts, loading, fetchAlerts } = useAlerts();
+  const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices } = useAlerts();
   
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [alertInitialData, setAlertInitialData] = useState(null);
 
@@ -20,6 +21,12 @@ const AlertsPage = () => {
   useEffect(() => {
     fetchAlerts();
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await checkAlertPrices();
+    setIsRefreshing(false);
+  };
 
   const openNewModal = () => {
     setAlertInitialData(null);
@@ -87,8 +94,8 @@ const AlertsPage = () => {
             <Sub>Notificaciones globales basadas en precios objetivo · Chequeo cada 15 min</Sub>
           </TitleArea>
           <HeaderBtns>
-            <RefreshBtn onClick={fetchAlerts} disabled={loading}>
-              <RefreshCw size={14} className={loading ? 'spin' : ''} />
+            <RefreshBtn onClick={handleRefresh} disabled={isRefreshing || loading}>
+              <RefreshCw size={14} className={isRefreshing ? 'spin' : ''} />
               Actualizar
             </RefreshBtn>
             <CreateBtn onClick={openNewModal}>
@@ -127,6 +134,7 @@ const AlertsPage = () => {
                         <th>Símbolo</th>
                         <th>Condición</th>
                         <th>Precio Objetivo</th>
+                        <th>Precio Actual</th>
                         <th>Notas</th>
                         <th>Estado</th>
                         <th style={{textAlign: 'right'}}>Acciones</th>
@@ -143,6 +151,11 @@ const AlertsPage = () => {
                             </ConditionBadge>
                           </Td>
                           <Td><PriceTxt>${parseFloat(a.target_price).toFixed(2)}</PriceTxt></Td>
+                          <Td>
+                            <PriceTxt $inactive={!currentPrices[a.symbol]}>
+                              {currentPrices[a.symbol] ? `$${parseFloat(currentPrices[a.symbol]).toFixed(2)}` : '—'}
+                            </PriceTxt>
+                          </Td>
                           <Td><NotesTxt>{a.notes || '—'}</NotesTxt></Td>
                           <Td>
                             <ToggleBtn $active={true} onClick={() => toggleActive(a)}>
@@ -176,6 +189,7 @@ const AlertsPage = () => {
                         <th>Símbolo</th>
                         <th>Condición</th>
                         <th>Precio Objetivo</th>
+                        <th>Precio Actual</th>
                         <th>Notas</th>
                         <th>Estado</th>
                         <th style={{textAlign: 'right'}}>Acciones</th>
@@ -192,6 +206,11 @@ const AlertsPage = () => {
                             </ConditionBadge>
                           </Td>
                           <Td><PriceTxt $inactive>${parseFloat(a.target_price).toFixed(2)}</PriceTxt></Td>
+                          <Td>
+                            <PriceTxt $inactive>
+                              {currentPrices[a.symbol] ? `$${parseFloat(currentPrices[a.symbol]).toFixed(2)}` : '—'}
+                            </PriceTxt>
+                          </Td>
                           <Td><NotesTxt>{a.notes || '—'}</NotesTxt></Td>
                           <Td>
                             <ToggleBtn $active={false} onClick={() => toggleActive(a)}>

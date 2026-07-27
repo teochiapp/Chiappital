@@ -11,6 +11,7 @@ export const AlertsProvider = ({ children }) => {
   const { user } = useStrapiAuth();
   const [alerts, setAlerts] = useState([]);
   const [triggeredAlerts, setTriggeredAlerts] = useState([]);
+  const [currentPrices, setCurrentPrices] = useState({});
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
 
@@ -43,6 +44,7 @@ export const AlertsProvider = ({ children }) => {
 
       // 3. Fetch prices for these symbols
       const pricesMap = await priceService.getMultiplePrices(symbols);
+      setCurrentPrices(prev => ({ ...prev, ...pricesMap }));
 
       // 4. Check conditions
       const newTriggered = [];
@@ -107,6 +109,8 @@ export const AlertsProvider = ({ children }) => {
       alerts,
       loading,
       fetchAlerts,
+      checkAlertPrices,
+      currentPrices,
       triggeredAlerts,
       dismissTriggeredAlert
     }}>
