@@ -10,6 +10,7 @@ import TradeLogsContainer from './containers/TradeLogsContainer';
 import MethodologyContainer from './containers/MethodologyContainer';
 import LabContainer from './containers/LabContainer';
 import ScreenerContainer from './containers/ScreenerContainer';
+import AlertsContainer from './containers/AlertsContainer';
 
 // Personal Hub
 import PersonalHub from './modules/personal/pages/PersonalHub';
@@ -33,6 +34,7 @@ import MediterraneanStatsPage from './modules/personal/pages/MediterraneanStatsP
 // Importar Contexto
 import { AccountProvider } from './context/AccountContext';
 import { LabProvider } from './context/LabContext';
+import { AlertsProvider } from './context/AlertsContext';
 
 // Componentes
 import Header from './components/common/Header';
@@ -40,6 +42,9 @@ import DebugConsole from './components/common/DebugConsole';
 
 // Personal Hub Layout
 import PersonalLayout from './modules/personal/components/PersonalLayout';
+
+// Global UI
+import MarketAlertModal from './components/Alerts/MarketAlertModal';
 
 // Componente para rutas protegidas
 import ProtectedRoute from './components/Auth/ProtectedRoute';
@@ -50,10 +55,12 @@ function App() {
             <GlobalStyles />
             <AccountProvider>
                 <LabProvider>
-                    <Router>
-                        <div className="App">
-                            <Header />
-                        <Routes>
+                    <AlertsProvider>
+                        <Router>
+                            <div className="App">
+                                <Header />
+                                <MarketAlertModal />
+                            <Routes>
                             <Route path="/login" element={<LoginContainer />} />
                             <Route
                                 path="/select-account"
@@ -103,6 +110,14 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
+                            <Route
+                                path="/alertas"
+                                element={
+                                    <ProtectedRoute>
+                                        <AlertsContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
 
                             {/* ─── Personal Hub (ruta oculta, acceso directo por URL) ─── */}
                             <Route
@@ -139,6 +154,7 @@ function App() {
                         <DebugConsole />
                     </div>
                     </Router>
+                    </AlertsProvider>
                 </LabProvider>
             </AccountProvider>
         </>

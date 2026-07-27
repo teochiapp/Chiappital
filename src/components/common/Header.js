@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 import AppLogo from './Logo';
@@ -71,6 +71,13 @@ const Header = () => {
         >
           <Search size={18} />
           Screener
+        </NavItem>
+        <NavItem
+          $active={location.pathname === '/alertas'}
+          onClick={() => navigate('/alertas')}
+        >
+          <BellRing size={18} />
+          Alertas
         </NavItem>
       </HeaderNav>
 

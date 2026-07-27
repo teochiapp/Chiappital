@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Map, Briefcase, ExternalLink, Zap, X, Target, ChevronRight } from 'lucide-react';
+import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Map, Briefcase, ExternalLink, Zap, X, Target, ChevronRight, BellRing } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
 import priceService from '../../services/priceService';
+import CreateAlertModal from '../Alerts/CreateAlertModal';
 import { colors, withOpacity } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
 
@@ -76,6 +77,15 @@ const ScreenerPage = () => {
   const [scanResults, setScanResults]   = useState([]);
   const [scanRan, setScanRan]           = useState(false);
   const [scanLoading, setScanLoading]   = useState(false);
+
+  // ── Alertas ───────────────────────────────────────────────────────────────
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [alertInitialData, setAlertInitialData] = useState(null);
+
+  const handleOpenAlert = (symbol, price) => {
+    setAlertInitialData({ symbol, currentPrice: price });
+    setShowAlertModal(true);
+  };
 
   useEffect(() => { fetchScreenerData(false); }, []);
 
@@ -547,7 +557,7 @@ const ScreenerPage = () => {
                         <Th $w="105px" $sort $right onClick={() => handleSort('emaDistance')}>
                           EMA21 <SortIcon col="emaDistance" />
                         </Th>
-                        <Th $w="65px" $center>Gráfico</Th>
+                        <Th $w="90px" $center>Acciones</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -582,15 +592,23 @@ const ScreenerPage = () => {
                               </ChangeBadge>
                             )}
                           </Td>
-                          <Td $w="65px" $center>
-                            <TVLink 
-                              href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              title="Ver en TradingView"
-                            >
-                              <SiTradingview size={15} />
-                            </TVLink>
+                          <Td $w="90px" $center>
+                            <ActionsWrap>
+                              <TVLink 
+                                href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                title="Ver en TradingView"
+                              >
+                                <SiTradingview size={15} />
+                              </TVLink>
+                              <AlertActionBtn 
+                                onClick={() => handleOpenAlert(s.symbol, s.price)}
+                                title="Crear Alerta"
+                              >
+                                <BellRing size={15} />
+                              </AlertActionBtn>
+                            </ActionsWrap>
                           </Td>
                         </Row>
                       ))}
@@ -730,14 +748,19 @@ const ScreenerPage = () => {
                         <ScanEmaChip $pos={s.emaDistance >= 0} $close={Math.abs(s.emaDistance) < 0.5}>
                           {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}% EMA21
                         </ScanEmaChip>
-                        <ScanTVLink
-                          href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Ver en TradingView"
-                        >
-                          <ChevronRight size={14} />
-                        </ScanTVLink>
+                        <ActionsWrap>
+                          <ScanTVLink
+                            href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Ver en TradingView"
+                          >
+                            <ChevronRight size={14} />
+                          </ScanTVLink>
+                          <AlertActionBtn style={{ padding: '4px', marginTop: '0.1rem' }} onClick={() => handleOpenAlert(s.symbol, s.price)} title="Crear Alerta">
+                            <BellRing size={14} />
+                          </AlertActionBtn>
+                        </ActionsWrap>
                       </ScanResultRight>
                     </ScanResultRow>
                   ))}
@@ -747,6 +770,16 @@ const ScreenerPage = () => {
           </ScanPanel>
         </ScanOverlay>
       )}
+
+      {/* ── Modal Nueva Alerta ────────────────────────────────────────── */}
+      <CreateAlertModal 
+        isOpen={showAlertModal} 
+        onClose={() => setShowAlertModal(false)}
+        initialData={alertInitialData}
+        onSuccess={() => {
+          // Opcionalmente recargar algo si fuera necesario
+        }}
+      />
     </Layout>
   );
 };
@@ -1362,6 +1395,30 @@ const ChangeBadge = styled.div`
 const MetaTxt = styled.span`color:#334155;font-size:.75rem;`;
 
 const Neutral = styled.span`color:#1e293b;font-size:.72rem;margin-left:2px;`;
+
+const ActionsWrap = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+`;
+
+const AlertActionBtn = styled.button`
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:hover {
+    background: rgba(245, 158, 11, 0.2);
+    transform: scale(1.1);
+  }
+`;
 
 const RegionFlagWrap = styled.div`
   display: flex;

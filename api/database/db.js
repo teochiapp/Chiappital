@@ -491,6 +491,23 @@ async function initializeDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  // Alertas de Mercado
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS market_alerts (
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      user_id       INT NOT NULL,
+      symbol        VARCHAR(20) NOT NULL,
+      target_price  DECIMAL(15, 6) NOT NULL,
+      condition_type ENUM('above', 'below') NOT NULL,
+      is_active     TINYINT(1) NOT NULL DEFAULT 1,
+      notes         TEXT DEFAULT NULL,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_user_alerts (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   console.log('✅ Base de datos inicializada correctamente');
 }
 

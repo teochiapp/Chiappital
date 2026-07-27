@@ -10,6 +10,7 @@ const balancesRouter = require('./routes/balances');
 const historicalMetricsRouter = require('./routes/historicalMetrics');
 const labRouter = require('./routes/lab');
 const personalRouter = require('./routes/personal');
+const alertsRouter = require('./routes/alerts');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -74,6 +75,9 @@ app.use('/api/lab', labRouter);
 
 // Personal Hub
 app.use('/api/personal', personalRouter);
+
+// Alerts
+app.use('/api/alerts', alertsRouter);
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
