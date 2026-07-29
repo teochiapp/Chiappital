@@ -10,6 +10,7 @@ const LS_KEYS = {
   sector: 'chiappital_sectorAnalysis',
   country: 'chiappital_countryAnalysis',
   checklist: 'chiappital_checklistHistory',
+  marketStrategy: 'chiappital_marketStrategy',
 };
 
 const lsGet = (key, fallback) => {
@@ -35,6 +36,7 @@ export const LabProvider = ({ children }) => {
   const [sectorData, setSectorData] = useState(() => lsGet(LS_KEYS.sector, {}));
   const [countryData, setCountryData] = useState(() => lsGet(LS_KEYS.country, {}));
   const [checklistHistory, setChecklistHistory] = useState(() => lsGet(LS_KEYS.checklist, []));
+  const [marketStrategy, setMarketStrategy] = useState(() => lsGet(LS_KEYS.marketStrategy, { text: '', lastUpdated: null }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -46,6 +48,7 @@ export const LabProvider = ({ children }) => {
       const serverSector = safeParse(data.sectorAnalysis, null);
       const serverCountry = safeParse(data.countryAnalysis, null);
       const serverChecklist = safeParse(data.checklistHistory, null);
+      const serverMarketStrategy = safeParse(data.marketStrategy, null);
 
       // Only update if server has data (don't overwrite local with empty)
       if (serverSector && Object.keys(serverSector).length > 0) {
@@ -59,6 +62,10 @@ export const LabProvider = ({ children }) => {
       if (serverChecklist && serverChecklist.length > 0) {
         setChecklistHistory(serverChecklist);
         lsSet(LS_KEYS.checklist, serverChecklist);
+      }
+      if (serverMarketStrategy) {
+        setMarketStrategy(serverMarketStrategy);
+        lsSet(LS_KEYS.marketStrategy, serverMarketStrategy);
       }
       setError(null);
     } catch (err) {
@@ -110,6 +117,17 @@ export const LabProvider = ({ children }) => {
     }
   };
 
+  const updateMarketStrategy = async (newStrategy) => {
+    setMarketStrategy(newStrategy);
+    lsSet(LS_KEYS.marketStrategy, newStrategy);
+    try {
+      await apiService.updateLabPreferences({ marketStrategy: newStrategy });
+    } catch (err) {
+      console.warn('Lab sync: market strategy guardado localmente, fallo en servidor:', err.message);
+      throw err;
+    }
+  };
+
   return (
     <LabContext.Provider
       value={{
@@ -119,6 +137,8 @@ export const LabProvider = ({ children }) => {
         updateCountryData,
         checklistHistory,
         updateChecklistHistory,
+        marketStrategy,
+        updateMarketStrategy,
         loading,
         error,
         refreshLabData: fetchLabData
