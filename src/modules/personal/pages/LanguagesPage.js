@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
-import { BookOpen, Plus, Search, Trash2, CheckCircle, HelpCircle, AlertCircle, RotateCcw, Globe } from 'lucide-react';
+import { BookOpen, Plus, Search, Trash2, CheckCircle, HelpCircle, AlertCircle, RotateCcw, Globe, Edit2 } from 'lucide-react';
 import { getUTC3DateString } from '../../../utils/helpers';
 
 const p = {
@@ -14,14 +14,19 @@ const p = {
 };
 
 const LanguagesPage = () => {
-  const { vocabulary, createVocabulary, reviewVocabulary, deleteVocabulary, loading } = usePersonalHub();
+  const { vocabulary, createVocabulary, updateVocabulary, reviewVocabulary, deleteVocabulary, loading } = usePersonalHub();
   const [activeTab, setActiveTab] = useState('review'); // 'review' | 'list'
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingWord, setEditingWord] = useState(null);
 
   // Form states
   const [newWord, setNewWord] = useState('');
   const [newTranslation, setNewTranslation] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [editWordText, setEditWordText] = useState('');
+  const [editTranslation, setEditTranslation] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   // Flashcard states
   const [isFlipped, setIsFlipped] = useState(false);
@@ -58,6 +63,26 @@ const LanguagesPage = () => {
     setNewTranslation('');
     setNewNotes('');
     setShowAddModal(false);
+  };
+
+  const handleEditClick = (word) => {
+    setEditingWord(word);
+    setEditWordText(word.word);
+    setEditTranslation(word.translation);
+    setEditNotes(word.notes || '');
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editWordText.trim() || !editTranslation.trim()) return;
+    await updateVocabulary(editingWord.id, {
+      word: editWordText,
+      translation: editTranslation,
+      notes: editNotes
+    });
+    setShowEditModal(false);
+    setEditingWord(null);
   };
 
   const handleDelete = async (id) => {
@@ -240,7 +265,10 @@ const LanguagesPage = () => {
                     <td>{word.translation}</td>
                     <td>{word.next_review ? String(word.next_review).split('T')[0].split('-').reverse().join('/') : ''}</td>
                     <td>
-                      <DelBtn onClick={() => handleDelete(word.id)}><Trash2 size={16} /></DelBtn>
+                      <ActionButtonsRow>
+                        <EditBtn onClick={() => handleEditClick(word)}><Edit2 size={16} /></EditBtn>
+                        <DelBtn onClick={() => handleDelete(word.id)}><Trash2 size={16} /></DelBtn>
+                      </ActionButtonsRow>
                     </td>
                   </tr>
                 ))}
@@ -275,6 +303,32 @@ const LanguagesPage = () => {
               <ModalActions>
                 <CancelBtn type="button" onClick={() => setShowAddModal(false)}>Cancelar</CancelBtn>
                 <SaveBtn type="submit">Guardar</SaveBtn>
+              </ModalActions>
+            </form>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
+      {showEditModal && (
+        <ModalOverlay onClick={() => setShowEditModal(false)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <ModalTitle>Editar Palabra</ModalTitle>
+            <form onSubmit={handleEditSubmit}>
+              <FormGroup>
+                <label>Palabra (Portugués)</label>
+                <Input value={editWordText} onChange={e => setEditWordText(e.target.value)} required autoFocus />
+              </FormGroup>
+              <FormGroup>
+                <label>Traducción (Español)</label>
+                <Input value={editTranslation} onChange={e => setEditTranslation(e.target.value)} required />
+              </FormGroup>
+              <FormGroup>
+                <label>Notas o Ejemplos (Opcional)</label>
+                <Input as="textarea" rows="2" value={editNotes} onChange={e => setEditNotes(e.target.value)} />
+              </FormGroup>
+              <ModalActions>
+                <CancelBtn type="button" onClick={() => setShowEditModal(false)}>Cancelar</CancelBtn>
+                <SaveBtn type="submit">Guardar Cambios</SaveBtn>
               </ModalActions>
             </form>
           </ModalContent>
@@ -637,6 +691,24 @@ const Table = styled.table`
     font-weight: 500;
     font-size: 0.9rem;
     background: rgba(255,255,255,0.02);
+  }
+`;
+
+const ActionButtonsRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const EditBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${p.primaryLight};
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  
+  &:hover {
+    background: rgba(96, 165, 250, 0.1);
   }
 `;
 

@@ -132,6 +132,12 @@ export const PersonalHubProvider = ({ children }) => {
     return data.word;
   };
 
+  const updateVocabulary = async (id, wordData) => {
+    const data = await personalApiService.updateVocabulary(id, wordData);
+    setVocabulary(prev => prev.map(w => w.id === id ? data.word : w));
+    return data.word;
+  };
+
   const reviewVocabulary = async (id, quality) => {
     const data = await personalApiService.reviewVocabulary(id, quality);
     setVocabulary(prev => prev.map(w => w.id === id ? data.word : w));
@@ -230,6 +236,7 @@ export const PersonalHubProvider = ({ children }) => {
         updateGoal,
         deleteGoal,
         createVocabulary,
+        updateVocabulary,
         reviewVocabulary,
         deleteVocabulary,
         updateFitnessPr,

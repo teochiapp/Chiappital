@@ -1,13 +1,44 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Map, Briefcase, ExternalLink, Zap, X, Target, ChevronRight, BellRing } from 'lucide-react';
+import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, Target, ChevronRight, BellRing } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
 import priceService from '../../services/priceService';
 import CreateAlertModal from '../Alerts/CreateAlertModal';
-import { colors, withOpacity } from '../../styles/colors';
+import { colors } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
+
+
+// ── MAPEOS LAB (constantes de módulo, fuera del componente para evitar re-creación) ─
+const MAP_REGION = {
+  'US': 'spy',
+  'AR': 'merval',
+  'BR': 'ewz',
+  'CN': 'fxi',
+  'EU': 'vgk',
+  'JP': 'ewj',
+  'Global': 'eem'
+};
+
+const MAP_SECTOR = {
+  'Software': 'igv',
+  'Semiconductores': 'smh',
+  'Criptomonedas': 'btc',
+  'Consumo Discrecional': 'xly',
+  'Comunicaciones': 'xlc',
+  'Financiero': 'xlf',
+  'Industrial': 'xli',
+  'Salud': 'xlv',
+  'Consumo Básico': 'xlp',
+  'Energía': 'xle',
+  'Servicios Públicos': 'xlu',
+  'Real Estate': 'xlre',
+  'Materiales': 'xlb',
+  'Technology': 'igv',
+  'Financial': 'xlf',
+  'Energy': 'xle',
+};
 
 // Nombres de las regiones
 const REGION_LABELS = {
@@ -87,6 +118,7 @@ const ScreenerPage = () => {
     setShowAlertModal(true);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchScreenerData(false); }, []);
 
   const fetchScreenerData = useCallback(async (forceRefresh = false) => {
@@ -95,14 +127,14 @@ const ScreenerPage = () => {
     try {
       if (forceRefresh) priceService.clearCache();
       const tickers = symbolsList.map(s => s.symbol);
-      const pricesMap = await priceService.getMultiplePrices(tickers);
+      const quotesMap = await priceService.getMultipleQuotes(tickers);
       const combined = symbolsList.map(item => {
         const symbolStr = item.symbol.toUpperCase();
-        const price = pricesMap[symbolStr] || 0;
-        
-        // Pseudo-random consistente para changePercent basado en el string (entre -5% y +5%)
-        const charSum = symbolStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const pseudoRandom = (charSum % 110) / 10 - 5.5; 
+        const quoteData = quotesMap[symbolStr];
+        const price = quoteData?.price || 0;
+        const changePercent = (quoteData && typeof quoteData.changePercent === 'number' && !isNaN(quoteData.changePercent))
+          ? quoteData.changePercent
+          : null; // null = sin dato real aún
         
         // Obtener de cache síncrona si existe
         const cachedEmaDistance = priceService.getCachedEma21Distance(item.symbol, price);
@@ -110,8 +142,8 @@ const ScreenerPage = () => {
         return {
           ...item,
           price,
-          changePercent: price ? pseudoRandom : 0,
-          change: price ? (price * pseudoRandom / 100) : 0,
+          changePercent,
+          change: (price && changePercent !== null) ? (price * changePercent / 100) : null,
           emaDistance: cachedEmaDistance,
         };
       });
@@ -220,37 +252,6 @@ const ScreenerPage = () => {
       setScanLoading(false);
     }, 300);
   }, [stockData, selectedScanRegions, selectedScanSectors, scanThreshold, countryData, sectorData]);
-
-  // ── MAPEOS LAB ──────────────────────────────────────────────────────────────
-  const MAP_REGION = {
-    'US': 'spy',
-    'AR': 'merval',
-    'BR': 'ewz',
-    'CN': 'fxi',
-    'EU': 'vgk',
-    'JP': 'ewj',
-    'Global': 'eem'
-  };
-
-  const MAP_SECTOR = {
-    'Software': 'igv',
-    'Semiconductores': 'smh',
-    'Criptomonedas': 'btc',
-    'Consumo Discrecional': 'xly',
-    'Comunicaciones': 'xlc',
-    'Financiero': 'xlf',
-    'Industrial': 'xli',
-    'Salud': 'xlv',
-    'Consumo Básico': 'xlp',
-    'Energía': 'xle',
-    'Servicios Públicos': 'xlu',
-    'Real Estate': 'xlre',
-    'Materiales': 'xlb',
-    // Si la db local los tiene en inglés o diferente
-    'Technology': 'igv', // fallback
-    'Financial': 'xlf',
-    'Energy': 'xle',
-  };
 
   // Sectores disponibles para el scan (independientes y solo ALCISTAS)
   const scanSectors = useMemo(() => {
@@ -576,10 +577,14 @@ const ScreenerPage = () => {
                             </PriceTxt>
                           </Td>
                           <Td $w="95px" $right>
-                            <ChangeBadge $pos={s.changePercent >= 0}>
-                              {s.changePercent >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                              {Math.abs(s.changePercent).toFixed(2)}%
-                            </ChangeBadge>
+                            {s.changePercent === null ? (
+                              <MetaTxt>—</MetaTxt>
+                            ) : (
+                              <ChangeBadge $pos={s.changePercent >= 0}>
+                                {s.changePercent >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                                {Math.abs(s.changePercent).toFixed(2)}%
+                              </ChangeBadge>
+                            )}
                           </Td>
                           <Td $w="105px" $right>
                             {s.emaDistance === null ? (
@@ -1374,10 +1379,6 @@ const SectorBadge = styled.span`
   letter-spacing: .03em;
 `;
 
-const RegionTxt = styled.span`
-  font-size: .8rem;
-  color: #64748b;
-`;
 
 const PriceTxt = styled.span`
   font-weight: 700;

@@ -2,28 +2,24 @@ const readline = require('readline');
 
 // Lista de palabras
 const words = [
-  { word: 'De graça', translation: 'Gratis', language: 'portugués', notes: 'Ex: Ele conseguiu os ingressos de graça.' },
-  { word: 'Ferrugem', translation: 'Óxido / Herrumbre', language: 'portugués', notes: 'Ex: A bicicleta velha estava coberta de ferrugem.' },
-  { word: 'Grudados', translation: 'Pegados', language: 'portugués', notes: 'Ex: Os dois amigos estão sempre grudados.' },
-  { word: 'Moleque', translation: 'Chico / Niño / Pibe', language: 'portugués', notes: 'Ex: Aquele moleque não para quieto!' },
-  { word: 'Lençóis', translation: 'Sábanas', language: 'portugués', notes: 'Ex: Preciso trocar os lençóis da cama.' },
-  { word: 'Reféns', translation: 'Rehenes', language: 'portugués', notes: 'Ex: Os ladrões fizeram três pessoas reféns.' },
-  { word: 'Bolhas', translation: 'Burbujas / Ampollas', language: 'portugués', notes: 'Ex: Meu sapato novo me deu bolhas nos pés.' },
-  { word: 'Remexeu', translation: 'Removió / Hurgó', language: 'portugués', notes: 'Ex: Ele remexeu na gaveta procurando as chaves.' },
-  { word: 'Estragado', translation: 'Arruinado / Echado a perder', language: 'portugués', notes: 'Ex: O leite ficou fora da geladeira e está estragado.' },
-  { word: 'Pombo', translation: 'Paloma', language: 'portugués', notes: 'Ex: Tinha um pombo na praça comendo migalhas.' },
-  { word: 'Carimbado', translation: 'Sellado', language: 'portugués', notes: 'Ex: Meu passaporte já foi carimbado.' },
-  { word: 'Barganhar', translation: 'Regatear', language: 'portugués', notes: 'Ex: Ele conseguiu barganhar um bom preço no mercado.' },
-  { word: 'Calçada', translation: 'Acera / Vereda', language: 'portugués', notes: 'Ex: Não ande na rua, use a calçada.' },
-  { word: 'Magrelo', translation: 'Flacucho', language: 'portugués', notes: 'Ex: Ele é muito alto e magrelo.' },
-  { word: 'Agourento', translation: 'Siniestro / De mal agüero', language: 'portugués', notes: 'Ex: Aquele corvo tem um olhar agourento.' },
-  { word: 'Vazou', translation: 'Se filtró / Se fugó', language: 'portugués', notes: 'Ex: A água do cano quebrado vazou pela casa toda.' },
-  { word: 'Rarefeito', translation: 'Enrarecido / Poco denso', language: 'portugués', notes: 'Ex: O ar na montanha é muito rarefeito.' },
-  { word: 'Degraus', translation: 'Escalones', language: 'portugués', notes: 'Ex: Cuidado ao descer os degraus da escada.' },
-  { word: 'Cuspir', translation: 'Escupir', language: 'portugués', notes: 'Ex: É falta de educação cuspir no chão.' },
-  { word: 'Jujuba', translation: 'Gomita (dulce)', language: 'portugués', notes: 'Ex: Eu adoro comer jujuba de morango.' },
-  { word: 'Espirra', translation: 'Estornuda / Salpica', language: 'portugués', notes: 'Ex: Ele tem alergia e espirra o tempo todo.' },
-  { word: 'Magoou', translation: 'Lastimó / Ofendió / Hirió', language: 'portugués', notes: 'Ex: O que você disse me magoou muito.' }
+  { word: 'Bambas', translation: 'Zapatillas', language: 'portugués', notes: 'Calzado. Ej: Ele comprou umas bambas novas.' },
+  { word: 'Abanou', translation: 'Sacudió', language: 'portugués', notes: 'Pasado de abanar. Ej: O cachorro abanou o rabo.' },
+  { word: 'Minha espada quase vai parar no eBay', translation: 'Mi espada casi termina en eBay', language: 'portugués', notes: 'Frase' },
+  { word: 'Lisonjeiro', translation: 'Halagador', language: 'portugués', notes: 'Ej: Foi um comentário muito lisonjeiro.' },
+  { word: 'Não farás cocô na cabeça da Arte', translation: 'No harás caca en la cabeza del Arte', language: 'portugués', notes: 'Frase' },
+  { word: 'Atordoado', translation: 'Aturdido', language: 'portugués', notes: 'Ej: Ele ficou atordoado com a notícia.' },
+  { word: 'Surdo', translation: 'Sordo', language: 'portugués', notes: 'Ej: Ele é surdo do ouvido esquerdo.' },
+  { word: 'Sou insultado por um esquilo', translation: 'Soy insultado por una ardilla', language: 'portugués', notes: 'Frase' },
+  { word: 'Coelho', translation: 'Conejo', language: 'portugués', notes: 'Ej: O coelho pulou para dentro do mato.' },
+  { word: 'Assobiou', translation: 'Silbó', language: 'portugués', notes: 'Pasado de assobiar. Ej: O vento assobiou durante a noite.' },
+  { word: 'Buraco', translation: 'Agujero', language: 'portugués', notes: 'Ej: Há um buraco enorme na rua.' },
+  { word: 'Caí em um Volkswagen', translation: 'Caí en un Volkswagen', language: 'portugués', notes: 'Frase' },
+  { word: 'Boatos', translation: 'Rumores', language: 'portugués', notes: 'Ej: Espalharam boatos falsos sobre ela.' },
+  { word: 'Freya é bonita! Ela tem gatos!', translation: '¡Freya es hermosa! ¡Tiene gatos!', language: 'portugués', notes: 'Frase' },
+  { word: 'Canela', translation: 'Espinilla', language: 'portugués', notes: 'Parte de la pierna. Ej: Machuquei a canela jogando.' },
+  { word: 'Gola', translation: 'Cuello', language: 'portugués', notes: 'De una prenda. Ej: A gola da camisa está suja.' },
+  { word: 'Empolgante', translation: 'Emocionante', language: 'portugués', notes: 'Ej: Foi uma aventura muito empolgante.' },
+  { word: 'Joalheiro', translation: 'Joyero', language: 'portugués', notes: 'Ej: O joalheiro consertou meu colar.' }
 ];
 
 const rl = readline.createInterface({
@@ -57,12 +53,32 @@ rl.question('Ingresa tu email de usuario (Chiappital):\n> ', (email) => {
       
       const token = authData.jwt;
       console.log('✅ Autenticación exitosa. Subiendo palabras...');
+      // 2. Fetch existing words
+      console.log('Obteniendo palabras existentes...');
+      const existingRes = await fetch(`${API_BASE_URL}/personal/vocabulary`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const existingData = await existingRes.json();
       
-      // 2. Subir palabras una por una
+      const existingList = Array.isArray(existingData) ? existingData : (existingData.data || []);
+      const existingMap = {};
+      existingList.forEach(item => {
+        const wordText = item.attributes ? item.attributes.word : item.word;
+        if (wordText) existingMap[wordText.toLowerCase()] = item.id;
+      });
+      
+      // 3. Subir o actualizar palabras una por una
       let successCount = 0;
+      let updateCount = 0;
+      
       for (const w of words) {
-        const res = await fetch(`${API_BASE_URL}/personal/vocabulary`, {
-          method: 'POST',
+        const existingId = existingMap[w.word.toLowerCase()];
+        
+        const url = existingId ? `${API_BASE_URL}/personal/vocabulary/${existingId}` : `${API_BASE_URL}/personal/vocabulary`;
+        const method = existingId ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, {
+          method,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -71,15 +87,16 @@ rl.question('Ingresa tu email de usuario (Chiappital):\n> ', (email) => {
         });
         
         if (res.ok) {
-          console.log(`✅ Agregada: ${w.word}`);
-          successCount++;
+          console.log(`✅ ${method === 'PUT' ? 'Actualizada' : 'Agregada'}: ${w.word}`);
+          if (method === 'PUT') updateCount++;
+          else successCount++;
         } else {
-          console.log(`❌ Error al agregar "${w.word}": HTTP ${res.status}`);
+          console.log(`❌ Error al ${method === 'PUT' ? 'actualizar' : 'agregar'} "${w.word}": HTTP ${res.status}`);
         }
       }
       
       console.log('------------------------------------------------');
-      console.log(`🎉 ¡Proceso finalizado! Se agregaron ${successCount} de ${words.length} palabras.`);
+      console.log(`🎉 ¡Proceso finalizado! Se agregaron ${successCount} y se actualizaron ${updateCount} palabras de un total de ${words.length}.`);
     } catch (error) {
       console.log('❌ Error en el proceso:', error.message);
     }

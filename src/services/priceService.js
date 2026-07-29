@@ -79,6 +79,7 @@ class PriceService {
       // Guardar precio mock en cache
       this.savePriceToCache(cacheKey, {
         price: mockPrice,
+        changePercent: null,
         timestamp: Date.now(),
         isMock: true
       });
@@ -95,14 +96,17 @@ class PriceService {
     if (!this.config.demoMode && this.config.provider === 'finnhub') {
       try {
         loggerService.info(`Solicitando precio de ${symbol} a Finnhub...`, 'API');
-        const price = await this.fetchFromFinnhub(symbol);
+        const finnhubData = await this.fetchFromFinnhub(symbol);
+        const price = finnhubData.price;
+        const changePercent = finnhubData.changePercent;
         this.savePriceToCache(cacheKey, {
           price,
+          changePercent: changePercent,
           timestamp: Date.now(),
           isDelayed: false
         });
         this.pendingRequests.delete(cacheKey);
-        loggerService.success(`[Finnhub] Precio ${symbol}: $${price}`, 'API');
+        loggerService.success(`[Finnhub] Precio ${symbol}: $${price}, cambio: ${changePercent?.toFixed(2) ?? 'N/A'}%`, 'API');
         return price;
       } catch (error) {
         lastError = error;
@@ -116,14 +120,18 @@ class PriceService {
       const quote = await yahooFinanceService.getQuote(symbol);
       if (quote?.price) {
         const price = quote.price;
+        const changePercent = (typeof quote.changePercent === 'number' && !isNaN(quote.changePercent))
+          ? quote.changePercent
+          : null;
         this.savePriceToCache(cacheKey, {
           price,
+          changePercent,
           timestamp: Date.now(),
           isDelayed: true
         });
         this.pendingRequests.delete(cacheKey);
-        loggerService.success(`[Yahoo] Precio ${symbol}: $${price} (Demorado)`, 'API');
-        return price;
+        loggerService.success(`[Yahoo] Precio ${symbol}: $${price}, cambio: ${changePercent?.toFixed(2) ?? 'N/A'}% (Demorado)`, 'API');
+        return price; // ← retorna solo el número, igual que antes
       }
     } catch (error) {
       lastError = error;
@@ -145,15 +153,17 @@ class PriceService {
 
     const data = await response.json();
     const price = extractPriceFromResponse(data, 'finnhub');
+    const changePercent = data.dp !== undefined && data.dp !== null ? parseFloat(data.dp) : null;
     
     if (!price || isNaN(price) || price <= 0) {
       throw new Error('Invalid price data');
     }
     
-    return price;
+    return { price, changePercent };
   }
 
   // Método para obtener múltiples precios de una vez
+  // Retorna un mapa { SYMBOL: precio_numérico } — compatible con todo el resto de la app
   async getMultiplePrices(symbols) {
     const promises = symbols.map(symbol => this.getCurrentPrice(symbol));
     const results = await Promise.allSettled(promises);
@@ -168,6 +178,112 @@ class PriceService {
     });
 
     return prices;
+  }
+
+  // Método para obtener múltiples precios + changePercent para el Screener
+  // Retorna { SYMBOL: { price, changePercent } }
+  async getMultipleQuotes(symbols) {
+    const quotes = {};
+    const uncachedSymbols = [];
+
+    symbols.forEach(symbol => {
+      const cacheKey = symbol.toUpperCase();
+      const cached = this.getPriceFromCache(cacheKey);
+      if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+        quotes[cacheKey] = { price: cached.price, changePercent: cached.changePercent ?? null };
+      } else {
+        uncachedSymbols.push(cacheKey);
+      }
+    });
+
+    if (uncachedSymbols.length === 0) return quotes;
+
+    const batchSize = 30; // Agrupamos símbolos para no exceder límites de URL
+    const TWELVE_DATA_API_KEY = '46895546a0ed453c80694154f07e3a11';
+
+    for (let i = 0; i < uncachedSymbols.length; i += batchSize) {
+      const batch = uncachedSymbols.slice(i, i + batchSize);
+      const symbolString = batch.join(',');
+
+      try {
+        const url = `https://api.twelvedata.com/quote?symbol=${symbolString}&apikey=${TWELVE_DATA_API_KEY}`;
+        
+        const executeTwelveDataBatch = async () => {
+          const now = Date.now();
+          const timeSinceLastCall = now - lastTwelveDataCall;
+          if (timeSinceLastCall < TWELVE_DATA_RATE_LIMIT_MS) {
+            const delay = TWELVE_DATA_RATE_LIMIT_MS - timeSinceLastCall;
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+          lastTwelveDataCall = Date.now();
+          loggerService.incrementTwelveData();
+          const response = await fetch(url);
+          return response.json();
+        };
+
+        twelveDataQueuePromise = twelveDataQueuePromise.then(executeTwelveDataBatch).catch(() => null);
+        const data = await twelveDataQueuePromise;
+
+        if (data && data.code === 429) {
+          loggerService.incrementTwelveDataLimit();
+          loggerService.error(`TwelveData API Limit (429) en screener para lote ${i}`, 'API');
+          await this._fallbackYahooForBatch(batch, quotes);
+          continue;
+        }
+
+        if (data) {
+          const isSingle = batch.length === 1;
+          const normalizedData = isSingle ? { [batch[0]]: data } : data;
+          
+          const missingSymbols = [];
+
+          batch.forEach(sym => {
+            const item = normalizedData[sym];
+            if (item && item.close) {
+              const price = parseFloat(item.close);
+              const changePercent = item.percent_change ? parseFloat(item.percent_change) : null;
+              this.savePriceToCache(sym, {
+                price, changePercent, timestamp: Date.now(), isDelayed: true
+              });
+              quotes[sym] = { price, changePercent };
+            } else {
+              // Si Twelve Data no encontró el símbolo (ej. tickers de BCBA con .BA), lo marcamos para fallback
+              missingSymbols.push(sym);
+            }
+          });
+          
+          if (missingSymbols.length > 0) {
+            await this._fallbackYahooForBatch(missingSymbols, quotes);
+          }
+        } else {
+          await this._fallbackYahooForBatch(batch, quotes);
+        }
+      } catch (e) {
+        loggerService.error(`Error TwelveData screener lote ${i}: ${e.message}`, 'API');
+        await this._fallbackYahooForBatch(batch, quotes);
+      }
+    }
+
+    return quotes;
+  }
+
+  async _fallbackYahooForBatch(batch, quotes) {
+    const promises = batch.map(async (symbol) => {
+      try {
+        const quote = await yahooFinanceService.getQuote(symbol);
+        if (quote?.price) {
+          const changePercent = (typeof quote.changePercent === 'number' && !isNaN(quote.changePercent))
+            ? quote.changePercent : null;
+          this.savePriceToCache(symbol, {
+            price: quote.price, changePercent, timestamp: Date.now(), isDelayed: true
+          });
+          quotes[symbol] = { price: quote.price, changePercent };
+          return;
+        }
+      } catch (e) {}
+      quotes[symbol] = { price: null, changePercent: null };
+    });
+    await Promise.allSettled(promises);
   }
 
   // Generar precio simulado para demo
@@ -433,4 +549,5 @@ class PriceService {
   }
 }
 
-export default new PriceService();
+const priceService = new PriceService();
+export default priceService;

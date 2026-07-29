@@ -378,6 +378,29 @@ router.put('/vocabulary/:id/review', async (req, res) => {
   }
 });
 
+// PUT /api/personal/vocabulary/:id
+router.put('/vocabulary/:id', async (req, res) => {
+  try {
+    const { word, translation, language, notes } = req.body;
+    const db = getPool();
+    const userId = req.user.id;
+
+    await db.execute(
+      'UPDATE vocabulary SET word = ?, translation = ?, language = ?, notes = ? WHERE id = ? AND user_id = ?',
+      [word, translation, language || 'portugués', notes || '', req.params.id, userId]
+    );
+
+    const [updatedRows] = await db.execute('SELECT * FROM vocabulary WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    if (updatedRows.length === 0) {
+      return res.status(404).json({ error: { message: 'Palabra no encontrada.' } });
+    }
+    res.json({ word: updatedRows[0] });
+  } catch (error) {
+    console.error('Error actualizando vocabulario:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
 // DELETE /api/personal/vocabulary/:id
 router.delete('/vocabulary/:id', async (req, res) => {
   try {

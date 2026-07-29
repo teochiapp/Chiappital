@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { BellRing, Plus, Edit2, Trash2, RefreshCw, AlertCircle, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { BellRing, Plus, Edit2, Trash2, RefreshCw, AlertCircle, ArrowUpRight, ArrowDownRight, Activity, RotateCcw } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import FeedbackModal from '../common/FeedbackModal';
 import { useAlerts } from '../../context/AlertsContext';
@@ -74,11 +74,24 @@ const AlertsPage = () => {
   const toggleActive = async (alertData) => {
     try {
       await alertService.updateAlert(alertData.id, {
+        symbol: alertData.symbol,
+        target_price: parseFloat(alertData.target_price),
+        condition_type: alertData.condition_type,
+        notes: alertData.notes,
         is_active: alertData.is_active ? 0 : 1
       });
       fetchAlerts();
     } catch (error) {
       console.error(error);
+      setTimeout(() => {
+        setFeedback({
+          isOpen: true,
+          type: 'error',
+          title: 'Error',
+          message: 'Error interno al actualizar la alerta.',
+          isConfirm: false
+        });
+      }, 300);
     }
   };
 
@@ -213,14 +226,15 @@ const AlertsPage = () => {
                           </Td>
                           <Td><NotesTxt>{a.notes || '—'}</NotesTxt></Td>
                           <Td>
-                            <ToggleBtn $active={false} onClick={() => toggleActive(a)}>
-                              Inactiva
-                            </ToggleBtn>
+                            <ReactivateBtn onClick={() => toggleActive(a)} title="Reactivar esta alerta">
+                              <RotateCcw size={12}/> Reactivar
+                            </ReactivateBtn>
                           </Td>
                           <Td style={{textAlign: 'right'}}>
                             <ActionBtns>
-                              <ActionBtn onClick={() => openEditModal(a)}><Edit2 size={14} /></ActionBtn>
-                              <ActionBtn $danger onClick={() => handleDelete(a.id)}><Trash2 size={14} /></ActionBtn>
+                              <ActionBtn $reactivate onClick={() => toggleActive(a)} title="Reactivar"><RotateCcw size={14} /></ActionBtn>
+                              <ActionBtn onClick={() => openEditModal(a)} title="Editar"><Edit2 size={14} /></ActionBtn>
+                              <ActionBtn $danger onClick={() => handleDelete(a.id)} title="Eliminar"><Trash2 size={14} /></ActionBtn>
                             </ActionBtns>
                           </Td>
                         </Row>
@@ -463,6 +477,28 @@ const ToggleBtn = styled.button`
   }
 `;
 
+const ReactivateBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.25);
+  color: #34d399;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(52,211,153,0.2);
+    border-color: rgba(52,211,153,0.45);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(52,211,153,0.15);
+  }
+  &:active { transform: translateY(0); }
+`;
+
 const ActionBtns = styled.div`
   display: flex;
   gap: 0.4rem;
@@ -472,15 +508,16 @@ const ActionBtns = styled.div`
 const ActionBtn = styled.button`
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.05);
-  color: ${p => p.$danger ? '#f43f5e' : '#94a3b8'};
+  color: ${p => p.$danger ? '#f43f5e' : p.$reactivate ? '#34d399' : '#94a3b8'};
   padding: .35rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all .2s;
   display: flex; align-items: center; justify-content: center;
   &:hover {
-    background: ${p => p.$danger ? 'rgba(244,63,94,.1)' : 'rgba(255,255,255,.1)'};
-    color: ${p => p.$danger ? '#f43f5e' : 'white'};
+    background: ${p => p.$danger ? 'rgba(244,63,94,.1)' : p.$reactivate ? 'rgba(52,211,153,.1)' : 'rgba(255,255,255,.1)'};
+    color: ${p => p.$danger ? '#f43f5e' : p.$reactivate ? '#34d399' : 'white'};
+    border-color: ${p => p.$reactivate ? 'rgba(52,211,153,.3)' : 'rgba(255,255,255,.1)'};
   }
 `;
 

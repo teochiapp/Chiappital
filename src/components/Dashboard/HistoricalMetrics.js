@@ -339,20 +339,20 @@ const HistoricalMetrics = () => {
                       <tbody>
                         {yearMetrics.map(metric => (
                           <tr key={metric.id} className={editingId === metric.id ? 'editing' : ''}>
-                            <td><strong>{metric.month_year.split(' ')[0]}</strong></td>
-                            <td>{renderCell(metric, 'usd_start', 'currency')}</td>
-                            <td>{renderCell(metric, 'deposits', 'currency')}</td>
-                            <td>{renderCell(metric, 'usd_end', 'currency')}</td>
-                            <td>{renderCell({ 
+                            <td data-label="Mes"><strong>{metric.month_year.split(' ')[0]}</strong></td>
+                            <td data-label="USD Inicio">{renderCell(metric, 'usd_start', 'currency')}</td>
+                            <td data-label="Aportes">{renderCell(metric, 'deposits', 'currency')}</td>
+                            <td data-label="USD Final">{renderCell(metric, 'usd_end', 'currency')}</td>
+                            <td data-label="Ganancia (USD)">{renderCell({ 
                               ...metric, 
                               profit: editingId === metric.id 
                                 ? (parseFloat(editForm.usd_end) || 0) - (parseFloat(editForm.usd_start) || 0)
                                 : metric.usd_end - metric.usd_start 
                             }, 'profit', 'profit')}</td>
-                            <td>{renderCell(metric, 'var_percent', 'percent')}</td>
-                            <td>{renderCell(metric, 'var_spy', 'percent')}</td>
-                            <td>{renderCell(metric, 'difference', 'percent')}</td>
-                            <td>
+                            <td data-label="Var (%)">{renderCell(metric, 'var_percent', 'percent')}</td>
+                            <td data-label="Var SPY (%)">{renderCell(metric, 'var_spy', 'percent')}</td>
+                            <td data-label="Diferencia">{renderCell(metric, 'difference', 'percent')}</td>
+                            <td data-label="Acciones">
                               {editingId === metric.id ? (
                                 <ActionButtons>
                                   <button className="save" onClick={() => handleSaveEdit(metric.id)}><Check size={16} /></button>
@@ -560,6 +560,53 @@ const StyledTable = styled.table`
   strong {
     color: ${colors.secondary};
     font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    tr {
+      display: flex;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      white-space: normal;
+      text-align: right;
+
+      &::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        text-align: left;
+        margin-right: 1rem;
+      }
+
+      &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        justify-content: flex-end;
+      }
+    }
   }
 `;
 

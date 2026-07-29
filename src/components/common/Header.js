@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 import AppLogo from './Logo';
@@ -11,6 +11,7 @@ const Header = () => {
   const location = useLocation();
   const { accountType } = useAccount();
   const { user, logout } = useStrapiAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // No renderizar el header en login, selección de cuenta o en el Personal Hub
   if (
@@ -32,49 +33,54 @@ const Header = () => {
         <AppLogo size="32px" fontSize="1.5rem" />
         <AccountBadge className={accountType}>
           {accountType === 'propia' ? <Wallet size={14} /> : <Users size={14} />}
-          {accountType === 'propia' ? 'Cuenta Propia' : 'Cuenta Compartida'}
+          <span className="badge-text">
+            {accountType === 'propia' ? 'Cuenta Propia' : 'Cuenta Compartida'}
+          </span>
         </AccountBadge>
+        <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </MobileMenuButton>
       </HeaderBrand>
 
-      <HeaderNav>
+      <HeaderNav $isOpen={isMobileMenuOpen}>
         <NavItem
           $active={location.pathname === '/dashboard'}
-          onClick={() => navigate('/dashboard')}
+          onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }}
         >
           <LayoutDashboard size={18} />
           Dashboard
         </NavItem>
         <NavItem
           $active={location.pathname === '/trades'}
-          onClick={() => navigate('/trades')}
+          onClick={() => { navigate('/trades'); setIsMobileMenuOpen(false); }}
         >
           <BookOpen size={18} />
           Portafolio
         </NavItem>
         <NavItem
           $active={location.pathname === '/lab'}
-          onClick={() => navigate('/lab')}
+          onClick={() => { navigate('/lab'); setIsMobileMenuOpen(false); }}
         >
           <FlaskConical size={18} />
           Lab
         </NavItem>
         <NavItem
           $active={location.pathname === '/metodologia'}
-          onClick={() => navigate('/metodologia')}
+          onClick={() => { navigate('/metodologia'); setIsMobileMenuOpen(false); }}
         >
           <GraduationCap size={18} />
           Métodología
         </NavItem>
         <NavItem
           $active={location.pathname === '/screener'}
-          onClick={() => navigate('/screener')}
+          onClick={() => { navigate('/screener'); setIsMobileMenuOpen(false); }}
         >
           <Search size={18} />
           Screener
         </NavItem>
         <NavItem
           $active={location.pathname === '/alertas'}
-          onClick={() => navigate('/alertas')}
+          onClick={() => { navigate('/alertas'); setIsMobileMenuOpen(false); }}
         >
           <BellRing size={18} />
           Alertas
@@ -154,6 +160,12 @@ const AccountBadge = styled.div`
     border: 1px solid rgba(16, 185, 129, 0.2);
   }
 
+  @media (max-width: 1200px) {
+    .badge-text {
+      display: none;
+    }
+  }
+
   @media (max-width: 350px) {
     font-size: 0.7rem;
     padding: 0.25rem 0.5rem;
@@ -162,27 +174,33 @@ const AccountBadge = styled.div`
 
 const HeaderNav = styled.nav`
   display: flex;
-  gap: 0.5rem;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  gap: 1.5rem; /* Más espacio entre items para notebook */
+  flex: 1;
+  justify-content: center;
 
-  @media (max-width: 768px) {
-    position: static;
-    transform: none;
-    justify-content: center;
-    flex-wrap: wrap;
+  @media (min-width: 1201px) {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  @media (max-width: 480px) {
-    width: 100%;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
-    padding-bottom: 2px;
+  @media (max-width: 1200px) {
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    display: ${props => props.$isOpen ? 'flex' : 'none'};
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: column;
+    background-color: #1e293b;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 999;
   }
 `;
 
@@ -195,7 +213,7 @@ const NavItem = styled.button`
   border: none;
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.88rem;
+  font-size: 0.8rem; /* Letra más chica para notebook */
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -207,15 +225,38 @@ const NavItem = styled.button`
     color: white;
   }
 
-  @media (max-width: 480px) {
-    font-size: 0.78rem;
+  @media (max-width: 1024px) {
+    font-size: 0.75rem;
     padding: 0.35rem 0.6rem;
   }
 
+  @media (max-width: 768px) {
+    font-size: 0.9rem; /* En mobile, el menú hamburguesa puede tener letra normal */
+    padding: 0.75rem 1rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   @media (max-width: 350px) {
-    font-size: 0.72rem;
-    padding: 0.3rem 0.5rem;
-    gap: 0.25rem;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+    gap: 0.5rem;
+  }
+`;
+
+const MobileMenuButton = styled.button`
+  display: none;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 `;
 

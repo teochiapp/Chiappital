@@ -50,6 +50,7 @@ const personalApiService = {
   // Vocabulary
   getVocabulary: () => request('GET', '/vocabulary'),
   createVocabulary: (wordData) => request('POST', '/vocabulary', wordData),
+  updateVocabulary: (id, wordData) => request('PUT', `/vocabulary/${id}`, wordData),
   reviewVocabulary: (id, quality) => request('PUT', `/vocabulary/${id}/review`, { quality }),
   deleteVocabulary: (id) => request('DELETE', `/vocabulary/${id}`),
 
