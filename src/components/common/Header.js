@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 import AppLogo from './Logo';
@@ -29,70 +29,81 @@ const Header = () => {
 
   return (
     <HeaderContainer>
-      <HeaderBrand>
-        <AppLogo size="32px" fontSize="1.5rem" />
-        <AccountBadge className={accountType}>
-          {accountType === 'propia' ? <Wallet size={14} /> : <Users size={14} />}
-          <span className="badge-text">
-            {accountType === 'propia' ? 'Cuenta Propia' : 'Cuenta Compartida'}
-          </span>
-        </AccountBadge>
-        <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </MobileMenuButton>
-      </HeaderBrand>
+      <HeaderTop>
+        <HeaderBrand>
+          <AppLogo size="32px" fontSize="1.5rem" />
+          <AccountBadge className={accountType}>
+            {accountType === 'propia' ? <Wallet size={14} /> : <Users size={14} />}
+            <span className="badge-text">
+              {accountType === 'propia' ? 'Cuenta Propia' : 'Cuenta Compartida'}
+            </span>
+          </AccountBadge>
+          <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </MobileMenuButton>
+        </HeaderBrand>
 
-      <HeaderNav $isOpen={isMobileMenuOpen}>
-        <NavItem
-          $active={location.pathname === '/dashboard'}
-          onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }}
-        >
-          <LayoutDashboard size={18} />
-          Dashboard
-        </NavItem>
-        <NavItem
-          $active={location.pathname === '/trades'}
-          onClick={() => { navigate('/trades'); setIsMobileMenuOpen(false); }}
-        >
-          <BookOpen size={18} />
-          Portafolio
-        </NavItem>
-        <NavItem
-          $active={location.pathname === '/lab'}
-          onClick={() => { navigate('/lab'); setIsMobileMenuOpen(false); }}
-        >
-          <FlaskConical size={18} />
-          Lab
-        </NavItem>
-        <NavItem
-          $active={location.pathname === '/metodologia'}
-          onClick={() => { navigate('/metodologia'); setIsMobileMenuOpen(false); }}
-        >
-          <GraduationCap size={18} />
-          Métodología
-        </NavItem>
-        <NavItem
-          $active={location.pathname === '/screener'}
-          onClick={() => { navigate('/screener'); setIsMobileMenuOpen(false); }}
-        >
-          <Search size={18} />
-          Screener
-        </NavItem>
-        <NavItem
-          $active={location.pathname === '/alertas'}
-          onClick={() => { navigate('/alertas'); setIsMobileMenuOpen(false); }}
-        >
-          <BellRing size={18} />
-          Alertas
-        </NavItem>
-      </HeaderNav>
+        <HeaderActions>
+          <SwitchButton onClick={() => navigate('/select-account')}>
+            <ArrowLeftRight size={18} />
+            Cambiar Cartera
+          </SwitchButton>
+        </HeaderActions>
+      </HeaderTop>
 
-      <HeaderActions>
-        <SwitchButton onClick={() => navigate('/select-account')}>
-          <ArrowLeftRight size={18} />
-          Cambiar Cartera
-        </SwitchButton>
-      </HeaderActions>
+      <HeaderBottom>
+        <HeaderNav $isOpen={isMobileMenuOpen}>
+          <NavItem
+            $active={location.pathname === '/dashboard'}
+            onClick={() => { navigate('/dashboard'); setIsMobileMenuOpen(false); }}
+          >
+            <LayoutDashboard size={18} />
+            Dashboard
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/trades'}
+            onClick={() => { navigate('/trades'); setIsMobileMenuOpen(false); }}
+          >
+            <BookOpen size={18} />
+            Portafolio
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/lab'}
+            onClick={() => { navigate('/lab'); setIsMobileMenuOpen(false); }}
+          >
+            <FlaskConical size={18} />
+            Lab
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/metodologia'}
+            onClick={() => { navigate('/metodologia'); setIsMobileMenuOpen(false); }}
+          >
+            <GraduationCap size={18} />
+            Métodología
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/screener'}
+            onClick={() => { navigate('/screener'); setIsMobileMenuOpen(false); }}
+          >
+            <Search size={18} />
+            Screener
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/macro'}
+            onClick={() => { navigate('/macro'); setIsMobileMenuOpen(false); }}
+          >
+            <Globe size={18} />
+            Macro
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/alertas'}
+            onClick={() => { navigate('/alertas'); setIsMobileMenuOpen(false); }}
+          >
+            <BellRing size={18} />
+            Alertas
+          </NavItem>
+        </HeaderNav>
+      </HeaderBottom>
     </HeaderContainer>
   );
 };
@@ -101,29 +112,42 @@ const Header = () => {
 
 const HeaderContainer = styled.header`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 2rem;
+  flex-direction: column;
   background-color: #1e293b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   color: white;
   position: sticky;
   top: 0;
   z-index: 1000;
-  gap: 0.5rem;
+`;
 
+const HeaderTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 2rem;
+  
   @media (max-width: 768px) {
-    flex-wrap: wrap;
     padding: 0.6rem 1rem;
-    gap: 0.5rem;
   }
 
   @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: stretch;
     padding: 0.5rem 0.75rem;
-    gap: 0.4rem;
+  }
+`;
+
+const HeaderBottom = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 2rem;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+  @media (max-width: 768px) {
+    padding: 0;
+    background-color: transparent;
+    border-top: none;
   }
 `;
 
@@ -174,18 +198,12 @@ const AccountBadge = styled.div`
 
 const HeaderNav = styled.nav`
   display: flex;
-  gap: 1.5rem; /* Más espacio entre items para notebook */
-  flex: 1;
+  gap: 1rem; /* Ahora hay más espacio disponible */
   justify-content: center;
-
-  @media (min-width: 1201px) {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+  width: 100%;
 
   @media (max-width: 1200px) {
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   @media (max-width: 768px) {
@@ -213,7 +231,7 @@ const NavItem = styled.button`
   border: none;
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
-  font-size: 0.8rem; /* Letra más chica para notebook */
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;

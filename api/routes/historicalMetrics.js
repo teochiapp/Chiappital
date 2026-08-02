@@ -34,15 +34,17 @@ router.put('/:id', async (req, res) => {
     const { usd_start, deposits, usd_end, var_percent, var_spy, difference } = req.body;
     const db = getPool();
 
-    // Verify ownership
+    // Verify ownership and get month_year
     const [existing] = await db.execute(
-      'SELECT id FROM historical_metrics WHERE id = ? AND user_id = ?',
+      'SELECT id, month_year FROM historical_metrics WHERE id = ? AND user_id = ?',
       [id, userId]
     );
 
     if (existing.length === 0) {
       return res.status(404).json({ error: { message: 'Metric not found or unauthorized' } });
     }
+
+    const monthYear = existing[0].month_year;
 
     await db.execute(
       `UPDATE historical_metrics 
@@ -58,6 +60,14 @@ router.put('/:id', async (req, res) => {
         id, 
         userId
       ]
+    );
+
+    // Update var_spy for the other account type for the same month
+    await db.execute(
+      `UPDATE historical_metrics 
+       SET var_spy = ?, difference = var_percent - ?
+       WHERE user_id = ? AND month_year = ? AND id != ?`,
+      [var_spy || 0, var_spy || 0, userId, monthYear, id]
     );
 
     res.json({ message: 'Metric updated successfully' });
@@ -89,11 +99,20 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: { message: 'El mes ya existe en esta cuenta.' } });
     }
 
+    // Check if there is an existing month in the other account to copy var_spy
+    const [otherAcc] = await db.execute(
+      'SELECT var_spy FROM historical_metrics WHERE user_id = ? AND month_year = ?',
+      [userId, month_year]
+    );
+    
+    const initialVarSpy = otherAcc.length > 0 ? otherAcc[0].var_spy : 0;
+    const initialDifference = 0 - initialVarSpy; // var_percent is 0
+
     const [result] = await db.execute(
       `INSERT INTO historical_metrics 
        (user_id, account_type, month_year, usd_start, deposits, usd_end, var_percent, var_spy, difference)
-       VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0)`,
-      [userId, account_type, month_year]
+       VALUES (?, ?, ?, 0, 0, 0, 0, ?, ?)`,
+      [userId, account_type, month_year, initialVarSpy, initialDifference]
     );
 
     const [newRow] = await db.execute('SELECT * FROM historical_metrics WHERE id = ?', [result.insertId]);

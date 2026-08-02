@@ -2,24 +2,25 @@ const readline = require('readline');
 
 // Lista de palabras
 const words = [
-  { word: 'Bambas', translation: 'Zapatillas', language: 'portugués', notes: 'Calzado. Ej: Ele comprou umas bambas novas.' },
-  { word: 'Abanou', translation: 'Sacudió', language: 'portugués', notes: 'Pasado de abanar. Ej: O cachorro abanou o rabo.' },
-  { word: 'Minha espada quase vai parar no eBay', translation: 'Mi espada casi termina en eBay', language: 'portugués', notes: 'Frase' },
-  { word: 'Lisonjeiro', translation: 'Halagador', language: 'portugués', notes: 'Ej: Foi um comentário muito lisonjeiro.' },
-  { word: 'Não farás cocô na cabeça da Arte', translation: 'No harás caca en la cabeza del Arte', language: 'portugués', notes: 'Frase' },
-  { word: 'Atordoado', translation: 'Aturdido', language: 'portugués', notes: 'Ej: Ele ficou atordoado com a notícia.' },
-  { word: 'Surdo', translation: 'Sordo', language: 'portugués', notes: 'Ej: Ele é surdo do ouvido esquerdo.' },
-  { word: 'Sou insultado por um esquilo', translation: 'Soy insultado por una ardilla', language: 'portugués', notes: 'Frase' },
-  { word: 'Coelho', translation: 'Conejo', language: 'portugués', notes: 'Ej: O coelho pulou para dentro do mato.' },
-  { word: 'Assobiou', translation: 'Silbó', language: 'portugués', notes: 'Pasado de assobiar. Ej: O vento assobiou durante a noite.' },
-  { word: 'Buraco', translation: 'Agujero', language: 'portugués', notes: 'Ej: Há um buraco enorme na rua.' },
-  { word: 'Caí em um Volkswagen', translation: 'Caí en un Volkswagen', language: 'portugués', notes: 'Frase' },
-  { word: 'Boatos', translation: 'Rumores', language: 'portugués', notes: 'Ej: Espalharam boatos falsos sobre ela.' },
-  { word: 'Freya é bonita! Ela tem gatos!', translation: '¡Freya es hermosa! ¡Tiene gatos!', language: 'portugués', notes: 'Frase' },
-  { word: 'Canela', translation: 'Espinilla', language: 'portugués', notes: 'Parte de la pierna. Ej: Machuquei a canela jogando.' },
-  { word: 'Gola', translation: 'Cuello', language: 'portugués', notes: 'De una prenda. Ej: A gola da camisa está suja.' },
-  { word: 'Empolgante', translation: 'Emocionante', language: 'portugués', notes: 'Ej: Foi uma aventura muito empolgante.' },
-  { word: 'Joalheiro', translation: 'Joyero', language: 'portugués', notes: 'Ej: O joalheiro consertou meu colar.' }
+  { word: 'Arfaram', translation: 'Jadearon', language: 'portugués', notes: 'Eles arfaram de cansaço após a corrida.' },
+  { word: 'Trapaceiros', translation: 'Tramposos', language: 'portugués', notes: 'Os trapaceiros foram expulsos do jogo.' },
+  { word: 'Enjoo', translation: 'Mareo', language: 'portugués', notes: 'Senti um forte enjoo no barco.' },
+  { word: 'Bode', translation: 'Chivo', language: 'portugués', notes: 'O bode fugiu do cercado.' },
+  { word: 'Enevoada', translation: 'Nublada', language: 'portugués', notes: 'A manhã estava muito enevoada.' },
+  { word: 'Rocha', translation: 'Roca', language: 'portugués', notes: 'Eles escalaram uma rocha enorme.' },
+  { word: 'Fazer manha', translation: 'Hacer berrinche', language: 'portugués', notes: 'A criança começou a fazer manha no mercado.' },
+  { word: 'Corça', translation: 'Cierva', language: 'portugués', notes: 'A corça correu para a floresta.' },
+  { word: 'Vermes', translation: 'Gusanos', language: 'portugués', notes: 'Havia vermes na maçã estragada.' },
+  { word: 'Exauriu', translation: 'Agotó', language: 'portugués', notes: 'O esforço exauriu todas as suas forças.' },
+  { word: 'Explosão de pó', translation: 'Explosión de polvo', language: 'portugués', notes: 'A explosão de pó destruiu a fábrica.' },
+  { word: 'Arrepio', translation: 'Escalofrío', language: 'portugués', notes: 'Senti um arrepio de frio.' },
+  { word: 'Gaiola', translation: 'Jaula', language: 'portugués', notes: 'O pássaro escapou da gaiola.' },
+  { word: 'Armadilha', translation: 'Trampa', language: 'portugués', notes: 'O animal caiu na armadilha.' },
+  { word: 'Engraçado', translation: 'Gracioso', language: 'portugués', notes: 'O filme era muito engraçado.' },
+  { word: 'Atingir', translation: 'Alcanzar', language: 'portugués', notes: 'Ele conseguiu atingir a meta.' },
+  { word: 'Surtou', translation: 'Enloqueció', language: 'portugués', notes: 'Ela surtou quando viu o problema.' },
+  { word: 'Vira-lata', translation: 'Perro callejero', language: 'portugués', notes: 'Adotei um cachorro vira-lata.' },
+  { word: 'Mané', translation: 'Tonto', language: 'portugués', notes: 'Não seja mané, ele está mentindo.' }
 ];
 
 const rl = readline.createInterface({

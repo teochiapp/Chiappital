@@ -285,6 +285,71 @@ class FinnhubService {
       throw error;
     }
   }
+
+  // Obtener noticias del mercado (general)
+  async getMarketNews(category = 'general') {
+    try {
+      const cacheKey = `market_news_${category}`;
+      const cachedData = this.getFromCache(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+
+      await this.waitForRateLimit();
+
+      const response = await fetch(
+        `${this.baseURL}/news?category=${category}&token=${this.apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      this.setCache(cacheKey, data);
+      this.cleanCache();
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching market news:', error);
+      throw error;
+    }
+  }
+
+  // Obtener calendario de earnings
+  async getEarningsCalendar(from, to) {
+    try {
+      const cacheKey = `earnings_${from}_${to}`;
+      const cachedData = this.getFromCache(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+
+      await this.waitForRateLimit();
+
+      const response = await fetch(
+        `${this.baseURL}/calendar/earnings?from=${from}&to=${to}&token=${this.apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // La API devuelve un objeto con { earningsCalendar: [...] }
+      const results = data.earningsCalendar || [];
+
+      this.setCache(cacheKey, results);
+      this.cleanCache();
+      
+      return results;
+    } catch (error) {
+      console.error('Error fetching earnings calendar:', error);
+      throw error;
+    }
+  }
 }
 
 // Crear instancia singleton

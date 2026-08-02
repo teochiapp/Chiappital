@@ -11,6 +11,7 @@ import MethodologyContainer from './containers/MethodologyContainer';
 import LabContainer from './containers/LabContainer';
 import ScreenerContainer from './containers/ScreenerContainer';
 import AlertsContainer from './containers/AlertsContainer';
+import MacroContainer from './containers/MacroContainer';
 
 // Personal Hub
 import PersonalHub from './modules/personal/pages/PersonalHub';
@@ -115,6 +116,14 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         <AlertsContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/macro"
+                                element={
+                                    <ProtectedRoute>
+                                        <MacroContainer />
                                     </ProtectedRoute>
                                 }
                             />
