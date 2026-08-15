@@ -159,27 +159,27 @@ router.delete('/habits/:id', async (req, res) => {
   }
 });
 
-// POST /api/personal/habits/:id/toggle — marcar/desmarcar completado para HOY
+// POST /api/personal/habits/:id/toggle — marcar/desmarcar completado
 router.post('/habits/:id/toggle', async (req, res) => {
   try {
     const db = getPool();
     const userId = req.user.id;
     const habitId = req.params.id;
-    const today = getUTC3DateString();
+    const targetDate = req.body.date || getUTC3DateString();
 
     const [existing] = await db.execute(
       'SELECT id FROM habit_completions WHERE habit_id = ? AND user_id = ? AND completed_on = ?',
-      [habitId, userId, today]
+      [habitId, userId, targetDate]
     );
 
     if (existing.length > 0) {
       await db.execute('DELETE FROM habit_completions WHERE habit_id = ? AND user_id = ? AND completed_on = ?',
-        [habitId, userId, today]);
-      res.json({ completed: false, date: today });
+        [habitId, userId, targetDate]);
+      res.json({ completed: false, date: targetDate });
     } else {
       await db.execute('INSERT INTO habit_completions (habit_id, user_id, completed_on) VALUES (?, ?, ?)',
-        [habitId, userId, today]);
-      res.json({ completed: true, date: today });
+        [habitId, userId, targetDate]);
+      res.json({ completed: true, date: targetDate });
     }
   } catch (error) {
     console.error('Error toggling hábito:', error);

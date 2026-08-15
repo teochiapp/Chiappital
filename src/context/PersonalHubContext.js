@@ -92,14 +92,14 @@ export const PersonalHubProvider = ({ children }) => {
     setHabits(prev => prev.filter(h => h.id !== id));
   };
 
-  const toggleHabit = async (id) => {
-    const data = await personalApiService.toggleHabit(id);
-    const today = data.date;
+  const toggleHabit = async (id, date) => {
+    const data = await personalApiService.toggleHabit(id, date);
+    const completedOn = data.date;
     setHabits(prev => prev.map(h => {
       if (h.id !== id) return h;
       const completions = data.completed
-        ? [...(h.completions || []), today]
-        : (h.completions || []).filter(d => d !== today);
+        ? [...(h.completions || []), completedOn]
+        : (h.completions || []).filter(d => d !== completedOn);
       return { ...h, completions };
     }));
     return data;

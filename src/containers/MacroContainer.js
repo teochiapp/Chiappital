@@ -33,10 +33,10 @@ const MacroContainer = () => {
         const targetEarningsDate = `${earningsDate.getFullYear()}-${pad(earningsDate.getMonth() + 1)}-${pad(earningsDate.getDate())}`;
 
         // 2. Fetch Forex (Yahoo)
-        const forexSymbols = ['EURUSD=X', 'JPY=X', 'BRL=X', 'CNY=X'];
+        const forexSymbols = ['EURUSD=X', 'JPY=X', 'BRL=X', 'CNY=X', 'KRW=X'];
 
         // 3. Fetch Macro (Yahoo) - incluye ETFs para ratios
-        const macroSymbols = ['^TNX', 'DX-Y.NYB', '^VIX', 'QQQ', 'SPY', 'IGV', 'SMH'];
+        const macroSymbols = ['^TNX', 'DX-Y.NYB', '^VIX', 'QQQ', 'SPY', 'IGV', 'SMH', 'IWM'];
         
         // Fetch Commodities (Yahoo)
         const commoditySymbols = ['CL=F', 'GC=F', 'SI=F', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
@@ -86,6 +86,7 @@ const MacroContainer = () => {
             case 'JPY=X': name = 'USD/JPY'; iso = 'jp'; break;
             case 'BRL=X': name = 'USD/BRL'; iso = 'br'; break;
             case 'CNY=X': name = 'USD/CNY'; iso = 'cn'; break;
+            case 'KRW=X': name = 'USD/KRW'; iso = 'kr'; break;
             default: name = item.symbol;
           }
 
@@ -158,6 +159,7 @@ const MacroContainer = () => {
 
         calculateRatio('QQQ', 'SPY', 'QQQ', 'SPY');
         calculateRatio('IGV', 'SMH', 'IGV', 'SMH');
+        calculateRatio('IWM', 'SPY', 'IWM', 'SPY');
 
         const goodKeywords = [
           // Bancos centrales

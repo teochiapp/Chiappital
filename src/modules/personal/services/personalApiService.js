@@ -39,7 +39,7 @@ const personalApiService = {
   createHabit: (habit) => request('POST', '/habits', habit),
   updateHabit: (id, habit) => request('PUT', `/habits/${id}`, habit),
   deleteHabit: (id) => request('DELETE', `/habits/${id}`),
-  toggleHabit: (id) => request('POST', `/habits/${id}/toggle`),
+  toggleHabit: (id, date) => request('POST', `/habits/${id}/toggle`, { date }),
 
   // Goals
   getGoals: () => request('GET', '/goals'),

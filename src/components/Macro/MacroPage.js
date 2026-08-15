@@ -96,6 +96,7 @@ const MacroPage = ({ data, loading, error }) => {
       case 'JPY=X': tvSymbol = 'USDJPY'; break;
       case 'BRL=X': tvSymbol = 'USDBRL'; break;
       case 'CNY=X': tvSymbol = 'USDCNY'; break;
+      case 'KRW=X': tvSymbol = 'USDKRW'; break;
       case 'ARS_OFICIAL': tvSymbol = 'FX_IDC:USDARS'; break;
       case 'ARS_MEP': tvSymbol = 'BCBA:MEP'; break;
       case 'ARS_CCL': tvSymbol = 'BCBA:CCL'; break;
@@ -104,6 +105,7 @@ const MacroPage = ({ data, loading, error }) => {
       case '^VIX': tvSymbol = 'VIX'; break;
       case 'QQQ/SPY': tvSymbol = 'QQQ/SPY'; break;
       case 'IGV/SMH': tvSymbol = 'IGV/SMH'; break;
+      case 'IWM/SPY': tvSymbol = 'IWM/SPY'; break;
       case 'CL=F': tvSymbol = 'CL1!'; break;
       case 'GC=F': tvSymbol = 'GOLD'; break;
       case 'SI=F': tvSymbol = 'SILVER'; break;

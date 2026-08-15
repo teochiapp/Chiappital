@@ -29,7 +29,21 @@ const HabitsPage = () => {
   const [formData, setFormData] = useState({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6] });
   const [calendarOffset, setCalendarOffset] = useState(0); // months back
 
+  const [selectedDateObj, setSelectedDateObj] = useState(new Date());
+  const selectedDateStr = getUTC3DateString(selectedDateObj);
   const today = getUTC3DateString();
+
+  const prevDay = () => {
+    const d = new Date(selectedDateObj);
+    d.setDate(d.getDate() - 1);
+    setSelectedDateObj(d);
+  };
+  const nextDay = () => {
+    const d = new Date(selectedDateObj);
+    d.setDate(d.getDate() + 1);
+    setSelectedDateObj(d);
+  };
+  const goToToday = () => setSelectedDateObj(new Date());
 
   const toggleDay = (val) => {
     setFormData(prev => {
@@ -140,7 +154,7 @@ const HabitsPage = () => {
   };
 
   const handleToggle = async (id) => {
-    await toggleHabit(id);
+    await toggleHabit(id, selectedDateStr);
   };
 
   if (loading) return <Container><LoadingText>Cargando...</LoadingText></Container>;
@@ -232,13 +246,27 @@ const HabitsPage = () => {
         </EmptyState>
       ) : (
         <>
+          <DateNav>
+            <DateNavBtn onClick={prevDay}><ChevronLeft size={20} /></DateNavBtn>
+            <DateNavLabel onClick={goToToday} $isToday={selectedDateStr === today}>
+              <Calendar size={16} />
+              {selectedDateStr === today ? 'Hoy' : selectedDateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+            </DateNavLabel>
+            <DateNavBtn onClick={nextDay} disabled={selectedDateStr >= today}><ChevronRight size={20} /></DateNavBtn>
+          </DateNav>
+
           {(() => {
-            const todayDayOfWeek = new Date().getDay();
-            const habitsToday = habits.filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(todayDayOfWeek));
-            const habitsOther = habits.filter(h => !(h.days_of_week || [0,1,2,3,4,5,6]).includes(todayDayOfWeek));
+            const selectedDayOfWeek = selectedDateObj.getDay();
+            const filteredHabits = habits.filter(h => {
+              if (!h.created_at) return true;
+              return selectedDateStr >= h.created_at.split('T')[0];
+            });
+
+            const habitsToday = filteredHabits.filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(selectedDayOfWeek));
+            const habitsOther = filteredHabits.filter(h => !(h.days_of_week || [0,1,2,3,4,5,6]).includes(selectedDayOfWeek));
             
             const renderHabitCard = (habit, isOther = false) => {
-              const completedToday = (habit.completions || []).includes(today);
+              const completedToday = (habit.completions || []).includes(selectedDateStr);
               const streak = getStreak(habit);
               const rate = getCompletionRate(habit);
               return (
@@ -817,6 +845,54 @@ const DaySwatch = styled.button`
   &:hover {
     border-color: ${p.primaryLight};
     color: white;
+  }
+`;
+
+const DateNav = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+`;
+
+const DateNavBtn = styled.button`
+  background: transparent;
+  border: none;
+  color: ${props => props.disabled ? '#475569' : '#94a3b8'};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  &:hover:not(:disabled) {
+    background: rgba(255,255,255,0.05);
+    color: white;
+  }
+`;
+
+const DateNavLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: ${props => props.$isToday ? p.primaryLight : 'white'};
+  text-transform: capitalize;
+  cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  min-width: 140px;
+  justify-content: center;
+  &:hover {
+    background: rgba(255,255,255,0.05);
   }
 `;
 
