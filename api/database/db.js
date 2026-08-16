@@ -508,6 +508,49 @@ async function initializeDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  // ─── Market Data Sync ────────────────────────────────────────────────────────
+
+  // Símbolos rastreados en background
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS tracked_symbols (
+      symbol VARCHAR(20) PRIMARY KEY,
+      name VARCHAR(100) DEFAULT NULL,
+      exchange VARCHAR(50) DEFAULT NULL,
+      market VARCHAR(50) DEFAULT NULL,
+      enabled TINYINT(1) DEFAULT 1,
+      priority INT DEFAULT 2,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Snapshot del mercado
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS market_snapshot (
+      symbol VARCHAR(20) PRIMARY KEY,
+      price DECIMAL(15, 6) DEFAULT NULL,
+      change_amount DECIMAL(15, 6) DEFAULT NULL,
+      change_percent DECIMAL(10, 4) DEFAULT NULL,
+      ema21_distance DECIMAL(10, 4) DEFAULT NULL,
+      ema_updated_at DATETIME DEFAULT NULL,
+      source VARCHAR(50) DEFAULT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      status ENUM('LIVE', 'STALE', 'ERROR', 'SYNCING') DEFAULT 'LIVE',
+      FOREIGN KEY (symbol) REFERENCES tracked_symbols(symbol) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN ema_updated_at DATETIME DEFAULT NULL AFTER ema21_distance;
+    `);
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar ema_updated_at:', error.message);
+    }
+  }
+
   console.log('✅ Base de datos inicializada correctamente');
 }
 

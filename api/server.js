@@ -11,6 +11,9 @@ const historicalMetricsRouter = require('./routes/historicalMetrics');
 const labRouter = require('./routes/lab');
 const personalRouter = require('./routes/personal');
 const alertsRouter = require('./routes/alerts');
+const marketRouter = require('./routes/market');
+const { runSync } = require('./services/marketSyncService');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -79,6 +82,9 @@ app.use('/api/personal', personalRouter);
 // Alerts
 app.use('/api/alerts', alertsRouter);
 
+// Market Data
+app.use('/api/market', marketRouter);
+
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: { message: `Ruta no encontrada: ${req.method} ${req.path}` } });
@@ -90,26 +96,48 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: { message: 'Error interno del servidor.' } });
 });
 
-// ─── Inicialización ───────────────────────────────────────────────────────────
-async function start() {
+// ─── START SERVER ─────────────────────────────────────────────────────────────
+async function startServer() {
   try {
-    console.log('🔌 Conectando a MySQL...');
+    logger.info('Server', 'Conectando a MySQL...');
     await initializeDatabase();
 
     app.listen(PORT, () => {
-      console.log(`🚀 SimpleTrade API escuchando en puerto ${PORT}`);
-      console.log(`   Entorno: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`   Health: http://localhost:${PORT}/api/health`);
+      logger.raw(`
+─────────────────────────────────────────────
+API SERVER
+─────────────────────────────────────────────
+Environment: ${process.env.NODE_ENV || 'development'}
+Port: ${PORT}
+Database: connected
+Market Sync: enabled
+Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+─────────────────────────────────────────────`);
+      
+      logger.info('Server', `Health: http://localhost:${PORT}/api/health`);
     });
+
+    // Iniciar scheduler de market data sync (cada 1 minuto)
+    setInterval(() => {
+      logger.debug('Scheduler', 'MarketSync scheduler tick');
+      runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
+    }, 60000); // 1 minuto
+    
+    // Ejecutar un sync inicial pasados unos segundos para no bloquear el arranque
+    setTimeout(() => {
+      runSync('startup').catch(e => logger.error('MarketSync', `Error in initial sync: ${e.message}`));
+    }, 5000);
+
   } catch (error) {
-    console.error('❌ Error al iniciar el servidor:');
-    console.error('   Código:', error.code || 'N/A');
-    console.error('   Mensaje:', error.message || String(error));
-    if (error.code === 'ECONNREFUSED' || error.code === 'ER_ACCESS_DENIED_ERROR') {
-      console.error('\n💡 Verifica el archivo api/.env: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
+    logger.error('Server', 'Error al iniciar el servidor:');
+    logger.error('Server', `Código: ${error.code || 'N/A'}`);
+    logger.error('Server', `Mensaje: ${error.message || String(error)}`);
+    
+    if (error.code === 'ECONNREFUSED' || error.message.includes('connect ECONNREFUSED')) {
+      logger.error('Server', '💡 Verifica el archivo api/.env: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
     }
     process.exit(1);
   }
 }
 
-start();
+startServer();

@@ -2,10 +2,9 @@ import { priceConfig, buildPriceUrl, extractPriceFromResponse } from '../config/
 import yahooFinanceService from './yahooFinanceService';
 import loggerService from './loggerService';
 
-// Variables globales para rate-limiting de Twelve Data
-let lastTwelveDataCall = 0;
-const TWELVE_DATA_RATE_LIMIT_MS = 8000; // 8 segundos entre llamadas para respetar 8/minuto
-let twelveDataQueuePromise = Promise.resolve();
+// Variables globales para estado de API
+let finnhubRateLimited = false;
+let finnhubRateLimitResetTime = 0;
 
 class PriceService {
   constructor() {
@@ -181,109 +180,50 @@ class PriceService {
   }
 
   // Método para obtener múltiples precios + changePercent para el Screener
-  // Retorna { SYMBOL: { price, changePercent } }
+  // Consume el snapshot del Backend
   async getMultipleQuotes(symbols) {
-    const quotes = {};
-    const uncachedSymbols = [];
-
-    symbols.forEach(symbol => {
-      const cacheKey = symbol.toUpperCase();
-      const cached = this.getPriceFromCache(cacheKey);
-      if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-        quotes[cacheKey] = { price: cached.price, changePercent: cached.changePercent ?? null };
-      } else {
-        uncachedSymbols.push(cacheKey);
-      }
-    });
-
-    if (uncachedSymbols.length === 0) return quotes;
-
-    const batchSize = 30; // Agrupamos símbolos para no exceder límites de URL
-    const TWELVE_DATA_API_KEY = '46895546a0ed453c80694154f07e3a11';
-
-    for (let i = 0; i < uncachedSymbols.length; i += batchSize) {
-      const batch = uncachedSymbols.slice(i, i + batchSize);
-      const symbolString = batch.join(',');
-
-      try {
-        const url = `https://api.twelvedata.com/quote?symbol=${symbolString}&apikey=${TWELVE_DATA_API_KEY}`;
-        
-        const executeTwelveDataBatch = async () => {
-          const now = Date.now();
-          const timeSinceLastCall = now - lastTwelveDataCall;
-          if (timeSinceLastCall < TWELVE_DATA_RATE_LIMIT_MS) {
-            const delay = TWELVE_DATA_RATE_LIMIT_MS - timeSinceLastCall;
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-          lastTwelveDataCall = Date.now();
-          loggerService.incrementTwelveData();
-          const response = await fetch(url);
-          return response.json();
-        };
-
-        twelveDataQueuePromise = twelveDataQueuePromise.then(executeTwelveDataBatch).catch(() => null);
-        const data = await twelveDataQueuePromise;
-
-        if (data && data.code === 429) {
-          loggerService.incrementTwelveDataLimit();
-          loggerService.error(`TwelveData API Limit (429) en screener para lote ${i}`, 'API');
-          await this._fallbackYahooForBatch(batch, quotes);
-          continue;
-        }
-
-        if (data) {
-          const isSingle = batch.length === 1;
-          const normalizedData = isSingle ? { [batch[0]]: data } : data;
-          
-          const missingSymbols = [];
-
-          batch.forEach(sym => {
-            const item = normalizedData[sym];
-            if (item && item.close) {
-              const price = parseFloat(item.close);
-              const changePercent = item.percent_change ? parseFloat(item.percent_change) : null;
-              this.savePriceToCache(sym, {
-                price, changePercent, timestamp: Date.now(), isDelayed: true
-              });
-              quotes[sym] = { price, changePercent };
-            } else {
-              // Si Twelve Data no encontró el símbolo (ej. tickers de BCBA con .BA), lo marcamos para fallback
-              missingSymbols.push(sym);
-            }
+    try {
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/snapshot`);
+      if (!response.ok) throw new Error('Error al obtener market snapshot');
+      
+      const data = await response.json();
+      const snapshot = data.snapshot || {};
+      
+      const quotes = {};
+      symbols.forEach(symbol => {
+        const cacheKey = symbol.toUpperCase();
+        if (snapshot[cacheKey]) {
+          quotes[cacheKey] = {
+            price: snapshot[cacheKey].price,
+            changePercent: snapshot[cacheKey].changePercent,
+            ema21Distance: snapshot[cacheKey].ema21Distance,
+            status: snapshot[cacheKey].status,
+            updatedAt: snapshot[cacheKey].updatedAt
+          };
+          // Actualizamos la caché local por las dudas
+          this.savePriceToCache(cacheKey, {
+            price: snapshot[cacheKey].price,
+            changePercent: snapshot[cacheKey].changePercent,
+            timestamp: Date.now(),
+            isDelayed: snapshot[cacheKey].source !== 'finnhub'
           });
-          
-          if (missingSymbols.length > 0) {
-            await this._fallbackYahooForBatch(missingSymbols, quotes);
-          }
         } else {
-          await this._fallbackYahooForBatch(batch, quotes);
+          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, status: 'ERROR', updatedAt: null };
         }
-      } catch (e) {
-        loggerService.error(`Error TwelveData screener lote ${i}: ${e.message}`, 'API');
-        await this._fallbackYahooForBatch(batch, quotes);
-      }
+      });
+      
+      return quotes;
+    } catch (error) {
+      loggerService.error(`Error obteniendo snapshot del backend: ${error.message}`, 'API');
+      
+      // Fallback básico si el backend falla: retornar mock o error
+      const quotes = {};
+      symbols.forEach(symbol => {
+         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, status: 'ERROR', updatedAt: null };
+      });
+      return quotes;
     }
-
-    return quotes;
-  }
-
-  async _fallbackYahooForBatch(batch, quotes) {
-    const promises = batch.map(async (symbol) => {
-      try {
-        const quote = await yahooFinanceService.getQuote(symbol);
-        if (quote?.price) {
-          const changePercent = (typeof quote.changePercent === 'number' && !isNaN(quote.changePercent))
-            ? quote.changePercent : null;
-          this.savePriceToCache(symbol, {
-            price: quote.price, changePercent, timestamp: Date.now(), isDelayed: true
-          });
-          quotes[symbol] = { price: quote.price, changePercent };
-          return;
-        }
-      } catch (e) {}
-      quotes[symbol] = { price: null, changePercent: null };
-    });
-    await Promise.allSettled(promises);
   }
 
   // Generar precio simulado para demo
@@ -428,122 +368,25 @@ class PriceService {
     return null;
   }
 
-  // Calcular la distancia porcentual a la EMA 21 usando histórico
-  // USANDO TWELVE DATA API (con fallback a Yahoo manual)
-  // IMPORTANTE: Límite de 800 llamadas/día en Twelve Data -> Cache estricto 12hs.
+  // Calcular la distancia porcentual a la EMA 21
+  // Ahora la consumimos de la cache local del Screener, o pedimos la foto instantánea.
   async getEma21Distance(symbol, currentPrice, forceYahoo = false) {
     if (!currentPrice) return null;
 
     const safeSymbol = symbol.toUpperCase();
-    const CACHE_KEY = `ema21_${safeSymbol}`;
-    const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 horas de cache
-    const TWELVE_DATA_API_KEY = '46895546a0ed453c80694154f07e3a11';
-
-    // 1. Revisar si tenemos la EMA guardada en localStorage
-    try {
-      const stored = localStorage.getItem(CACHE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Date.now() - parsed.timestamp < CACHE_TTL) {
-          const cachedEma = parsed.ema;
-          loggerService.incrementCacheHit();
-          loggerService.info(`[HIT] EMA 21 para ${safeSymbol} desde caché`, 'CACHE');
-          return ((currentPrice - cachedEma) / cachedEma) * 100;
-        }
-      }
-    } catch (e) {}
-
-    loggerService.incrementCacheMiss();
-
-    // 2. Intentar obtener EMA desde Twelve Data API (solo si no forzamos Yahoo)
-    let ema = null;
     
-    if (!forceYahoo) {
-      try {
-        // 2.a RATE LIMITING ESTRICTO (8 llamadas por minuto = 1 llamada cada 7.5s)
-        const executeTwelveDataFetch = async () => {
-          const now = Date.now();
-          const timeSinceLastCall = now - lastTwelveDataCall;
-          if (timeSinceLastCall < TWELVE_DATA_RATE_LIMIT_MS) {
-            const delay = TWELVE_DATA_RATE_LIMIT_MS - timeSinceLastCall;
-            loggerService.warn(`[Rate Limit] Esperando ${delay}ms para Twelve Data (${safeSymbol})...`, 'API');
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-          lastTwelveDataCall = Date.now();
-
-          loggerService.info(`Solicitando EMA 21 de ${safeSymbol} a TwelveData...`, 'API');
-          loggerService.incrementTwelveData();
-          
-          const tdUrl = `https://api.twelvedata.com/ema?symbol=${safeSymbol}&interval=1day&time_period=21&apikey=${TWELVE_DATA_API_KEY}`;
-          const tdResponse = await fetch(tdUrl, { signal: AbortSignal.timeout(15000) });
-          return await tdResponse.json();
-        };
-
-        // Encadenar en la cola global
-        twelveDataQueuePromise = twelveDataQueuePromise.then(executeTwelveDataFetch).catch(() => null);
-        const tdData = await twelveDataQueuePromise;
-
-        if (tdData && tdData.status === 'ok' && tdData.values && tdData.values.length > 0) {
-          ema = parseFloat(tdData.values[0].ema);
-          loggerService.success(`[TwelveData] EMA 21 para ${safeSymbol}: ${ema}`, 'API');
-        } else if (tdData && tdData.code === 429) {
-          loggerService.error(`TwelveData API Limit alcanzado (429) para ${safeSymbol}`, 'API');
-          loggerService.incrementTwelveDataLimit();
-        } else if (tdData) {
-          loggerService.warn(`TwelveData no devolvió datos válidos para ${safeSymbol}: ${tdData.message || 'Sin mensaje'}`, 'API');
-        }
-      } catch (e) {
-        loggerService.error(`Error TwelveData para ${safeSymbol}: ${e.message}`, 'API');
+    // Tratamos de ver si el backend snapshot ya nos lo trajo (al estar integrados con getMultipleQuotes)
+    // Para llamadas individuales (que no son del screener), podríamos hacer un fallback o solo retornar null
+    // y dejar que la UI use el valor.
+    // O hacer request al backend
+    try {
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/snapshot`);
+      const data = await response.json();
+      if (data.snapshot && data.snapshot[safeSymbol] && data.snapshot[safeSymbol].ema21Distance !== null) {
+         return parseFloat(data.snapshot[safeSymbol].ema21Distance);
       }
-    }
-
-    // 3. Fallback a Yahoo Finance (cálculo manual) si Twelve Data falló o límite alcanzado
-    if (ema === null) {
-      try {
-        loggerService.info(`[FALLBACK] Calculando EMA 21 manual con Yahoo para ${safeSymbol}...`, 'API');
-        // Pedimos 3 meses para tener al menos ~63 días hábiles
-        const candles = await yahooFinanceService.getCandles(symbol, '1d', '3mo');
-        
-        if (!candles || candles.length < 21) {
-          return null;
-        }
-
-        // Filtrar cierres válidos
-        const closes = candles.map(c => c.close).filter(c => c && !isNaN(c));
-        if (closes.length < 21) return null;
-
-        const N = 21;
-        const k = 2 / (N + 1);
-        
-        // SMA inicial como semilla
-        let sum = 0;
-        for (let i = 0; i < N; i++) {
-          sum += closes[i];
-        }
-        ema = sum / N;
-        
-        // Aplicar fórmula EMA
-        for (let i = N; i < closes.length; i++) {
-          ema = (closes[i] * k) + (ema * (1 - k));
-        }
-        loggerService.success(`[Yahoo Fallback] EMA 21 calculada manual para ${safeSymbol}: ${ema.toFixed(2)}`, 'API');
-      } catch (err) {
-        loggerService.error(`Fallo crítico: Fallback Yahoo falló para EMA de ${safeSymbol}: ${err.message}`, 'API');
-        return null;
-      }
-    }
-
-    // 4. Guardar resultado final en caché y retornar distancia
-    if (ema !== null && !isNaN(ema)) {
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          ema,
-          timestamp: Date.now()
-        }));
-      } catch (e) {}
-      
-      return ((currentPrice - ema) / ema) * 100;
-    }
+    } catch(e) {}
 
     return null;
   }

@@ -128,32 +128,33 @@ const ScreenerPage = () => {
       if (forceRefresh) priceService.clearCache();
       const tickers = symbolsList.map(s => s.symbol);
       const quotesMap = await priceService.getMultipleQuotes(tickers);
+      
+      let latestUpdate = null;
+
       const combined = symbolsList.map(item => {
         const symbolStr = item.symbol.toUpperCase();
         const quoteData = quotesMap[symbolStr];
         const price = quoteData?.price || 0;
         const changePercent = (quoteData && typeof quoteData.changePercent === 'number' && !isNaN(quoteData.changePercent))
           ? quoteData.changePercent
-          : null; // null = sin dato real aún
+          : null;
         
-        // Obtener de cache síncrona si existe
-        const cachedEmaDistance = priceService.getCachedEma21Distance(item.symbol, price);
+        if (quoteData?.updatedAt) {
+          const d = new Date(quoteData.updatedAt);
+          if (!latestUpdate || d > latestUpdate) latestUpdate = d;
+        }
         
         return {
           ...item,
           price,
           changePercent,
           change: (price && changePercent !== null) ? (price * changePercent / 100) : null,
-          emaDistance: cachedEmaDistance,
+          emaDistance: quoteData?.ema21Distance ?? null,
+          status: quoteData?.status || 'ERROR'
         };
       });
       setStockData(combined);
-      setLastUpdate(new Date());
-      
-      // Iniciar carga en segundo plano de EMA 21 para no bloquear UI
-      setTimeout(() => {
-        loadEmaDistances(combined);
-      }, 500);
+      setLastUpdate(latestUpdate || new Date());
       
     } catch (err) {
       console.error(err);
@@ -163,48 +164,6 @@ const ScreenerPage = () => {
     }
   }, [symbolsList]);
 
-  // Función para cargar las EMA faltantes en lotes paralelos (Chunking) usando Yahoo
-  const loadEmaDistances = async (dataList) => {
-    const missing = dataList.filter(s => s.emaDistance === null && s.price > 0);
-    // En local (dev) podemos usar lotes de 5 porque el proxy es local y robusto.
-    // En producción usamos lotes de 1 (secuencial) para que los proxies públicos no colapsen (Error 429).
-    const isDev = process.env.NODE_ENV === 'development';
-    const CHUNK_SIZE = isDev ? 5 : 1; 
-
-    for (let i = 0; i < missing.length; i += CHUNK_SIZE) {
-      const chunk = missing.slice(i, i + CHUNK_SIZE);
-      
-      const promises = chunk.map(async (item) => {
-        try {
-          // pasamos "true" al final para forzar Yahoo y saltar la cola de TwelveData
-          const emaDistance = await priceService.getEma21Distance(item.symbol, item.price, true);
-          return { symbol: item.symbol, emaDistance };
-        } catch (e) {
-          console.warn(`Error procesando EMA para ${item.symbol}`);
-          return { symbol: item.symbol, emaDistance: null };
-        }
-      });
-
-      const results = await Promise.all(promises);
-
-      // Actualizar el estado de a bloques
-      setStockData(prev => {
-        let next = [...prev];
-        results.forEach(res => {
-          if (res.emaDistance !== null) {
-            const idx = next.findIndex(s => s.symbol === res.symbol);
-            if (idx !== -1) {
-              next[idx] = { ...next[idx], emaDistance: res.emaDistance };
-            }
-          }
-        });
-        return next;
-      });
-      
-      // Pequeña pausa entre lotes para que el navegador respire y React renderice
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-  };
 
   const handleRefresh = () => fetchScreenerData(true);
 

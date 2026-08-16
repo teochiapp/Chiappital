@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Terminal, Copy, Trash2, X, RefreshCw, Layers } from 'lucide-react';
+import { Terminal, Copy, Trash2, X, RefreshCw } from 'lucide-react';
 import loggerService from '../../services/loggerService';
-import { colors, withOpacity } from '../../styles/colors';
+import { colors } from '../../styles/colors';
 
 const DebugConsole = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,8 +17,6 @@ const DebugConsole = () => {
   const [filterLevel, setFilterLevel] = useState('ALL');
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [copied, setCopied] = useState(false);
-  
-  const terminalEndRef = useRef(null);
 
   useEffect(() => {
     // Escuchar atajo de teclado Ctrl + Shift + D
@@ -41,11 +39,21 @@ const DebugConsole = () => {
     setLogs([...loggerService.logs]);
     setMetrics({ ...loggerService.metrics });
 
+    // Polling del backend logs
+    let pollingInterval;
+    if (isOpen) {
+      loggerService.fetchBackendLogs();
+      pollingInterval = setInterval(() => {
+        loggerService.fetchBackendLogs();
+      }, 3000);
+    }
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       unsubscribe();
+      if (pollingInterval) clearInterval(pollingInterval);
     };
-  }, []);
+  }, [isOpen]);
 
   // El scroll se mantiene al final nativamente gracias a flex-direction: column-reverse
 
@@ -146,6 +154,29 @@ const DebugConsole = () => {
               })
             )}
 
+            <PanelTitle style={{ marginTop: '1rem', color: '#38bdf8' }}>Backend Sync</PanelTitle>
+            {loggerService.backendMetrics ? (
+              <>
+                <MetricCard style={{ borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                  <MetricLabel>Finnhub Requests</MetricLabel>
+                  <MetricValue>{loggerService.backendMetrics.finnhubSuccess} / {loggerService.backendMetrics.finnhubRequests}</MetricValue>
+                </MetricCard>
+                <MetricCard style={{ borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                  <MetricLabel>Yahoo Fallback</MetricLabel>
+                  <MetricValue>{loggerService.backendMetrics.yahooSuccess} / {loggerService.backendMetrics.yahooRequests}</MetricValue>
+                </MetricCard>
+                <MetricCard style={{ borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                  <MetricLabel>Stale vs Fresh</MetricLabel>
+                  <MetricValue>{loggerService.backendMetrics.stale} stale</MetricValue>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '4px' }}>
+                    Fresh: {loggerService.backendMetrics.fresh} | {loggerService.backendMetrics.duration}s
+                  </div>
+                </MetricCard>
+              </>
+            ) : (
+              <NoDataText>Esperando metrics del server...</NoDataText>
+            )}
+
             {/* Acciones */}
             <ActionsContainer>
               <ActionButton onClick={handleCopyReport}>
@@ -192,11 +223,11 @@ const DebugConsole = () => {
                 <div style={{ color: '#475569', fontStyle: 'italic', fontSize: '0.85rem' }}>No hay logs que coincidan con los filtros seleccionados...</div>
               ) : (
                 filteredLogs.map(log => (
-                  <LogLine key={log.id} $level={log.level}>
+                  <LogLine key={log.id} $level={log.level} $isBackend={log.isBackend}>
                     <span className="time">[{log.timestamp}]</span>
                     <span className="level">[{log.level}]</span>
                     <span className="category">[{log.category}]</span>
-                    <span className="msg">{log.message}</span>
+                    <span className="msg">{log.isBackend ? '☁️ ' : ''}{log.message}</span>
                   </LogLine>
                 ))
               )}
@@ -459,9 +490,15 @@ const LogLine = styled.div`
     }};
   }
   
-  .category { color: ${colors.primary}; font-weight: 500; }
+  .category { color: ${props => props.$isBackend ? '#38bdf8' : colors.primary}; font-weight: 500; }
   .msg { 
     color: ${props => {
+      if (props.$isBackend) {
+         if (props.$level === 'SUCCESS') return '#bae6fd'; // azul muy claro
+         if (props.$level === 'WARNING') return '#fde68a';
+         if (props.$level === 'ERROR') return '#fca5a5';
+         return '#e0f2fe';
+      }
       if (props.$level === 'SUCCESS') return '#a7f3d0'; // verde clarito
       if (props.$level === 'WARNING') return '#fde68a'; // amarillo clarito
       if (props.$level === 'ERROR') return '#fca5a5'; // rojo clarito

@@ -334,25 +334,36 @@ class YahooFinanceService {
   async getBulkQuotes(symbols) {
     try {
       const results = [];
-      const chunkSize = 20; // Yahoo suele permitir hasta 200, usamos 20 por seguridad
+      const chunkSize = 50; // Yahoo suele permitir hasta 200, usamos 50 por seguridad
       
       for (let i = 0; i < symbols.length; i += chunkSize) {
         const chunk = symbols.slice(i, i + chunkSize);
         
         // Ajustar sufijos para Yahoo Finance si es necesario (ej: BMA -> BMA, YPF -> YPF)
-        // La mayoría de los tickers de USA y ADRs funcionan igual.
-        const query = chunk.join(',');
+        const mappedChunk = chunk.map(sym => this._mapSymbol(sym));
+        const query = mappedChunk.join(',');
         
         await this.waitForRateLimit();
         
-        const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${query}`);
+        // Usar fetchYahoo adaptado para v7
+        let response;
+        if (IS_DEV) {
+          const devUrl = `/api/yahoo-v7/quote?symbols=${query}`;
+          response = await fetch(devUrl, { signal: AbortSignal.timeout(10000) });
+        } else {
+          const targetUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${query}`;
+          response = await this.fetchWithCorsProxies(targetUrl);
+        }
         
-        if (response.ok) {
+        if (response && response.ok) {
           const data = await response.json();
           if (data.quoteResponse && data.quoteResponse.result) {
             data.quoteResponse.result.forEach(q => {
+              // Buscar el symbol original basado en el mapeado
+              const originalIndex = mappedChunk.indexOf(q.symbol);
+              const originalSymbol = originalIndex !== -1 ? chunk[originalIndex] : q.symbol;
               results.push({
-                symbol: q.symbol,
+                symbol: originalSymbol,
                 data: {
                   price: q.regularMarketPrice,
                   change: q.regularMarketChange,

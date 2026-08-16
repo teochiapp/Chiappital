@@ -134,6 +134,52 @@ class LoggerService {
       recentLogs: this.logs
     }, null, 2);
   }
+
+  // --- Backend Sync ---
+  async fetchBackendLogs() {
+    try {
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/logs`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.metrics) {
+           this.backendMetrics = data.metrics;
+        }
+        if (data.logs && Array.isArray(data.logs)) {
+           // Fusionar logs del backend en la memoria local, evitando duplicados por ID
+           const existingIds = new Set(this.logs.map(l => l.id));
+           let added = false;
+           // Los logs del backend vienen del más reciente al más antiguo.
+           // Los damos vuelta para insertarlos en el orden cronológico adecuado, 
+           // o simplemente iteramos y hacemos unshift/push según corresponda.
+           // La API ya los manda en unshift (reciente primero).
+           
+           data.logs.forEach(bLog => {
+             if (!existingIds.has(bLog.id)) {
+               this.logs.push({
+                 ...bLog,
+                 isBackend: true
+               });
+               added = true;
+             }
+           });
+
+           if (added) {
+             // Ordenamos de nuevo por id (si el id o timestamp sirviera, acá simplificamos)
+             // Como el timestamp es de texto y formato simple HH:MM:SS, podemos ordenar
+             this.logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+             
+             if (this.logs.length > this.maxLogs) {
+               this.logs = this.logs.slice(0, this.maxLogs);
+             }
+           }
+        }
+        this.notify();
+      }
+    } catch (error) {
+      console.warn('No se pudo conectar a los logs del backend', error);
+    }
+  }
 }
 
 const loggerService = new LoggerService();

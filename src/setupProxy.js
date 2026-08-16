@@ -55,4 +55,20 @@ module.exports = function (app) {
       },
     })
   );
+
+  app.use(
+    '/api/yahoo-v7',
+    createProxyMiddleware({
+      target: 'https://query1.finance.yahoo.com',
+      changeOrigin: true,
+      pathRewrite: { '^/api/yahoo-v7': '/v7/finance' },
+      on: {
+        proxyReq: (proxyReq, req) => {
+          Object.entries(YAHOO_HEADERS).forEach(([key, value]) => {
+            proxyReq.setHeader(key, value);
+          });
+        },
+      },
+    })
+  );
 };
