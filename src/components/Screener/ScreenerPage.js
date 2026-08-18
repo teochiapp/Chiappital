@@ -700,6 +700,7 @@ const ScreenerPage = () => {
                                       s.setupState === 'bullish_reversal_confirmed' ? '#8b5cf6' :
                                       s.setupState === 'early_bullish_reversal' ? '#d946ef' :
                                       s.setupState === 'bearish_trend' ? '#ef4444' :
+                                      s.setupState === 'lateral_trend' ? '#eab308' :
                                       '#94a3b8'
                                   }}
                                 >
