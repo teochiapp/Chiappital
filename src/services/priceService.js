@@ -198,6 +198,22 @@ class PriceService {
             price: snapshot[cacheKey].price,
             changePercent: snapshot[cacheKey].changePercent,
             ema21Distance: snapshot[cacheKey].ema21Distance,
+            weeklyRsi: snapshot[cacheKey].rsiWeekly,
+            weeklyRsiPrevious: snapshot[cacheKey].rsiPrevious,
+            weeklyRsiDelta: snapshot[cacheKey].rsiDelta,
+            weeklyMacd: snapshot[cacheKey].macdWeekly,
+            weeklyMacdSignal: snapshot[cacheKey].macdSignal,
+            weeklyMacdHist: snapshot[cacheKey].macdHist,
+            weeklyMacdPrev: snapshot[cacheKey].macdPrevWeekly,
+            weeklyMacdPrevSignal: snapshot[cacheKey].macdPrevSignal,
+            weeklyMacdPrevHist: snapshot[cacheKey].macdPrevHist,
+            drawdown52w: snapshot[cacheKey].drawdown52w,
+            rsValue: snapshot[cacheKey].rsValue,
+            rsPrevious: snapshot[cacheKey].rsPrevious,
+            rsState: snapshot[cacheKey].rsState,
+            setupState: snapshot[cacheKey].setupState,
+            setupVerdict: snapshot[cacheKey].setupVerdict,
+            setupFactors: snapshot[cacheKey].setupFactors,
             status: snapshot[cacheKey].status,
             updatedAt: snapshot[cacheKey].updatedAt
           };
@@ -209,7 +225,7 @@ class PriceService {
             isDelayed: snapshot[cacheKey].source !== 'finnhub'
           });
         } else {
-          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, status: 'ERROR', updatedAt: null };
+          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, status: 'ERROR', updatedAt: null };
         }
       });
       
@@ -220,7 +236,7 @@ class PriceService {
       // Fallback básico si el backend falla: retornar mock o error
       const quotes = {};
       symbols.forEach(symbol => {
-         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, status: 'ERROR', updatedAt: null };
+         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, status: 'ERROR', updatedAt: null };
       });
       return quotes;
     }

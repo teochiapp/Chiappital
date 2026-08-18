@@ -50,15 +50,26 @@ async function seedSymbols() {
 
   console.log(`🚀 Se encontraron ${uniqueSymbols.length} símbolos únicos para insertar.`);
 
+  const MAP_REGION = {
+    'US': 'SPY',
+    'AR': '^MERV',
+    'BR': 'EWZ',
+    'CN': 'FXI',
+    'EU': 'VGK',
+    'JP': 'EWJ',
+    'Global': null
+  };
+
   let inserted = 0;
   for (const sym of uniqueSymbols) {
     const exchange = sym.region === 'US' ? 'US' : 'BA'; // Simplificación
     const priority = (['SPY', 'QQQ', 'AAPL', 'MSFT', 'AMZN', 'NVDA', 'META', 'GOOGL', 'TSLA'].includes(sym.symbol)) ? 1 : 2;
+    const index_symbol = MAP_REGION[sym.region] || null;
 
     await db.execute(
-      `REPLACE INTO tracked_symbols (symbol, name, exchange, market, enabled, priority)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [sym.symbol.toUpperCase(), sym.name, exchange, 'Equity', 1, priority]
+      `REPLACE INTO tracked_symbols (symbol, name, exchange, market, enabled, priority, index_symbol)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [sym.symbol.toUpperCase(), sym.name, exchange, 'Equity', 1, priority, index_symbol]
     );
     inserted++;
   }

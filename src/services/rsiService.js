@@ -1,182 +1,91 @@
-// services/rsiService.js - Servicio para el cálculo del RSI
-import yahooFinanceService from './yahooFinanceService';
+// services/rsiService.js - Servicio para obtener el RSI del backend
+
 
 class RsiService {
   constructor() {
-    this.cache = new Map();
+    this.snapshotCache = null;
+    this.snapshotCacheTime = 0;
   }
 
   /**
-   * Calcula el RSI estándar de Wilder (Smooth Moving Average).
-   * @param {number[]} prices - Array de precios de cierre.
-   * @param {number} period - Períodos para el cálculo (usualmente 14).
-   * @returns {Object} { current, previous, delta }
+   * Obtiene el snapshot del mercado desde el backend.
+   * Utiliza un caché en memoria de 1 minuto para evitar llamadas duplicadas
+   * cuando los componentes montan y piden el RSI casi simultáneamente.
    */
-  calculateRSI(prices, period = 14) {
-    if (!prices || prices.length <= period) {
-      return { current: null, previous: null, delta: null };
+  async getSnapshot() {
+    if (this.snapshotCache && Date.now() - this.snapshotCacheTime < 60000) {
+      return this.snapshotCache;
     }
 
-    let gains = 0;
-    let losses = 0;
-
-    // Calcular ganancia/pérdida media inicial (Simple Moving Average para la primera vela)
-    for (let i = 1; i <= period; i++) {
-      const difference = prices[i] - prices[i - 1];
-      if (difference >= 0) {
-        gains += difference;
-      } else {
-        losses -= difference;
-      }
+    try {
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/snapshot`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      this.snapshotCache = data.snapshot || {};
+      this.snapshotCacheTime = Date.now();
+      return this.snapshotCache;
+    } catch (error) {
+      console.warn('Error fetching market snapshot for RSI:', error);
+      return {};
     }
-
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
-
-    let rsiArray = [];
-
-    const getRsi = (ag, al) => {
-      if (al === 0) return 100; // Sin pérdidas = RSI 100
-      const rs = ag / al;
-      return 100 - (100 / (1 + rs));
-    };
-
-    rsiArray.push(getRsi(avgGain, avgLoss));
-
-    // Calcular valores subsiguientes usando la Media Móvil Suavizada (SMMA) de Wilder
-    for (let i = period + 1; i < prices.length; i++) {
-      const difference = prices[i] - prices[i - 1];
-      let gain = 0;
-      let loss = 0;
-
-      if (difference >= 0) {
-        gain = difference;
-      } else {
-        loss = -difference;
-      }
-
-      avgGain = (avgGain * (period - 1) + gain) / period;
-      avgLoss = (avgLoss * (period - 1) + loss) / period;
-
-      rsiArray.push(getRsi(avgGain, avgLoss));
-    }
-
-    if (rsiArray.length < 2) {
-      return { 
-        current: parseFloat(rsiArray[0].toFixed(2)), 
-        previous: null, 
-        delta: null 
-      };
-    }
-
-    const current = parseFloat(rsiArray[rsiArray.length - 1].toFixed(2));
-    const previous = parseFloat(rsiArray[rsiArray.length - 2].toFixed(2));
-    const delta = parseFloat((current - previous).toFixed(2));
-
-    return { current, previous, delta };
   }
 
   /**
    * Obtiene el RSI semanal (y su delta) para un símbolo.
+   * Ahora los lee directamente de la base de datos a través de la API.
    * @param {string} symbol - Símbolo (ticker).
-   * @param {number} period - Períodos del RSI (por defecto 14).
    * @returns {Promise<Object>} { current, previous, delta } o nulls en caso de error.
    */
-  async getWeeklyRsi(symbol, period = 14) {
-    const timeframe = '1wk';
-    // Se incluye symbol, timeframe y period en la key para evitar colisiones en caché.
-    const cacheKey = `rsi_${symbol}_${timeframe}_${period}`;
-    
+  async getWeeklyRsi(symbol) {
     const emptyResult = { current: null, previous: null, delta: null };
-
-    // 1. Verificar sessionStorage (TTL ~24 horas)
     try {
-      const cached = sessionStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          return parsed.value; // Retorna el objeto {current, previous, delta}
-        }
-      }
-    } catch (e) {
-      console.warn('Error leyendo sessionStorage en rsiService:', e);
-    }
+      const snapshot = await this.getSnapshot();
+      const symbolData = snapshot[symbol];
 
-    // 2. Fetch y cálculo si no hay caché
-    try {
-      // 2 años de datos semanales (~104 velas) aseguran un historial robusto para
-      // que el RSI inicialice correctamente y absorba las fluctuaciones iniciales de Wilder.
-      const candles = await yahooFinanceService.getCandles(symbol, timeframe, '2y');
-      
-      if (!candles || !Array.isArray(candles) || candles.length < period + 1) {
-        return emptyResult;
+      if (symbolData && symbolData.rsiWeekly !== undefined && symbolData.rsiWeekly !== null) {
+        return {
+          current: symbolData.rsiWeekly,
+          previous: symbolData.rsiPrevious,
+          delta: symbolData.rsiDelta
+        };
       }
 
-      // 3. Lógica de vela cerrada:
-      // Es importante evitar que el RSI semanal cambie durante la semana por utilizar una vela semanal que todavía está en formación.
-      // Siempre que sea posible, utilizamos la última vela semanal completamente cerrada.
-      // Asumimos que los timestamps de Yahoo están en segundos. Si el inicio de la vela + 7 días está en el futuro, no ha cerrado.
-      if (candles.length > 0) {
-        const lastCandle = candles[candles.length - 1];
-        const lastCandleStartMs = (lastCandle.timestamp || 0) * 1000;
-        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-        
-        // Si el momento actual es menor al inicio de la vela + 7 días, la vela sigue abierta, la descartamos.
-        // Además, como fallback de seguridad, verificamos si la fecha actual es la misma semana en curso.
-        if (Date.now() < lastCandleStartMs + sevenDaysMs) {
-           candles.pop(); // Descartar vela abierta para que el RSI quede estable
-        }
-      }
-
-      // Filtrar cierres válidos
-      const closes = candles
-        .map(c => c.close)
-        .filter(c => c !== null && c !== undefined && !isNaN(c));
-
-      // Re-verificar que sigan quedando suficientes velas después de descartar nulos y la última
-      if (closes.length <= period) {
-        return emptyResult;
-      }
-
-      // 4. Calcular RSI
-      const rsiData = this.calculateRSI(closes, period);
-      
-      // 5. Guardar en caché
-      if (rsiData.current !== null) {
-        try {
-          sessionStorage.setItem(cacheKey, JSON.stringify({
-            value: rsiData,
-            timestamp: Date.now()
-          }));
-        } catch (e) {
-          // Ignorar silenciosamente errores de cuota de storage
-        }
-      }
-
-      return rsiData;
+      return emptyResult;
     } catch (error) {
-      console.warn(`[RSI Service] No se pudo obtener datos para RSI Semanal de ${symbol}:`, error.message);
-      return emptyResult; // Fallback graceful sin romper React
+      console.warn(`[RSI Service] No se pudo obtener RSI Semanal de ${symbol}:`, error.message);
+      return emptyResult;
     }
   }
 
   /**
-   * Obtiene el RSI para múltiples símbolos, reportando progreso progresivamente.
+   * Obtiene el RSI para múltiples símbolos, reportando progreso.
+   * Al leer del snapshot, esto es ahora prácticamente instantáneo y no satura APIs externas.
    */
   async getMultipleWeeklyRsi(symbols, onProgress) {
     const results = {};
+    const snapshot = await this.getSnapshot();
+
     for (let i = 0; i < symbols.length; i++) {
       const symbol = symbols[i];
-      const rsiData = await this.getWeeklyRsi(symbol, 14);
+      const symbolData = snapshot[symbol];
+      
+      let rsiData = { current: null, previous: null, delta: null };
+      
+      if (symbolData && symbolData.rsiWeekly !== undefined && symbolData.rsiWeekly !== null) {
+        rsiData = {
+          current: symbolData.rsiWeekly,
+          previous: symbolData.rsiPrevious,
+          delta: symbolData.rsiDelta
+        };
+      }
+
       results[symbol] = rsiData;
       
       if (onProgress) {
+        // Simulamos asincronía mínima para que la UI de carga pueda renderizar el progreso suavemente si lo espera
+        await new Promise(res => setTimeout(res, 10)); 
         onProgress(symbol, rsiData);
-      }
-      
-      // Pequeña pausa para no saturar requests en concurrencia (rate-limiting)
-      if (i < symbols.length - 1) {
-        await new Promise(res => setTimeout(res, 200));
       }
     }
     return results;

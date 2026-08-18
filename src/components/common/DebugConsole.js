@@ -172,6 +172,13 @@ const DebugConsole = () => {
                     Fresh: {loggerService.backendMetrics.fresh} | {loggerService.backendMetrics.duration}s
                   </div>
                 </MetricCard>
+                <MetricCard style={{ borderColor: 'rgba(56, 189, 248, 0.2)' }}>
+                  <MetricLabel>EMA21 / RSI Weekly</MetricLabel>
+                  <MetricValue>{loggerService.backendMetrics.emaUpdated} / {loggerService.backendMetrics.rsiUpdated} OK</MetricValue>
+                  <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '4px' }}>
+                    Fails: {loggerService.backendMetrics.emaFailed} (EMA) | {loggerService.backendMetrics.rsiFailed} (RSI)
+                  </div>
+                </MetricCard>
               </>
             ) : (
               <NoDataText>Esperando metrics del server...</NoDataText>

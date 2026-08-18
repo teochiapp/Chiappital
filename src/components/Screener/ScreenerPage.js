@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, Target, ChevronRight, BellRing } from 'lucide-react';
+import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, Target, ChevronRight, BellRing, Activity, BarChart2, Award } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
@@ -95,8 +95,16 @@ const ScreenerPage = () => {
   const [sortDir, setSortDir]       = useState('asc');
   const [filterRegion, setFilterRegion] = useState('ALL');
   const [filterSector, setFilterSector] = useState('ALL');
+  const [selectedScanRsi, setSelectedScanRsi] = useState([]);
+  const [selectedScanMacd, setSelectedScanMacd] = useState([]);
+  const [selectedScanDrawdown, setSelectedScanDrawdown] = useState([]);
+  const [selectedScanRs, setSelectedScanRs] = useState([]);
   const [groupMode, setGroupMode]   = useState('general'); // 'region' | 'sector' | 'general'
   const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
+
+  const toggleFilter = (setState, value) => {
+    setState(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
+  };
 
   // Data del laboratorio (Sectores y Paises)
   const { sectorData, countryData } = useLabData();
@@ -154,6 +162,19 @@ const ScreenerPage = () => {
           weeklyRsi: quoteData?.weeklyRsi ?? null,
           weeklyRsiPrevious: quoteData?.weeklyRsiPrevious ?? null,
           weeklyRsiDelta: quoteData?.weeklyRsiDelta ?? null,
+          weeklyMacd: quoteData?.weeklyMacd ?? null,
+          weeklyMacdSignal: quoteData?.weeklyMacdSignal ?? null,
+          weeklyMacdHist: quoteData?.weeklyMacdHist ?? null,
+          weeklyMacdPrev: quoteData?.weeklyMacdPrev ?? null,
+          weeklyMacdPrevSignal: quoteData?.weeklyMacdPrevSignal ?? null,
+          weeklyMacdPrevHist: quoteData?.weeklyMacdPrevHist ?? null,
+          drawdown52w: quoteData?.drawdown52w ?? null,
+          rsValue: quoteData?.rsValue ?? null,
+          rsPrevious: quoteData?.rsPrevious ?? null,
+          rsState: quoteData?.rsState ?? null,
+          setupState: quoteData?.setupState ?? null,
+          setupVerdict: quoteData?.setupVerdict ?? null,
+          setupFactors: quoteData?.setupFactors ?? null,
           status: quoteData?.status || 'ERROR'
         };
       });
@@ -227,6 +248,65 @@ const ScreenerPage = () => {
           const passSector = sTrend === 'alcista';
 
           return passRegion || passSector;
+        });
+      }
+
+      if (selectedScanRsi.length > 0) {
+        pool = pool.filter(s => {
+          if (typeof s.weeklyRsi !== 'number') return false;
+          return selectedScanRsi.some(r => {
+            if (r === '< 30') return s.weeklyRsi < 30;
+            if (r === '30-50') return s.weeklyRsi >= 30 && s.weeklyRsi < 50;
+            if (r === '50-70') return s.weeklyRsi >= 50 && s.weeklyRsi < 70;
+            if (r === '> 70') return s.weeklyRsi >= 70;
+            return false;
+          });
+        });
+      }
+
+      if (selectedScanMacd.length > 0) {
+        pool = pool.filter(s => {
+          if (s.weeklyMacd === null || s.weeklyMacd === 'N/A') return false;
+          const isGoldenCross = (s.weeklyMacdPrev !== null && s.weeklyMacdPrevSignal !== null && s.weeklyMacdPrev <= s.weeklyMacdPrevSignal && s.weeklyMacd > s.weeklyMacdSignal);
+          const isBullishGrowing = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist);
+          const isBullishShrinking = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && !(s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist);
+          const isBearishGrowing = (s.weeklyMacd <= s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist);
+          const isBearishShrinking = (s.weeklyMacd <= s.weeklyMacdSignal) && !(s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist);
+          
+          return selectedScanMacd.some(m => {
+            if (m === 'Golden Cross') return isGoldenCross;
+            if (m === 'Bullish (+)') return isBullishGrowing;
+            if (m === 'Bullish (-)') return isBullishShrinking;
+            if (m === 'Bearish (+)') return isBearishGrowing;
+            if (m === 'Bearish (-)') return isBearishShrinking;
+            return false;
+          });
+        });
+      }
+
+      if (selectedScanDrawdown.length > 0) {
+        pool = pool.filter(s => {
+          if (typeof s.drawdown52w !== 'number') return false;
+          return selectedScanDrawdown.some(r => {
+            if (r === '0 a -10%') return s.drawdown52w >= -10;
+            if (r === '-10% a -20%') return s.drawdown52w < -10 && s.drawdown52w >= -20;
+            if (r === '-20% a -30%') return s.drawdown52w < -20 && s.drawdown52w >= -30;
+            if (r === '< -30%') return s.drawdown52w < -30;
+            return false;
+          });
+        });
+      }
+
+      if (selectedScanRs.length > 0) {
+        pool = pool.filter(s => {
+          if (typeof s.rsValue !== 'number') return false;
+          return selectedScanRs.some(r => {
+            if (r === '> 10%') return s.rsValue > 10;
+            if (r === '0 a 10%') return s.rsValue >= 0 && s.rsValue <= 10;
+            if (r === '-10% a 0%') return s.rsValue < 0 && s.rsValue >= -10;
+            if (r === '< -10%') return s.rsValue < -10;
+            return false;
+          });
         });
       }
 
@@ -344,6 +424,7 @@ const ScreenerPage = () => {
     
     if (filterRegion !== 'ALL') d = d.filter(s => s.region === filterRegion);
     if (filterSector !== 'ALL') d = d.filter(s => s.sector === filterSector);
+
     return [...d].sort((a, b) => {
       let va = a[sortKey];
       let vb = b[sortKey];
@@ -479,6 +560,7 @@ const ScreenerPage = () => {
               ))}
             </PillGroup>
           </FilterRow>
+
         </FiltersBar>
 
         {/* ── Toggle de agrupación ────────────────── */}
@@ -528,10 +610,9 @@ const ScreenerPage = () => {
                   <Table>
                     <thead>
                       <tr>
-                        <Th $w="105px" $sort onClick={() => handleSort('symbol')}>
-                          Símbolo <SortIcon col="symbol" />
+                        <Th $w="220px" $sort onClick={() => handleSort('symbol')}>
+                          Activo <SortIcon col="symbol" />
                         </Th>
-                        <Th $w="auto">Nombre</Th>
                         {groupMode === 'region' ? (
                           <Th $w="170px" $sort onClick={() => handleSort('sector')}>
                             Sector <SortIcon col="sector" />
@@ -553,14 +634,27 @@ const ScreenerPage = () => {
                         <Th $w="105px" $sort $center onClick={() => handleSort('weeklyRsi')}>
                           RSI Sem. <SortIcon col="weeklyRsi" />
                         </Th>
+                        <Th $w="105px" $sort $center onClick={() => handleSort('weeklyMacd')}>
+                          MACD <SortIcon col="weeklyMacd" />
+                        </Th>
+                        <Th $w="105px" $sort $center onClick={() => handleSort('drawdown52w')}>
+                          52W Max <SortIcon col="drawdown52w" />
+                        </Th>
+                        <Th $w="105px" $sort $center onClick={() => handleSort('rsValue')}>
+                          RS 12W <SortIcon col="rsValue" />
+                        </Th>
                         <Th $w="90px" $center>Acciones</Th>
                       </tr>
                     </thead>
                     <tbody>
                       {stocks.map((s, i) => (
                         <Row key={s.symbol} $even={i % 2 === 0}>
-                          <Td $w="105px"><SymTxt>{s.symbol}</SymTxt></Td>
-                          <Td $w="auto"><NameTxt>{s.name}</NameTxt></Td>
+                          <Td $w="220px">
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <SymTxt>{s.symbol}</SymTxt>
+                              <NameTxt style={{ fontSize: '0.75rem', marginTop: '2px', whiteSpace: 'normal', overflow: 'visible' }}>{s.name}</NameTxt>
+                            </div>
+                          </Td>
                           {groupMode === 'region' ? (
                             <Td $w="170px"><SectorBadge>{s.sector}</SectorBadge></Td>
                           ) : (
@@ -582,15 +676,37 @@ const ScreenerPage = () => {
                             )}
                           </Td>
                           <Td $w="105px" $right>
-                            {s.emaDistance === null ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'flex-end', gap:'4px'}}>
-                                <RefreshCw size={10} className="spin" /> Calc...
-                              </MetaTxt>
-                            ) : (
-                              <ChangeBadge $pos={s.emaDistance >= 0}>
-                                {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}%
-                              </ChangeBadge>
-                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                              {s.emaDistance === null ? (
+                                <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'flex-end', gap:'4px'}}>
+                                  <RefreshCw size={10} className="spin" /> Calc...
+                                </MetaTxt>
+                              ) : (
+                                <ChangeBadge $pos={s.emaDistance >= 0}>
+                                  {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}%
+                                </ChangeBadge>
+                              )}
+                              {s.setupState && s.setupVerdict && s.setupState !== 'neutral' && (
+                                <div 
+                                  style={{
+                                    marginTop: '4px',
+                                    fontSize: '0.6rem',
+                                    lineHeight: '1.2',
+                                    textAlign: 'right',
+                                    whiteSpace: 'normal',
+                                    color: 
+                                      s.setupState === 'strong_uptrend' ? '#10b981' :
+                                      s.setupState === 'bullish_pullback' ? '#3b82f6' :
+                                      s.setupState === 'bullish_reversal_confirmed' ? '#8b5cf6' :
+                                      s.setupState === 'early_bullish_reversal' ? '#d946ef' :
+                                      s.setupState === 'bearish_trend' ? '#ef4444' :
+                                      '#94a3b8'
+                                  }}
+                                >
+                                  {s.setupVerdict}
+                                </div>
+                              )}
+                            </div>
                           </Td>
                           <Td $w="105px" $center>
                             {s.weeklyRsi === null ? (
@@ -607,6 +723,70 @@ const ScreenerPage = () => {
                                 title={`Prev: ${s.weeklyRsiPrevious} | Delta: ${s.weeklyRsiDelta > 0 ? '+' : ''}${s.weeklyRsiDelta}`}
                               >
                                 {typeof s.weeklyRsi === 'number' ? s.weeklyRsi.toFixed(1) : s.weeklyRsi}
+                              </MetaTxt>
+                            )}
+                          </Td>
+                          <Td $w="105px" $center>
+                            {s.weeklyMacd === null ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                                <RefreshCw size={10} className="spin" /> Calc...
+                              </MetaTxt>
+                            ) : s.weeklyMacd === 'N/A' ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                                N/A
+                              </MetaTxt>
+                            ) : (
+                              <MetaTxt 
+                                style={{
+                                  color: (s.weeklyMacdPrev !== null && s.weeklyMacdPrevSignal !== null && s.weeklyMacdPrev <= s.weeklyMacdPrevSignal && s.weeklyMacd > s.weeklyMacdSignal) ? '#f59e0b' :
+                                         (s.weeklyMacd > s.weeklyMacdSignal) ? ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist) ? '#10b981' : '#a7f3d0') :
+                                         ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist) ? '#f43f5e' : '#fda4af'),
+                                  fontWeight: 'bold'
+                                }}
+                                title={`MACD: ${s.weeklyMacd} | Signal: ${s.weeklyMacdSignal} | Hist: ${s.weeklyMacdHist}\nPrev MACD: ${s.weeklyMacdPrev} | Prev Signal: ${s.weeklyMacdPrevSignal} | Prev Hist: ${s.weeklyMacdPrevHist}`}
+                              >
+                                {typeof s.weeklyMacd === 'number' ? s.weeklyMacd.toFixed(2) : s.weeklyMacd}
+                              </MetaTxt>
+                            )}
+                          </Td>
+                          <Td $w="105px" $center>
+                            {s.drawdown52w === null ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                                <RefreshCw size={10} className="spin" /> Calc...
+                              </MetaTxt>
+                            ) : s.drawdown52w === 'N/A' ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                                N/A
+                              </MetaTxt>
+                            ) : (
+                              <MetaTxt 
+                                style={{
+                                  color: s.drawdown52w >= -5 ? '#e2e8f0' : '#f43f5e',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {s.drawdown52w.toFixed(1)}%
+                              </MetaTxt>
+                            )}
+                          </Td>
+                          <Td $w="105px" $center>
+                            {s.rsValue === null || s.rsValue === undefined ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                                N/A
+                              </MetaTxt>
+                            ) : (
+                              <MetaTxt
+                                title={s.rsState}
+                                style={{
+                                  color: 
+                                    s.rsState === 'Strong & Rising' ? '#22c55e' :
+                                    s.rsState === 'Strong but Weakening' ? '#86efac' :
+                                    s.rsState === 'Weak but Recovering' ? '#fca5a5' :
+                                    '#ef4444',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {s.rsValue > 0 ? '+' : ''}{s.rsValue.toFixed(1)}%
                               </MetaTxt>
                             )}
                           </Td>
@@ -649,7 +829,7 @@ const ScreenerPage = () => {
             <ScanPanelHeader>
               <ScanPanelTitle>
                 <Zap size={18} color="#f59e0b" />
-                Scan Rápido — EMA 21
+                Scan Avanzado Multicriterio
               </ScanPanelTitle>
               <ScanCloseBtn onClick={() => setShowScan(false)}>
                 <X size={18} />
@@ -659,8 +839,8 @@ const ScreenerPage = () => {
             <ScanBody>
               {/* Descripción */}
               <ScanDescription>
-                Filtra por País y Sector, buscando acciones a <strong>1% o menos</strong> de la EMA 21.<br/>
-                <span style={{color: colors.primary}}>Solo aparecen opciones marcadas como <strong>Alcistas (Diario)</strong> en el Lab.</span>
+                Encuentra oportunidades combinando la tendencia diaria del Lab, indicadores semanales (RSI, MACD, RS) y distancia a la EMA 21.<br/>
+                <span style={{color: colors.primary}}>Las opciones de País y Sector solo muestran los marcados como <strong>Alcistas</strong>.</span>
               </ScanDescription>
 
               {/* Filtro País */}
@@ -707,6 +887,72 @@ const ScreenerPage = () => {
                 </PillGroup>
               </ScanFilterBlock>
 
+              {/* Fila: RSI Semanal */}
+          <ScanFilterBlock>
+            <ScanFilterLabel><Activity size={13} /> RSI Sem.</ScanFilterLabel>
+            <PillGroup>
+              <Pill $active={selectedScanRsi.length === 0} onClick={() => setSelectedScanRsi([])}>
+                Todos
+              </Pill>
+              {['< 30', '30-50', '50-70', '> 70'].map(val => (
+                <Pill key={val} $active={selectedScanRsi.includes(val)} onClick={() => toggleFilter(setSelectedScanRsi, val)}>
+                  {val}
+                </Pill>
+              ))}
+            </PillGroup>
+          </ScanFilterBlock>
+
+          {/* Fila: MACD Semanal */}
+          <ScanFilterBlock>
+            <ScanFilterLabel><BarChart2 size={13} /> MACD</ScanFilterLabel>
+            <PillGroup>
+              <Pill $active={selectedScanMacd.length === 0} onClick={() => setSelectedScanMacd([])}>
+                Todos
+              </Pill>
+              {[
+                { label: 'Golden Cross', color: '#f59e0b' },
+                { label: 'Bullish (+)', color: '#10b981' },
+                { label: 'Bullish (-)', color: '#a7f3d0' },
+                { label: 'Bearish (-)', color: '#fda4af' },
+                { label: 'Bearish (+)', color: '#f43f5e' }
+              ].map(item => (
+                <Pill key={item.label} $active={selectedScanMacd.includes(item.label)} onClick={() => toggleFilter(setSelectedScanMacd, item.label)}>
+                  <ColorDot style={{ backgroundColor: item.color }} /> {item.label}
+                </Pill>
+              ))}
+            </PillGroup>
+          </ScanFilterBlock>
+
+          {/* Fila: Drawdown 52W */}
+          <ScanFilterBlock>
+            <ScanFilterLabel><TrendingDown size={13} /> Drawdown</ScanFilterLabel>
+            <PillGroup>
+              <Pill $active={selectedScanDrawdown.length === 0} onClick={() => setSelectedScanDrawdown([])}>
+                Todos
+              </Pill>
+              {['0 a -10%', '-10% a -20%', '-20% a -30%', '< -30%'].map(val => (
+                <Pill key={val} $active={selectedScanDrawdown.includes(val)} onClick={() => toggleFilter(setSelectedScanDrawdown, val)}>
+                  {val}
+                </Pill>
+              ))}
+            </PillGroup>
+          </ScanFilterBlock>
+
+          {/* Fila: RS 12W */}
+          <ScanFilterBlock>
+            <ScanFilterLabel><Award size={13} /> RS 12W</ScanFilterLabel>
+            <PillGroup>
+              <Pill $active={selectedScanRs.length === 0} onClick={() => setSelectedScanRs([])}>
+                Todos
+              </Pill>
+              {['> 10%', '0 a 10%', '-10% a 0%', '< -10%'].map(val => (
+                <Pill key={val} $active={selectedScanRs.includes(val)} onClick={() => toggleFilter(setSelectedScanRs, val)}>
+                  {val}
+                </Pill>
+              ))}
+            </PillGroup>
+          </ScanFilterBlock>
+        
               {/* Umbral EMA */}
               <ScanFilterBlock>
                 <ScanFilterLabel>
@@ -1445,3 +1691,11 @@ const RegionFlagWrap = styled.div`
 
 
 export default ScreenerPage;
+
+const ColorDot = styled.span`
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+`;

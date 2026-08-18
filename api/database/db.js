@@ -533,6 +533,17 @@ async function initializeDatabase() {
       change_percent DECIMAL(10, 4) DEFAULT NULL,
       ema21_distance DECIMAL(10, 4) DEFAULT NULL,
       ema_updated_at DATETIME DEFAULT NULL,
+      rsi_weekly DECIMAL(10, 2) DEFAULT NULL,
+      rsi_previous DECIMAL(10, 2) DEFAULT NULL,
+      rsi_delta DECIMAL(10, 2) DEFAULT NULL,
+      rsi_updated_at DATETIME DEFAULT NULL,
+      macd_weekly DECIMAL(10, 2) DEFAULT NULL,
+      macd_signal DECIMAL(10, 2) DEFAULT NULL,
+      macd_hist DECIMAL(10, 2) DEFAULT NULL,
+      macd_prev_weekly DECIMAL(10, 2) DEFAULT NULL,
+      macd_prev_signal DECIMAL(10, 2) DEFAULT NULL,
+      macd_prev_hist DECIMAL(10, 2) DEFAULT NULL,
+      drawdown_52w DECIMAL(10, 4) DEFAULT NULL,
       source VARCHAR(50) DEFAULT NULL,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       status ENUM('LIVE', 'STALE', 'ERROR', 'SYNCING') DEFAULT 'LIVE',
@@ -548,6 +559,97 @@ async function initializeDatabase() {
   } catch (error) {
     if (error.code !== 'ER_DUP_FIELDNAME') {
       console.error('⚠️ Error al intentar agregar ema_updated_at:', error.message);
+    }
+  }
+
+  // Migración: Agregar columnas RSI a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN rsi_weekly DECIMAL(10, 2) DEFAULT NULL AFTER ema_updated_at,
+      ADD COLUMN rsi_previous DECIMAL(10, 2) DEFAULT NULL AFTER rsi_weekly,
+      ADD COLUMN rsi_delta DECIMAL(10, 2) DEFAULT NULL AFTER rsi_previous,
+      ADD COLUMN rsi_updated_at DATETIME DEFAULT NULL AFTER rsi_delta;
+    `);
+    console.log('✅ Migración: Columnas de RSI agregadas a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de RSI:', error.message);
+    }
+  }
+
+  // Migración: Agregar columnas Setup a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN setup_state VARCHAR(50) DEFAULT NULL AFTER drawdown_52w,
+      ADD COLUMN setup_verdict VARCHAR(255) DEFAULT NULL AFTER setup_state,
+      ADD COLUMN setup_factors JSON DEFAULT NULL AFTER setup_verdict;
+    `);
+    console.log('✅ Migración: Columnas de Setup agregadas a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de Setup:', error.message);
+    }
+  }
+
+  // Migración: Agregar columnas MACD a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN macd_weekly DECIMAL(10, 2) DEFAULT NULL AFTER rsi_updated_at,
+      ADD COLUMN macd_signal DECIMAL(10, 2) DEFAULT NULL AFTER macd_weekly,
+      ADD COLUMN macd_hist DECIMAL(10, 2) DEFAULT NULL AFTER macd_signal,
+      ADD COLUMN macd_prev_weekly DECIMAL(10, 2) DEFAULT NULL AFTER macd_hist,
+      ADD COLUMN macd_prev_signal DECIMAL(10, 2) DEFAULT NULL AFTER macd_prev_weekly,
+      ADD COLUMN macd_prev_hist DECIMAL(10, 2) DEFAULT NULL AFTER macd_prev_signal;
+    `);
+    console.log('✅ Migración: Columnas de MACD agregadas a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de MACD:', error.message);
+    }
+  }
+
+  // Migración: Agregar columna drawdown_52w a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN drawdown_52w DECIMAL(10, 4) DEFAULT NULL AFTER macd_prev_hist;
+    `);
+    console.log('✅ Migración: Columna drawdown_52w agregada a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columna drawdown_52w:', error.message);
+    }
+  }
+
+  // Migración: Agregar columna index_symbol a tracked_symbols
+  try {
+    await db.execute(`
+      ALTER TABLE tracked_symbols 
+      ADD COLUMN index_symbol VARCHAR(20) DEFAULT NULL AFTER market;
+    `);
+    console.log('✅ Migración: Columna index_symbol agregada a tracked_symbols');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columna index_symbol:', error.message);
+    }
+  }
+
+  // Migración: Agregar columnas de Relative Strength a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN rs_value DECIMAL(10, 4) DEFAULT NULL AFTER drawdown_52w,
+      ADD COLUMN rs_previous DECIMAL(10, 4) DEFAULT NULL AFTER rs_value,
+      ADD COLUMN rs_state VARCHAR(50) DEFAULT NULL AFTER rs_previous,
+      ADD COLUMN rs_updated_at DATETIME DEFAULT NULL AFTER rs_state;
+    `);
+    console.log('✅ Migración: Columnas de Relative Strength agregadas a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de RS:', error.message);
     }
   }
 
