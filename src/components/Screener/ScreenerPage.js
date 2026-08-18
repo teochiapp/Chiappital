@@ -5,6 +5,7 @@ import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
 import priceService from '../../services/priceService';
+import rsiService from '../../services/rsiService';
 import CreateAlertModal from '../Alerts/CreateAlertModal';
 import { colors } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
@@ -18,7 +19,7 @@ const MAP_REGION = {
   'CN': 'fxi',
   'EU': 'vgk',
   'JP': 'ewj',
-  'Global': 'eem'
+  'Global': 'btc'
 };
 
 const MAP_SECTOR = {
@@ -49,7 +50,7 @@ const REGION_LABELS = {
   EU:     'Europa',
   JP:     'Japón',
   IN:     'India',
-  Global: 'Global',
+  Global: 'Criptos',
 };
 
 // Códigos ISO 3166-1 alpha-2 para flagcdn.com
@@ -150,11 +151,38 @@ const ScreenerPage = () => {
           changePercent,
           change: (price && changePercent !== null) ? (price * changePercent / 100) : null,
           emaDistance: quoteData?.ema21Distance ?? null,
+          weeklyRsi: quoteData?.weeklyRsi ?? null,
+          weeklyRsiPrevious: quoteData?.weeklyRsiPrevious ?? null,
+          weeklyRsiDelta: quoteData?.weeklyRsiDelta ?? null,
           status: quoteData?.status || 'ERROR'
         };
       });
       setStockData(combined);
       setLastUpdate(latestUpdate || new Date());
+      
+      const symbolsToFetchRsi = combined
+        .filter(item => item.weeklyRsi === null)
+        .map(item => item.symbol);
+
+      if (symbolsToFetchRsi.length > 0) {
+        rsiService.getMultipleWeeklyRsi(symbolsToFetchRsi, (symbol, rsiData) => {
+          if (rsiData && rsiData.current !== null) {
+            setStockData(prevData => prevData.map(item => 
+              item.symbol === symbol ? { 
+                ...item, 
+                weeklyRsi: rsiData.current,
+                weeklyRsiPrevious: rsiData.previous,
+                weeklyRsiDelta: rsiData.delta
+              } : item
+            ));
+          } else if (rsiData && rsiData.current === null) {
+            // Manejo de error gracefully: marcamos como N/A para no quedar iterando
+            setStockData(prevData => prevData.map(item => 
+              item.symbol === symbol ? { ...item, weeklyRsi: 'N/A' } : item
+            ));
+          }
+        }).catch(err => console.warn('Error en fetch RSI:', err));
+      }
       
     } catch (err) {
       console.error(err);
@@ -347,8 +375,13 @@ const ScreenerPage = () => {
       if (groupMode === 'region') key = (REGION_LABELS[s.region] || s.region);
       else if (groupMode === 'sector') key = (s.sector || 'Otros');
       else if (groupMode === 'general') {
-        if (s.type !== 'ETF') return; // En vista general, solo mostrar ETFs
-        key = s.macroCategory || 'Otros ETFs';
+        const isGeneralOnlyETFs = (filterRegion === 'US' || filterRegion === 'ALL') && filterSector === 'ALL';
+        if (isGeneralOnlyETFs) {
+          if (s.type !== 'ETF') return; // En vista general, solo mostrar ETFs
+          key = s.macroCategory || 'Otros ETFs';
+        } else {
+          key = s.sector || 'General';
+        }
       }
       
       if (!groups[key]) groups[key] = [];
@@ -517,6 +550,9 @@ const ScreenerPage = () => {
                         <Th $w="105px" $sort $right onClick={() => handleSort('emaDistance')}>
                           EMA21 <SortIcon col="emaDistance" />
                         </Th>
+                        <Th $w="105px" $sort $center onClick={() => handleSort('weeklyRsi')}>
+                          RSI Sem. <SortIcon col="weeklyRsi" />
+                        </Th>
                         <Th $w="90px" $center>Acciones</Th>
                       </tr>
                     </thead>
@@ -554,6 +590,24 @@ const ScreenerPage = () => {
                               <ChangeBadge $pos={s.emaDistance >= 0}>
                                 {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}%
                               </ChangeBadge>
+                            )}
+                          </Td>
+                          <Td $w="105px" $center>
+                            {s.weeklyRsi === null ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                                <RefreshCw size={10} className="spin" /> Calc...
+                              </MetaTxt>
+                            ) : s.weeklyRsi === 'N/A' ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                                N/A
+                              </MetaTxt>
+                            ) : (
+                              <MetaTxt 
+                                style={{color: s.weeklyRsi > 70 ? '#f43f5e' : s.weeklyRsi < 30 ? '#10b981' : '#e2e8f0', fontWeight: 'bold'}}
+                                title={`Prev: ${s.weeklyRsiPrevious} | Delta: ${s.weeklyRsiDelta > 0 ? '+' : ''}${s.weeklyRsiDelta}`}
+                              >
+                                {typeof s.weeklyRsi === 'number' ? s.weeklyRsi.toFixed(1) : s.weeklyRsi}
+                              </MetaTxt>
                             )}
                           </Td>
                           <Td $w="90px" $center>

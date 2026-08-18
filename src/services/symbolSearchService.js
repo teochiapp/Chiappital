@@ -875,7 +875,7 @@ class SymbolSearchService {
       { symbol: 'SYY', name: 'Sysco Corp.', sector: 'Consumo Básico', region: 'US', currency: 'USD', type: 'Equity' },
 
       { symbol: 'UL', name: 'Unilever PLC', sector: 'Consumo Básico', region: 'EU', currency: 'USD', type: 'Equity' },
-      { symbol: 'TV', name: 'Grupo Televisa S.A.', sector: 'Comunicaciones', region: 'MX', currency: 'USD', type: 'Equity' },
+
       { symbol: 'TM', name: 'Toyota Motor Corp.', sector: 'Consumo Discrecional', region: 'JP', currency: 'USD', type: 'Equity' },
 
     ];

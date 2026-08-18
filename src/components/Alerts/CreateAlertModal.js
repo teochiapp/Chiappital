@@ -17,7 +17,8 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
     if (isOpen) {
       if (initialData) {
         setSymbol(initialData.symbol || '');
-        setTargetPrice(initialData.target_price || initialData.currentPrice || '');
+        const p = initialData.target_price || initialData.currentPrice;
+        setTargetPrice(p ? (Math.round(Number(p) * 10000) / 10000).toString() : '');
         setCondition(initialData.condition_type || 'above');
         setNotes(initialData.notes || '');
       } else {

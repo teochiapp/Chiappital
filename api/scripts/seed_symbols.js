@@ -12,16 +12,19 @@ async function seedSymbols() {
   const content = fs.readFileSync(path.join(__dirname, '../../src/services/symbolSearchService.js'), 'utf8');
   
   const allCedearsMatch = content.match(/getAllCedears\(\) \{\s*return \[(.*?)\];\s*\}/s);
-  if (!allCedearsMatch) {
-    console.error('❌ No se encontró la lista de CEDEARs.');
+  const popularMatch = content.match(/getPopularSymbols\(\) \{\s*return \[(.*?)\];\s*\}/s);
+  
+  if (!allCedearsMatch || !popularMatch) {
+    console.error('❌ No se encontró la lista de CEDEARs o PopularSymbols.');
     process.exit(1);
   }
 
   // Truco sucio pero efectivo: evaluar el contenido del array como JS válido para tener los objetos
-  const symbolsArrayString = `[${allCedearsMatch[1]}]`;
   let symbols = [];
   try {
-    symbols = eval(symbolsArrayString);
+    const arr1 = eval(`[${allCedearsMatch[1]}]`);
+    const arr2 = eval(`[${popularMatch[1]}]`);
+    symbols = [...arr1, ...arr2];
   } catch (e) {
     console.error('❌ Error parseando los símbolos:', e);
     process.exit(1);

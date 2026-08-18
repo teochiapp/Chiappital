@@ -209,7 +209,7 @@ async function runSync(reason = 'manual') {
         yahooFailed += failedFinnhubSymbols.length;
       } else {
         logger.debug('Yahoo', `Yahoo fallback triggered for ${failedFinnhubSymbols.length} symbols`);
-        const BATCH_SIZE = 50;
+        const BATCH_SIZE = 20;
         
         for (let i = 0; i < failedFinnhubSymbols.length; i += BATCH_SIZE) {
           const batch = failedFinnhubSymbols.slice(i, i + BATCH_SIZE);
@@ -434,32 +434,40 @@ async function fetchFinnhub(symbol) {
 
 async function fetchYahooBulk(symbols) {
   const symbolString = symbols.join(',');
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbolString)}`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/spark?symbols=${encodeURIComponent(symbolString)}&range=1d&interval=1d`;
   
   const response = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0' }
   });
 
   if (!response.ok) {
-    throw new Error(`Yahoo HTTP ${response.status}`);
+    let errorText = '';
+    try { errorText = await response.text(); } catch(e) {}
+    throw new Error(`Yahoo HTTP ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
   const results = [];
   
-  if (data.quoteResponse && data.quoteResponse.result) {
-    data.quoteResponse.result.forEach(q => {
-      if (q.regularMarketPrice) {
+  if (data && typeof data === 'object') {
+    for (const [sym, item] of Object.entries(data)) {
+      if (item && item.close && item.close.length > 0) {
+        const validCloses = item.close.filter(c => c !== null && !isNaN(c));
+        if (validCloses.length === 0) continue;
+        
+        const currentPrice = validCloses[validCloses.length - 1];
+        const prevClose = item.chartPreviousClose || item.previousClose;
+        
         results.push({
-          symbol: q.symbol,
+          symbol: sym,
           data: {
-            price: q.regularMarketPrice,
-            changeAmount: q.regularMarketChange || null,
-            changePercent: q.regularMarketChangePercent || null
+            price: currentPrice,
+            changeAmount: prevClose ? currentPrice - prevClose : null,
+            changePercent: prevClose ? ((currentPrice - prevClose) / prevClose) * 100 : null
           }
         });
       }
-    });
+    }
   }
   return results;
 }

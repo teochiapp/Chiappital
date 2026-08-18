@@ -209,9 +209,9 @@ const getRegionFlag = (region) => {
     'BR': '🇧🇷',
     'CN': '🇨🇳',
     'EU': '🇪🇺',
-    'Global': '🌍'
+    'Global': '₿'
   };
-  return flags[region] || '🌍';
+  return flags[region] || '🌐';
 };
 
 const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", initialValue = "" }) => {
