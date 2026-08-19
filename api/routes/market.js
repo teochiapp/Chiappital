@@ -12,7 +12,7 @@ router.get('/snapshot', async (req, res) => {
              rsi_weekly, rsi_previous, rsi_delta, rsi_updated_at,
              macd_weekly, macd_signal, macd_hist, macd_prev_weekly, macd_prev_signal, macd_prev_hist,
              drawdown_52w, rs_value, rs_previous, rs_state, rs_updated_at,
-             setup_state, setup_verdict, setup_factors, source, updated_at, status 
+             setup_state, setup_verdict, setup_factors, op_score, op_score_conclusions, source, updated_at, status 
       FROM market_snapshot
     `);
 
@@ -42,6 +42,8 @@ router.get('/snapshot', async (req, res) => {
         setupState: row.setup_state,
         setupVerdict: row.setup_verdict,
         setupFactors: typeof row.setup_factors === 'string' ? JSON.parse(row.setup_factors) : row.setup_factors,
+        opScore: row.op_score !== null ? parseInt(row.op_score, 10) : null,
+        opScoreConclusions: typeof row.op_score_conclusions === 'string' ? JSON.parse(row.op_score_conclusions) : row.op_score_conclusions,
         source: row.source,
         updatedAt: row.updated_at,
         status: row.status

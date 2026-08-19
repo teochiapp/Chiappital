@@ -7,6 +7,8 @@ import { useAlerts } from '../../context/AlertsContext';
 import alertService from '../../services/alertService';
 import { colors } from '../../styles/colors';
 import CreateAlertModal from './CreateAlertModal';
+import EmailConfigModal from './EmailConfigModal';
+import { Mail } from 'lucide-react';
 
 const AlertsPage = () => {
   const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices } = useAlerts();
@@ -14,6 +16,9 @@ const AlertsPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [alertInitialData, setAlertInitialData] = useState(null);
+  
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailAlertData, setEmailAlertData] = useState(null);
 
   // Feedback Modal State
   const [feedback, setFeedback] = useState({ isOpen: false, type: 'info', title: '', message: '', isConfirm: false, onConfirm: null });
@@ -38,8 +43,17 @@ const AlertsPage = () => {
     setShowModal(true);
   };
 
+  const openEmailModal = (alert) => {
+    setEmailAlertData(alert);
+    setShowEmailModal(true);
+  };
+
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  const closeEmailModal = () => {
+    setShowEmailModal(false);
   };
 
   const handleDelete = (id) => {
@@ -156,7 +170,14 @@ const AlertsPage = () => {
                     <tbody>
                       {activeAlerts.map((a) => (
                         <Row key={a.id}>
-                          <Td><SymTxt>{a.symbol}</SymTxt></Td>
+                          <Td>
+                            <SymTxt>
+                              {a.symbol}
+                              {(a.email_enabled === 1 || a.email_enabled === true) && (
+                                <Mail size={12} color="#10b981" style={{ marginLeft: '6px' }} title="Email configurado" />
+                              )}
+                            </SymTxt>
+                          </Td>
                           <Td>
                             <ConditionBadge $type={a.condition_type}>
                               {a.condition_type === 'above' ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
@@ -177,8 +198,9 @@ const AlertsPage = () => {
                           </Td>
                           <Td style={{textAlign: 'right'}}>
                             <ActionBtns>
-                              <ActionBtn onClick={() => openEditModal(a)}><Edit2 size={14} /></ActionBtn>
-                              <ActionBtn $danger onClick={() => handleDelete(a.id)}><Trash2 size={14} /></ActionBtn>
+                              <ActionBtn onClick={() => openEmailModal(a)} title="Programar Envío de Email"><Mail size={14} /></ActionBtn>
+                              <ActionBtn onClick={() => openEditModal(a)} title="Editar Alerta"><Edit2 size={14} /></ActionBtn>
+                              <ActionBtn $danger onClick={() => handleDelete(a.id)} title="Eliminar Alerta"><Trash2 size={14} /></ActionBtn>
                             </ActionBtns>
                           </Td>
                         </Row>
@@ -211,7 +233,14 @@ const AlertsPage = () => {
                     <tbody>
                       {inactiveAlerts.map((a) => (
                         <Row key={a.id} $inactive>
-                          <Td><SymTxt>{a.symbol}</SymTxt></Td>
+                          <Td>
+                            <SymTxt>
+                              {a.symbol}
+                              {(a.email_enabled === 1 || a.email_enabled === true) && (
+                                <Mail size={12} color="#10b981" style={{ marginLeft: '6px' }} title="Email configurado" />
+                              )}
+                            </SymTxt>
+                          </Td>
                           <Td>
                             <ConditionBadge $type={a.condition_type} $inactive>
                               {a.condition_type === 'above' ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
@@ -232,6 +261,7 @@ const AlertsPage = () => {
                           </Td>
                           <Td style={{textAlign: 'right'}}>
                             <ActionBtns>
+                              <ActionBtn onClick={() => openEmailModal(a)} title="Programar Envío"><Mail size={14} /></ActionBtn>
                               <ActionBtn $reactivate onClick={() => toggleActive(a)} title="Reactivar"><RotateCcw size={14} /></ActionBtn>
                               <ActionBtn onClick={() => openEditModal(a)} title="Editar"><Edit2 size={14} /></ActionBtn>
                               <ActionBtn $danger onClick={() => handleDelete(a.id)} title="Eliminar"><Trash2 size={14} /></ActionBtn>
@@ -273,6 +303,12 @@ const AlertsPage = () => {
         confirmText={feedback.confirmText}
         onConfirm={feedback.onConfirm}
         onClose={() => setFeedback(prev => ({ ...prev, isOpen: false }))}
+      />
+      <EmailConfigModal
+        isOpen={showEmailModal}
+        onClose={closeEmailModal}
+        initialData={emailAlertData}
+        onSuccess={fetchAlerts}
       />
     </Layout>
   );

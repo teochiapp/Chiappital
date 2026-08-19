@@ -60,6 +60,16 @@ export const AlertsProvider = ({ children }) => {
         }
 
         if (isTriggered) {
+          // Trigger alert actions (like sending emails) before deactivating
+          try {
+            if (alert.email_enabled === 1 || alert.email_enabled === true) {
+              // Pass the current price, backend will resolve the rest of the dynamic variables
+              await alertService.triggerAlertActions(alert.id, { price: currentPrice, triggerTime: new Date().toISOString() });
+            }
+          } catch (e) {
+            console.error('Error triggering alert actions:', e);
+          }
+
           // Deactivate it in DB
           await alertService.deactivateAlert(alert.id);
           

@@ -1,0 +1,208 @@
+ Fase 1: Detección Inicial (marketSyncService.js)
+Antes de ponerle puntaje, el sistema escanea el mercado buscando acciones que cumplan estrictamente con las reglas de un Pullback. Para que una acción sea marcada como bullish_pullback, debe superar esta carrera de obstáculos matemáticos:
+
+La base de la tendencia (SMA30): La media de 30 días tiene que estar apuntando hacia arriba en el corto plazo (5-10 días) y no puede estar apuntando hacia abajo en el mediano plazo (20 días).
+Impulso previo (wasStrongAbove): En las últimas dos semanas, el precio tiene que haber estado fuerte y alejado por lo menos un 1.5% por encima de la media. Tiene que demostrar que hubo un impulso.
+El Retroceso (corrected): En los últimos 5 días, el precio tiene que haberse acercado a "descansar" hacia la EMA21 o la SMA30. El bot mide la volatilidad real (ATR) y exige que el precio se haya acercado al menos a la mitad de un ATR de distancia de las medias.
+El Soporte Aguanta: El precio actual tiene que seguir por encima de la EMA21 o la SMA30.
+No se escapó todavía (stillNearEma21): Esto es crucial. Si la acción ya rebotó y se alejó mucho de las medias, ya no es un pullback (es un tren que ya partió). El sistema exige que hoy la distancia a la EMA21 siga siendo menor al 1.5% y menor a 1 ATR.
+🧮 Fase 2: El Análisis del OP Score (opScoreService.js)
+Si la acción sobrevive a la Fase 1, entra al quirófano del OP Score. Arranca con un puntaje Base de 60 y se le aplican los siguientes exámenes:
+
+💪 Fuerza Relativa de Weinstein (RS):
+
+Compara el rendimiento de 12 semanas contra el índice de referencia.
+Si la fuerza es Fuerte y Creciente suma +20 puntos.
+Si es Muy Débil y Deteriorándose resta -20 puntos y le clava un límite estricto (Cap) de 50 puntos al total.
+📊 Calidad del Volumen:
+
+Revisa todos los "días rojos" del retroceso. Si el volumen se secó (cayó con menos del 80% del volumen habitual), significa que los institucionales no están vendiendo: +7 puntos.
+Si los días de caída tuvieron volumen pesado (>1.5x): -12 puntos.
+Rebote actual: Si hoy está subiendo con cierre fuerte y mucho volumen, premia la reacción institucional con +8 puntos.
+⚖️ Momentum (MACD y RSI):
+
+Premia los cruces alcistas tempranos del MACD (+12 pts).
+Penaliza si el RSI está explotado por arriba de 80 (riesgo de extensión).
+🏛️ Salud a Largo Plazo:
+
+Si la acción cotiza sobre su EMA200 y está a menos de 10% de sus máximos históricos (Drawdown): +12 puntos.
+Si está por debajo de la EMA200 y destrozada a más de un -50% de sus máximos, le resta -15 puntos y capa el máximo posible en 45 puntos (aislando así las acciones "basura").
+🕯️ Price Action (Micro-análisis):
+
+Busca patrones exactos: Si hay un Martillo apoyado en la EMA21 suma puntos.
+Detecta "Riesgo Institucional": Si hubo una vela roja gigante acompañada de hiper-volumen, asume distribución, resta puntos y limita el score a 50.
+Profundidad: Si el punto más bajo del pullback perforó "demasiado" las medias, se asume que hubo pánico, restando puntos.
+Invalidación: Si en algún momento la acción cierra simultáneamente por debajo de la EMA21 y la SMA30 por un margen superior a medio ATR... saca la guillotina. El setup se marca como INVALIDADO y se descarta.
+Con esto, el bot logra distinguir entre un Pullback donde las "manos fuertes" simplemente están tomando un respiro con bajo volumen para seguir subiendo (OP Score 85-95), y una acción que se está cayendo a pedazos rebotando por casualidad (OP Score 30-50).
+
+Cuando estés listo, decime con qué setup querés que continuemos.
+
+
+Respuesta:
+
+Mostrar más
+Sí. Esta versión está bastante más coherente con la estrategia que venimos armando. Hay una separación sana entre:
+
+Detección del setup: ¿realmente existe un pullback?
+Calidad del setup: ¿qué tan bueno es ese pullback?
+Invalidación: ¿el setup dejó de existir?
+Eso es mucho mejor que intentar que un único Score haga todo.
+
+Pero haría 4 ajustes antes de congelar esta especificación.
+
+1. El stillNearEma21 puede ser demasiado restrictivo
+La regla:
+
+distancia < 1.5% y < 1 ATR
+
+me gusta conceptualmente, pero puede eliminar buenos pullbacks en acciones volátiles.
+
+Yo usaría:
+
+Distancia EMA21 <= MAX(1.5%, 1 ATR)
+Es decir, que cumpla al menos una de las dos condiciones, no necesariamente ambas.
+
+Aunque para una estrategia muy conservadora, mantener AND también tiene sentido. En tu caso, como preferís evitar stops antes que perseguir oportunidades, mantendría inicialmente el AND y luego lo validaría con backtesting.
+
+2. La detección del retroceso debería distinguir "tocó" de "rompió"
+Esto es importante.
+
+No es lo mismo:
+
+Precio → EMA21 → rebote
+que:
+
+Precio → EMA21 → SMA30 → -1 ATR → rebote
+El segundo ya es mucho más sospechoso.
+
+Por eso me gusta que el Score tenga:
+
+pullbackDepthATR
+y que además de penalizarlo pueda invalidarlo cuando rompe estructura.
+
+3. El RS de +20 / -20 me parece correcto para TU estrategia
+Antes teníamos +15/-15. Ahora que estamos viendo el árbol completo, subiría la importancia del RS.
+
+Tu estrategia busca:
+
+debilidad temporal dentro de un activo relativamente fuerte.
+
+Por lo tanto, un Pullback con:
+
+RS fuerte
++
+RS mejorando
+es prácticamente el escenario ideal.
+
+Y uno con:
+
+RS muy débil
++
+RS deteriorándose
+es exactamente lo contrario.
+
+Así que:
+
+Very Strong + Rising    +20
+Strong + Rising         +15
+Positive                +8
+Neutral                  0
+Weak                    -10
+Very Weak + Falling     -20 + Cap 50
+me parece incluso mejor que el esquema anterior.
+
+4. Una cosa que agregaría: separación entre rawScore y valid
+Esto para mí ya debería quedar definitivamente en la arquitectura.
+
+Ejemplo:
+
+GOOGL
+Setup: Bullish Pullback
+Raw Score: 94
+Cap: none
+Final Score: 94
+Valid: YES
+Mientras:
+
+UPST
+Setup: Bullish Pullback
+Raw Score: 78
+Cap: 45
+Final Score: 45
+Valid: NO
+Invalidation: EMA21 + SMA30 broken
+Porque el segundo caso no es un Pullback de 45/100.
+
+Es un Pullback que falló.
+
+Eso después te permite hacer algo muy potente en el Screener:
+
+🔥 90-100   Excelente
+🟢 80-89    Muy interesante
+🟡 70-79    Interesante
+⚪ 60-69    Seguimiento
+🟠 50-59    Débil
+🔴 <50      Mala calidad
+⛔ INVALID  Setup descartado
+Y no confundir una acción mediocre con una estructura directamente rota.
+
+Hay otra cuestión conceptual importante
+Yo no pondría como objetivo que todos los Pullbacks buenos terminen necesariamente en 85-95.
+
+Porque entonces terminamos calibrando los puntos para que el resultado "se vea lindo".
+
+Mejor que el Score tenga significado relativo:
+
+60 = Pullback técnicamente válido
+70 = Bueno
+80 = Muy bueno
+90 = Excepcional
+100+ = excepcional + múltiples confluencias
+Y que el Cap sea realmente un techo de riesgo, no un mecanismo para mantener todo entre 0 y 100.
+
+Eso además encaja perfectamente con lo que dijiste originalmente: no te interesa tanto que sea un 0/100 perfecto, sino que ordene correctamente las oportunidades y permita decidir cuáles pasan la guillotina.
+
+La arquitectura final que usaría
+                ACCIÓN
+                   │
+                   ▼
+          ¿Existe Pullback?
+                   │
+            ┌──────┴──────┐
+            │             │
+           NO             SÍ
+            │             │
+         DESCARTAR        ▼
+                    ¿Está invalidado?
+                          │
+                    ┌─────┴─────┐
+                    │           │
+                   SÍ           NO
+                    │           │
+                INVALID      OP SCORE
+                                │
+                ┌───────────────┼───────────────┐
+                │               │               │
+               RS            VOLUME          MOMENTUM
+                │               │               │
+                └───────────────┼───────────────┘
+                                │
+                        LONG TERM HEALTH
+                                │
+                         PRICE ACTION
+                                │
+                              FLAGS
+                                │
+                                ▼
+                          RAW SCORE
+                                │
+                         ¿Existe CAP?
+                                │
+                         ┌──────┴──────┐
+                         │             │
+                        SÍ            NO
+                         │             │
+                    FINAL SCORE     RAW SCORE
+Esta sería la base que congelaría para bullish_pullback.
+
+Y recién después pasaría a Reversión Confirmada, porque ahí cambia bastante la lógica: en un Pullback queremos que la estructura alcista ya exista, mientras que en una Reversión justamente estamos intentando detectar que se está construyendo. Esa diferencia debería reflejarse fuertemente en los pesos.

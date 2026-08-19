@@ -81,5 +81,24 @@ export const useApiMetrics = () => {
     }
   };
 
-  return { metrics, loading, error, updateMetric, addMetric, refreshMetrics: fetchMetrics };
+  const sendHistoricalSummary = async (payload) => {
+    try {
+      const response = await fetch(`${apiService.baseURL}/historical-metrics/send-summary`, {
+        method: 'POST',
+        headers: apiService.getHeaders(),
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al enviar el resumen');
+      }
+      
+      return await response.json();
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
+  return { metrics, loading, error, updateMetric, addMetric, refreshMetrics: fetchMetrics, sendHistoricalSummary };
 };

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { Table, Edit2, Check, X, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Table, Edit2, Check, X, TrendingUp, TrendingDown, ChevronDown, ChevronUp, Plus, Mail } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import { useApiMetrics } from '../../hooks/useApiMetrics';
 import { useAccount } from '../../context/AccountContext';
+import HistoricalMetricsEmailModal from './HistoricalMetricsEmailModal';
 
 const HistoricalMetrics = () => {
-  const { metrics, loading, error, updateMetric, addMetric, refreshMetrics } = useApiMetrics();
+  const { metrics, loading, error, updateMetric, addMetric, refreshMetrics, sendHistoricalSummary } = useApiMetrics();
   const { accountType } = useAccount();
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -14,6 +15,10 @@ const HistoricalMetrics = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState('ENERO');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [selectedMetricForEmail, setSelectedMetricForEmail] = useState(null);
+  const [ytdDataForEmail, setYtdDataForEmail] = useState(null);
 
   const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
   const yearsOptions = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 2 + i); // -2 to +7 years
@@ -142,6 +147,12 @@ const HistoricalMetrics = () => {
       var_percent: parseFloat(metric.var_percent).toFixed(2).replace(/\.00$/, ''),
       var_spy: parseFloat(metric.var_spy).toFixed(2).replace(/\.00$/, '')
     });
+  };
+
+  const handleEmailClick = (metric, ytd, spy, diff, totalProfitUSD) => {
+    setSelectedMetricForEmail(metric);
+    setYtdDataForEmail({ ytd, spy, diff, profit: totalProfitUSD });
+    setEmailModalOpen(true);
   };
 
   const handleCancelEdit = () => {
@@ -303,6 +314,14 @@ const HistoricalMetrics = () => {
         </ModalOverlay>
       )}
 
+      <HistoricalMetricsEmailModal 
+        isOpen={emailModalOpen}
+        onClose={() => { setEmailModalOpen(false); setSelectedMetricForEmail(null); setYtdDataForEmail(null); }}
+        monthData={selectedMetricForEmail}
+        ytdData={ytdDataForEmail}
+        onSend={sendHistoricalSummary}
+      />
+
       <TabsContainer>
         {years.map(year => {
           const yearMetrics = groupedMetrics[year];
@@ -359,9 +378,14 @@ const HistoricalMetrics = () => {
                                   <button className="cancel" onClick={handleCancelEdit}><X size={16} /></button>
                                 </ActionButtons>
                               ) : (
-                                <EditButton onClick={() => handleEditClick(metric)}>
-                                  <Edit2 size={16} />
-                                </EditButton>
+                                <ActionButtons>
+                                  <EditButton onClick={() => handleEmailClick(metric, ytd, spy, diff, totalProfitUSD)}>
+                                    <Mail size={16} />
+                                  </EditButton>
+                                  <EditButton onClick={() => handleEditClick(metric)}>
+                                    <Edit2 size={16} />
+                                  </EditButton>
+                                </ActionButtons>
                               )}
                             </td>
                           </tr>

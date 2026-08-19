@@ -1,6 +1,10 @@
 const { getPool } = require('../database/db');
 const logger = require('../utils/logger');
+const opScoreService = require('./opScoreService');
 require('dotenv').config();
+
+const { default: YahooFinance } = require('yahoo-finance2');
+const yahooFinance = new YahooFinance({ validation: { logErrors: false } });
 
 let isSyncing = false;
 let finnhubRateLimited = false;
@@ -67,7 +71,11 @@ async function runSync(reason = 'manual') {
         ms.drawdown_52w,
         ms.rs_updated_at,
         ms.rs_value,
+        ms.rs_previous,
+        ms.rs_state,
         ms.setup_state,
+        ms.setup_factors,
+        ms.rsi_weekly,
         ts.index_symbol
       FROM tracked_symbols ts
       LEFT JOIN market_snapshot ms ON ts.symbol = ms.symbol
@@ -438,6 +446,40 @@ async function runSync(reason = 'manual') {
         updateQuery = updateQuery.replace(/, $/, '');
       }
 
+      // --- OP SCORE CALCULATION ---
+      const dbRow = rows.find(r => r.symbol === symbol) || {};
+      const finalSetupState = setup !== undefined ? setup.setup_state : dbRow.setup_state;
+      const finalFactors = setup !== undefined ? setup.setup_factors : (typeof dbRow.setup_factors === 'string' ? JSON.parse(dbRow.setup_factors) : dbRow.setup_factors) || {};
+      
+      const opData = {
+        rsValue: rsiData !== undefined && rsiData.rs_value !== undefined ? rsiData.rs_value : dbRow.rs_value,
+        rsPrevious: rsiData !== undefined && rsiData.rs_previous !== undefined ? rsiData.rs_previous : dbRow.rs_previous,
+        rsState: rsiData !== undefined && rsiData.rs_state !== undefined ? rsiData.rs_state : dbRow.rs_state,
+        rsiWeekly: rsiData !== undefined && rsiData.rsi_weekly !== undefined ? rsiData.rsi_weekly : dbRow.rsi_weekly,
+        currentRVol: finalFactors.volume?.rvol,
+        drawdown52w: rsiData !== undefined && rsiData.drawdown_52w !== undefined ? rsiData.drawdown_52w : dbRow.drawdown_52w,
+        rsiDaily: finalFactors.rsiDaily,
+        atr14: finalFactors.atr14,
+        price: finalFactors.currentPrice,
+        ema21: finalFactors.currentEma21,
+        sma30: finalFactors.currentSma30,
+        ema200: finalFactors.currentEma200,
+        recentCandles: finalFactors.recentCandles,
+        ema21Distance: finalFactors.priceAboveEma21Pct,
+        ema21AboveSma30Pct: finalFactors.ema21AboveSma30Pct,
+        macd: finalFactors.macd
+      };
+
+      let opScoreResult = null;
+      if (finalSetupState) {
+        opScoreResult = opScoreService.calculateOpScore(finalSetupState, opData);
+        if (!updateQuery.endsWith(', ') && !updateQuery.endsWith('(')) updateQuery += ', ';
+        updateQuery += 'op_score, op_score_conclusions';
+        updatePlaceholders.push('?', '?');
+        updateValues.push(opScoreResult.score, JSON.stringify(opScoreResult.conclusions));
+        onDuplicateUpdate.push('op_score = VALUES(op_score)', 'op_score_conclusions = VALUES(op_score_conclusions)');
+      }
+
       if (onDuplicateUpdate.length > 0) {
         const sql = `${updateQuery}) VALUES (?${updatePlaceholders.length > 0 ? ',' + updatePlaceholders.join(',') : ''}) ON DUPLICATE KEY UPDATE ${onDuplicateUpdate.join(', ')}`;
         try {
@@ -542,43 +584,19 @@ async function fetchFinnhub(symbol) {
 }
 
 async function fetchYahooBulk(symbols) {
-  const symbolString = symbols.join(',');
-  const url = `https://query1.finance.yahoo.com/v8/finance/spark?symbols=${encodeURIComponent(symbolString)}&range=1d&interval=1d`;
-
-  const response = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' }
-  });
-
-  if (!response.ok) {
-    let errorText = '';
-    try { errorText = await response.text(); } catch (e) { }
-    throw new Error(`Yahoo HTTP ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  const results = [];
-
-  if (data && typeof data === 'object') {
-    for (const [sym, item] of Object.entries(data)) {
-      if (item && item.close && item.close.length > 0) {
-        const validCloses = item.close.filter(c => c !== null && !isNaN(c));
-        if (validCloses.length === 0) continue;
-
-        const currentPrice = validCloses[validCloses.length - 1];
-        const prevClose = item.chartPreviousClose || item.previousClose;
-
-        results.push({
-          symbol: sym,
-          data: {
-            price: currentPrice,
-            changeAmount: prevClose ? currentPrice - prevClose : null,
-            changePercent: prevClose ? ((currentPrice - prevClose) / prevClose) * 100 : null
-          }
-        });
+  try {
+    const quotes = await yahooFinance.quote(symbols);
+    return quotes.map(q => ({
+      symbol: q.symbol,
+      data: {
+        price: q.regularMarketPrice,
+        changeAmount: q.regularMarketChange,
+        changePercent: q.regularMarketChangePercent
       }
-    }
+    }));
+  } catch (error) {
+    throw new Error(`Yahoo Bulk Quote Error - ${error.message}`);
   }
-  return results;
 }
 
 function calculateEMAArray(data, period) {
@@ -704,44 +722,41 @@ async function calculateDailySetup(symbol) {
   const SLOPE_THRESHOLD_PCT = 0.20;
   const MIN_SEPARATION_PCT = 1.0;
 
-  // Pedimos 2 años de datos diarios para asegurar tener 200 ruedas hábiles (y más) para la EMA200
-  let url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=2y`;
-  let response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-
-  if (response.status === 404 && !symbol.includes('.')) {
-    url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol + '.BA')}?interval=1d&range=2y`;
-    response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-  }
-
-  if (!response.ok) throw new Error(`Yahoo Chart HTTP ${response.status}`);
-
-  const data = await response.json();
-  if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
-  const result = data.chart.result[0];
-  if (!result.indicators || !result.indicators.quote || result.indicators.quote.length === 0) return null;
-
-  // Extraer precios y filtrar inválidos
-  const rawCloses = result.indicators.quote[0].close || [];
-  const rawHighs = result.indicators.quote[0].high || [];
-  const rawLows = result.indicators.quote[0].low || [];
-
-  let closes = [], highs = [], lows = [];
-  for (let i = 0; i < rawCloses.length; i++) {
-    const c = rawCloses[i], h = rawHighs[i], l = rawLows[i];
-    if (c !== null && !isNaN(c) && h !== null && !isNaN(h) && l !== null && !isNaN(l)) {
-      closes.push(c); highs.push(h); lows.push(l);
+  let data;
+  try {
+    data = await yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
+  } catch (e) {
+    if (!symbol.includes('.')) {
+      try {
+        data = await yahooFinance.chart(symbol + '.BA', { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
+      } catch (e2) {
+        throw new Error(`Yahoo Chart Error ${e2.message}`);
+      }
+    } else {
+      throw new Error(`Yahoo Chart Error ${e.message}`);
     }
   }
 
-  if (closes.length < 30) return null; // Mínimo para SMA30
+  if (!data || !data.quotes || data.quotes.length === 0) return null;
 
-  // 1. Calcular arreglos de indicadores diarios
+  let closes = [], highs = [], lows = [], opens = [], volumes = [];
+  for (const q of data.quotes) {
+    if (q.close !== null && !isNaN(q.close) && q.high !== null && !isNaN(q.high) && q.low !== null && !isNaN(q.low) && q.open !== null && !isNaN(q.open) && q.volume !== null && !isNaN(q.volume)) {
+      closes.push(q.close); highs.push(q.high); lows.push(q.low); opens.push(q.open); volumes.push(q.volume);
+    }
+  }
+
+  // Antes exigía 30. Para EMA200 real (no fallback) conviene un mínimo mayor,
+  // pero mantenemos 30 como piso y dejamos que el fallback maneje el resto.
+  if (closes.length < 30) return null;
+
   const ema21Array = calculateEMAArray(closes, 21);
   const sma30Array = calculateSMAArray(closes, 30);
   const ema200Array = calculateEMAArray(closes, 200);
   const rsiArray = calculateRsiArray(closes, 14);
   const macdData = calculateMacdArrays(closes, 12, 26, 9);
   const atrArray = calculateATRArray(highs, lows, closes, 14);
+  const volumeSma20Array = calculateSMAArray(volumes, 20);
 
   const L = closes.length - 1;
   const currentPrice = closes[L];
@@ -750,7 +765,6 @@ async function calculateDailySetup(symbol) {
   const currentSma30 = sma30Array[L];
   const currentEma200 = ema200Array[L];
 
-  // Extraer horizontes de medias (L-5, L-10, L-20)
   const prev5Ema21 = L >= 5 ? ema21Array[L - 5] : ema21Array[0];
   const prev10Ema21 = L >= 10 ? ema21Array[L - 10] : ema21Array[0];
   const prev20Ema21 = L >= 20 ? ema21Array[L - 20] : ema21Array[0];
@@ -763,19 +777,20 @@ async function calculateDailySetup(symbol) {
   const currentMacd = macdData.macdLine[L];
   const currentSignal = macdData.signalLine[L];
   const currentHist = macdData.histLine[L];
-  const prevHist = macdData.histLine[L - 1];
+  const prevHist = L >= 1 ? macdData.histLine[L - 1] : null;
 
   const currentAtr = atrArray[L];
 
-  // Separaciones
-  const ema21Distance = currentEma21 ? ((currentPrice - currentEma21) / currentEma21) * 100 : null;
-  const sma30Distance = currentSma30 ? ((currentPrice - currentSma30) / currentSma30) * 100 : null;
-  const ema21AboveSma30Pct = currentEma21 && currentSma30 ? ((currentEma21 - currentSma30) / currentSma30) * 100 : null;
+  const currentVolume = volumes[L];
+  const currentVolumeSma20 = volumeSma20Array[L];
+  const currentRVol = currentVolumeSma20 ? currentVolume / currentVolumeSma20 : null;
+  const isAccumulationDay = L > 0 ? (closes[L] > closes[L - 1]) : true;
 
-  // Función para determinar DIR
+  const ema21Distance = currentEma21 ? ((currentPrice - currentEma21) / currentEma21) * 100 : null;
+  const ema21AboveSma30Pct = (currentEma21 && currentSma30) ? ((currentEma21 - currentSma30) / currentSma30) * 100 : null;
+
   const getDir = (pct) => pct >= SLOPE_THRESHOLD_PCT ? 'UP' : (pct <= -SLOPE_THRESHOLD_PCT ? 'DOWN' : 'FLAT');
 
-  // Pendientes EMA21
   const ema21Slope5Pct = currentEma21 && prev5Ema21 ? ((currentEma21 / prev5Ema21) - 1) * 100 : 0;
   const ema21Slope10Pct = currentEma21 && prev10Ema21 ? ((currentEma21 / prev10Ema21) - 1) * 100 : 0;
   const ema21Slope20Pct = currentEma21 && prev20Ema21 ? ((currentEma21 / prev20Ema21) - 1) * 100 : 0;
@@ -785,7 +800,6 @@ async function calculateDailySetup(symbol) {
   const ema21Slope20Dir = getDir(ema21Slope20Pct);
   const ema21Trend = ema21Slope5Pct > ema21Slope10Pct ? 'ACCELERATING' : (ema21Slope5Pct < ema21Slope10Pct ? 'DECELERATING' : 'CONSTANT');
 
-  // Pendientes SMA30
   const sma30Slope5Pct = currentSma30 && prev5Sma30 ? ((currentSma30 / prev5Sma30) - 1) * 100 : 0;
   const sma30Slope10Pct = currentSma30 && prev10Sma30 ? ((currentSma30 / prev10Sma30) - 1) * 100 : 0;
   const sma30Slope20Pct = currentSma30 && prev20Sma30 ? ((currentSma30 / prev20Sma30) - 1) * 100 : 0;
@@ -795,7 +809,6 @@ async function calculateDailySetup(symbol) {
   const sma30Slope20Dir = getDir(sma30Slope20Pct);
   const sma30Trend = sma30Slope5Pct > sma30Slope10Pct ? 'ACCELERATING' : (sma30Slope5Pct < sma30Slope10Pct ? 'DECELERATING' : 'CONSTANT');
 
-  // Estructura de factores JSON
   let factors = {
     trend: 'neutral',
     ema21: {
@@ -816,20 +829,55 @@ async function calculateDailySetup(symbol) {
       slope20Dir: sma30Slope20Dir,
       trend: sma30Trend
     },
-    ema21AboveSma30Pct: ema21AboveSma30Pct ? parseFloat(ema21AboveSma30Pct.toFixed(2)) : null,
-    priceAboveEma21Pct: ema21Distance ? parseFloat(ema21Distance.toFixed(2)) : null,
+    ema21AboveSma30Pct: ema21AboveSma30Pct !== null ? parseFloat(ema21AboveSma30Pct.toFixed(2)) : null,
+    priceAboveEma21Pct: ema21Distance !== null ? parseFloat(ema21Distance.toFixed(2)) : null,
     atr14: currentAtr ? parseFloat(currentAtr.toFixed(4)) : null,
     distToEma21Atr: currentAtr && currentEma21 ? parseFloat((Math.abs(currentPrice - currentEma21) / currentAtr).toFixed(2)) : null,
     priceAboveEma21: currentEma21 ? currentPrice > currentEma21 : null,
     priceAboveSma30: currentSma30 ? currentPrice > currentSma30 : null,
     rsiDaily: currentRsi,
-    macdDailyBullish: currentMacd !== null && currentSignal !== null ? currentMacd > currentSignal : null,
+    macd: {
+      current: currentMacd,
+      signal: currentSignal,
+      hist: currentHist,
+      prevMacd: L >= 1 ? macdData.macdLine[L - 1] : null,
+      prevSignal: L >= 1 ? macdData.signalLine[L - 1] : null,
+      prevHist: prevHist
+    },
     pullbackDetected: false,
     reversalEarly: false,
-    reversalConfirmed: false
+    reversalConfirmed: false,
+    lateralDetected: false,
+    volume: {
+      rvol: currentRVol !== null ? parseFloat(currentRVol.toFixed(2)) : null,
+      isAccumulationDay: isAccumulationDay
+    },
+    currentPrice: currentPrice,
+    currentEma21: currentEma21,
+    currentSma30: currentSma30,
+    currentEma200: currentEma200,
+    recentCandles: [] // Llenado dinámicamente
   };
 
-  // Helper variables
+  // Guardar últimas 10 velas para análisis OP Score
+  if (L >= 0) {
+    const startIdx = Math.max(0, L - 9);
+    for (let i = startIdx; i <= L; i++) {
+      const isRed = closes[i] < opens[i];
+      const rvol = volumeSma20Array[i] ? volumes[i] / volumeSma20Array[i] : null;
+      factors.recentCandles.push({
+        open: opens[i],
+        high: highs[i],
+        low: lows[i],
+        close: closes[i],
+        volume: volumes[i],
+        rvol: rvol,
+        isRed: isRed,
+        isGreen: !isRed
+      });
+    }
+  }
+
   const isEma21AllUp = ema21Slope5Dir === 'UP' && ema21Slope10Dir === 'UP' && ema21Slope20Dir === 'UP';
   const isSma30AllUp = sma30Slope5Dir === 'UP' && sma30Slope10Dir === 'UP' && sma30Slope20Dir === 'UP';
   const isEma21AllDown = ema21Slope5Dir === 'DOWN' && ema21Slope10Dir === 'DOWN' && ema21Slope20Dir === 'DOWN';
@@ -838,7 +886,6 @@ async function calculateDailySetup(symbol) {
   const isPriceAboveEma21 = factors.priceAboveEma21;
   const isPriceAboveSma30 = factors.priceAboveSma30;
 
-  // Lógica de Tendencia Alcista Fuerte (Strong Uptrend)
   let isUptrend = false;
   let isBearish = false;
 
@@ -854,41 +901,49 @@ async function calculateDailySetup(symbol) {
         factors.trend = 'bearish';
       }
     }
-  } else {
-    // Fallback sin EMA200
-    if (currentEma21 && currentSma30) {
-      if (currentPrice > currentEma21 && currentEma21 > currentSma30 && isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT && ema21Distance >= MIN_SEPARATION_PCT) {
-        isUptrend = true;
-        factors.trend = 'bullish';
-      } else if (currentPrice < currentEma21 && currentEma21 < currentSma30 && isEma21AllDown && isSma30AllDown) {
-        isBearish = true;
-        factors.trend = 'bearish';
-      }
+  } else if (currentEma21 && currentSma30) {
+    if (currentPrice > currentEma21 && currentEma21 > currentSma30 && isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT && ema21Distance >= MIN_SEPARATION_PCT) {
+      isUptrend = true;
+      factors.trend = 'bullish';
+    } else if (currentPrice < currentEma21 && currentEma21 < currentSma30 && isEma21AllDown && isSma30AllDown) {
+      isBearish = true;
+      factors.trend = 'bearish';
     }
   }
 
-  // Si no cumple las condiciones estrictas y está flotando alrededor, la pasamos a NEUTRAL.
-  let isLateral = (!isUptrend && !isBearish &&
-    (Math.abs(ema21AboveSma30Pct) < MIN_SEPARATION_PCT ||
-      (ema21Slope5Dir === 'FLAT' && sma30Slope5Dir === 'FLAT')));
+  // FIX: manejo seguro de null en la distancia EMA21/SMA30 — antes Math.abs(null) = 0
+  // podía marcar lateral falsamente. Ahora, si falta el dato, no se asume lateral por eso.
+  const separationTooSmall = ema21AboveSma30Pct !== null
+    ? Math.abs(ema21AboveSma30Pct) < MIN_SEPARATION_PCT
+    : false;
+  const bothSlopesFlat = ema21Slope5Dir === 'FLAT' && sma30Slope5Dir === 'FLAT';
 
-  // Pullback Logic
+  // FIX: isLateral ahora exige que el precio siga cerca de las medias y que el slope
+  // de 10 días no venga en caída — evita clasificar como 'lateral' activos que ya
+  // rompieron a la baja pero no cumplen todos los criterios bajistas estrictos, y
+  // activos en recuperación donde las medias convergen pero el precio ya se alejó.
+  const priceCloseToMAs = ema21Distance !== null ? Math.abs(ema21Distance) < 4.0 : true;
+  let isLateral = !isUptrend && !isBearish
+    && (separationTooSmall || bothSlopesFlat)
+    && priceCloseToMAs
+    && ema21Slope10Dir !== 'DOWN';
+  if (isLateral) factors.lateralDetected = true;
+
+  // Pullback Logic (sin cambios de lógica, solo prolijidad)
   let pullbackConfirmed = false;
   if (closes.length >= 15 && currentAtr) {
     const isSma30TolerantUp = sma30Slope5Dir === 'UP' && sma30Slope10Dir === 'UP' && sma30Slope20Dir !== 'DOWN';
     if (isSma30TolerantUp) {
-      // La tendencia previa debe haber sido marcada: precio > SMA30 + 1.5% entre hace 5 y 12 días
       let wasStrongAbove = false;
-      for (let i = L - 12; i <= L - 5; i++) {
+      for (let i = Math.max(0, L - 12); i <= L - 5; i++) {
         if (sma30Array[i] && closes[i] >= sma30Array[i] * 1.015) {
           wasStrongAbove = true; break;
         }
       }
 
-      // Verificamos si corrigió: distancia a EMA21 o SMA30 <= 0.5 ATR
       let corrected = false;
       for (let i = L - 5; i <= L; i++) {
-        if (ema21Array[i] && sma30Array[i]) {
+        if (ema21Array[i] && sma30Array[i] && atrArray[i]) {
           const distEma21 = Math.abs(closes[i] - ema21Array[i]);
           const distSma30 = Math.abs(closes[i] - sma30Array[i]);
           if (distEma21 <= 0.5 * atrArray[i] || distSma30 <= 0.5 * atrArray[i]) {
@@ -897,24 +952,42 @@ async function calculateDailySetup(symbol) {
         }
       }
 
-      if (wasStrongAbove && corrected && (isPriceAboveEma21 || isPriceAboveSma30)) {
+      // FIX: el pullback solo es válido si el precio de HOY sigue "descansando"
+      // cerca de la media. Usamos exclusivamente la distancia en ATRs (ya normaliza
+      // la volatilidad del activo), eliminando el umbral fijo de 1.5% que era
+      // demasiado estricto para acciones volátiles (BCBA, tecnología, etc.).
+      const distToEma21AtrNow = currentAtr ? Math.abs(currentPrice - currentEma21) / currentAtr : null;
+      const stillNearEma21 = distToEma21AtrNow !== null && distToEma21AtrNow <= 1.2;
+
+      // FIX: el pullback requiere isUptrend como prerequisito. Sin esto, un activo
+      // lateral/neutro que casualmente toca su EMA21 podía clasificarse como pullback
+      // en lugar de strong_uptrend, invirtiendo la cascada de prioridades.
+      if (isUptrend && wasStrongAbove && corrected && (isPriceAboveEma21 || isPriceAboveSma30) && stillNearEma21) {
         pullbackConfirmed = true;
         factors.pullbackDetected = true;
       }
     }
   }
 
-  // Reversal Logic
+  // FIX: la reversión ahora solo se evalúa cuando el contexto es realmente bajista
+  // o lateral proveniente de debilidad reciente — antes se disparaba con
+  // "!isUptrend && !pullbackConfirmed", lo cual incluía mercados laterales sanos
+  // y generaba señales de reversión sin una tendencia bajista real detrás.
   let reversalEarly = false;
   let reversalConfirmed = false;
+  const weakContext = isBearish || (isLateral && (ema21Slope10Dir === 'DOWN' || sma30Slope10Dir === 'DOWN'));
 
-  if (isBearish || factors.trend === 'bearish' || (!isUptrend && !pullbackConfirmed)) {
-    // Early Reversal
+  // FIX: macdDailyBullish se calcula como variable local real. Antes se usaba
+  // factors.macdDailyBullish que nunca se seteaba (siempre undefined/falsy),
+  // haciendo que este criterio nunca aportara a improvementSignals ni a reversalConfirmed.
+  const macdDailyBullish = currentHist !== null && prevHist !== null && currentHist > prevHist;
+
+  if (weakContext && !pullbackConfirmed) {
     if (isPriceAboveEma21) {
       let improvementSignals = 0;
-      if (currentRsi > 45) improvementSignals++;
-      if (factors.macdDailyBullish) improvementSignals++;
-      if (currentHist && prevHist && currentHist > prevHist) improvementSignals++;
+      if (currentRsi !== null && currentRsi > 45) improvementSignals++;
+      if (macdDailyBullish) improvementSignals++;
+      if (currentHist !== null && prevHist !== null && currentHist > prevHist) improvementSignals++;
       if (ema21Slope5Dir === 'UP') improvementSignals++;
       if (ema21Trend === 'ACCELERATING') improvementSignals++;
 
@@ -924,19 +997,50 @@ async function calculateDailySetup(symbol) {
       }
     }
 
-    // Confirmed Reversal
     const isWeakStructure = ema21Slope20Dir === 'DOWN' || sma30Slope20Dir === 'DOWN';
-    if (isWeakStructure && isPriceAboveEma21 && isPriceAboveSma30 && ema21Slope5Dir === 'UP' && currentRsi > 50 && factors.macdDailyBullish) {
+    if (isWeakStructure && isPriceAboveEma21 && isPriceAboveSma30 && ema21Slope5Dir === 'UP'
+      && currentRsi !== null && currentRsi > 50 && macdDailyBullish) {
       reversalConfirmed = true;
       factors.reversalConfirmed = true;
     }
   }
 
+  // Breakout Logic (Swing - 20 días)
+  let breakoutConfirmed = false;
+  if (closes.length >= 21) {
+    // Máximo de los últimos 20 días excluyendo hoy
+    const max20 = Math.max(...closes.slice(Math.max(0, L - 20), L));
+    const isNewHigh = currentPrice > max20;
+    
+    // Si rompe un máximo de 20 días con fuerte volumen y está sobre sus medias
+    if (isNewHigh && currentRVol !== null && currentRVol >= 1.2 && isAccumulationDay && isPriceAboveEma21 && isPriceAboveSma30) {
+      // Para diferenciar de una tendencia alcista ya disparada, comprobamos que 
+      // hubo cierta consolidación (el máximo de 20 días no se tocó en los últimos 5 días)
+      // O venía de un contexto lateral
+      const max5 = Math.max(...closes.slice(Math.max(0, L - 5), L));
+      const wasConsolidating = max5 < max20 || isLateral; 
+      
+      if (wasConsolidating) {
+        breakoutConfirmed = true;
+        factors.breakoutDetected = true;
+      }
+    }
+  }
+
   // Asignar estado según prioridad
+  // FIX: se agrega 'lateral_trend' explícito en la cascada — antes isLateral
+  // se calculaba pero nunca decidía el estado final, cayendo siempre a 'neutral'.
+  // FIX: pullbackConfirmed ya requiere isUptrend, por lo que no puede "robar" el
+  // estado a activos que no son alcistas confirmados.
+  // NUEVO: strong_uptrend_extended detecta entradas tardías cuando el precio se alejó
+  // demasiado de la EMA21 (> 8% Y > 2.5 ATRs), útil para penalizar en el OP Score.
   let state = 'neutral';
   let verdict = 'Sin setup alcista claro';
 
-  if (pullbackConfirmed) {
+  if (breakoutConfirmed) {
+    state = 'bullish_breakout';
+    verdict = 'Breakout';
+  } else if (pullbackConfirmed) {
     state = 'bullish_pullback';
     verdict = 'Pullback';
   } else if (reversalConfirmed) {
@@ -945,12 +1049,26 @@ async function calculateDailySetup(symbol) {
   } else if (reversalEarly) {
     state = 'early_bullish_reversal';
     verdict = 'Reversión';
-  } else if (isUptrend && !isLateral) {
-    state = 'strong_uptrend';
-    verdict = 'Alcista';
-  } else if (isBearish && !isLateral) {
+  } else if (isUptrend) {
+    // Detectar si el precio está demasiado extendido respecto a la EMA21 —
+    // se usan ambos criterios en conjunto: distancia porcentual Y distancia en ATRs
+    // para que sea robusto a distintas volatilidades.
+    const distToEma21AtrExtended = factors.distToEma21Atr;
+    const isExtended = ema21Distance !== null && ema21Distance > 8
+      && distToEma21AtrExtended !== null && distToEma21AtrExtended > 2.5;
+    if (isExtended) {
+      state = 'strong_uptrend_extended';
+      verdict = 'Alcista Tardío';
+    } else {
+      state = 'strong_uptrend';
+      verdict = 'Alcista';
+    }
+  } else if (isBearish) {
     state = 'bearish_trend';
-    verdict = 'Tendencia bajista';
+    verdict = 'Bajista';
+  } else if (isLateral) {
+    state = 'lateral_trend';
+    verdict = 'Lateral';
   }
 
   return {
@@ -963,7 +1081,6 @@ async function calculateDailySetup(symbol) {
 }
 
 
-
 const indexPromises = new Map();
 async function getIndexHistory(indexSymbol) {
   if (!indexSymbol) return null;
@@ -971,29 +1088,17 @@ async function getIndexHistory(indexSymbol) {
 
   const promise = (async () => {
     try {
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(indexSymbol)}?interval=1wk&range=2y`;
-      const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      if (!response.ok) return null;
-      const data = await response.json();
-      if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
-      const result = data.chart.result[0];
-      if (!result.indicators || !result.indicators.quote || result.indicators.quote.length === 0) return null;
-
-      const timestamps = result.timestamp || [];
-      const rawCloses = result.indicators.quote[0].close || [];
+      const data = await yahooFinance.chart(indexSymbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' });
+      if (!data || !data.quotes || data.quotes.length === 0) return null;
 
       let closesByTime = new Map();
-      if (timestamps.length > 0 && rawCloses.length > 0) {
-        for (let i = 0; i < timestamps.length; i++) {
-          const t = timestamps[i];
-          const c = rawCloses[i];
-          if (c !== null && c !== undefined && !isNaN(c)) {
-            // Utilizamos una aproximación semanal (ej. agrupar por inicio de semana o simplemente día)
-            // Yahoo a veces devuelve timestamps ligeramente distintos, redondeamos a inicio de día UTC
-            const date = new Date(t * 1000);
-            date.setUTCHours(0, 0, 0, 0);
-            closesByTime.set(date.getTime(), c);
-          }
+      for (const q of data.quotes) {
+        if (q.close !== null && q.close !== undefined && !isNaN(q.close)) {
+          // Utilizamos una aproximación semanal (ej. agrupar por inicio de semana o simplemente día)
+          // Yahoo a veces devuelve timestamps ligeramente distintos, redondeamos a inicio de día UTC
+          const date = new Date(q.date);
+          date.setUTCHours(0, 0, 0, 0);
+          closesByTime.set(date.getTime(), q.close);
         }
       }
       return closesByTime;
@@ -1008,39 +1113,34 @@ async function getIndexHistory(indexSymbol) {
 }
 
 async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod = 14) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1wk&range=2y`;
-  const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-  if (!response.ok) throw new Error(`Yahoo Chart HTTP ${response.status}`);
+  let data;
+  try {
+    data = await yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' });
+  } catch (e) {
+    throw new Error(`Yahoo Chart Error ${e.message}`);
+  }
 
-  const data = await response.json();
-  if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
-  const result = data.chart.result[0];
-  if (!result.indicators || !result.indicators.quote || result.indicators.quote.length === 0) return null;
-
-  const timestamps = result.timestamp || [];
-  const rawCloses = result.indicators.quote[0].close || [];
-  const rawHighs = result.indicators.quote[0].high || [];
+  if (!data || !data.quotes || data.quotes.length === 0) return null;
 
   let closes = [];
   let highs = [];
   let validTimestamps = [];
-  if (timestamps.length > 0 && rawCloses.length > 0 && rawHighs.length > 0) {
-    const lastTimestamp = timestamps[timestamps.length - 1] * 1000;
-    let endIdx = timestamps.length;
-    if (Date.now() < lastTimestamp + (7 * 24 * 60 * 60 * 1000)) {
-      endIdx = timestamps.length - 1;
-    }
-    for (let i = 0; i < endIdx; i++) {
-      const c = rawCloses[i];
-      const h = rawHighs[i];
-      if (c !== null && c !== undefined && !isNaN(c) && h !== null && h !== undefined && !isNaN(h)) {
-        closes.push(c);
-        highs.push(h);
+  
+  const lastTimestamp = new Date(data.quotes[data.quotes.length - 1].date).getTime();
+  let endIdx = data.quotes.length;
+  if (Date.now() < lastTimestamp + (7 * 24 * 60 * 60 * 1000)) {
+    endIdx = data.quotes.length - 1;
+  }
+  
+  for (let i = 0; i < endIdx; i++) {
+    const q = data.quotes[i];
+    if (q.close !== null && q.close !== undefined && !isNaN(q.close) && q.high !== null && q.high !== undefined && !isNaN(q.high)) {
+      closes.push(q.close);
+      highs.push(q.high);
 
-        const date = new Date(timestamps[i] * 1000);
-        date.setUTCHours(0, 0, 0, 0);
-        validTimestamps.push(date.getTime());
-      }
+      const date = new Date(q.date);
+      date.setUTCHours(0, 0, 0, 0);
+      validTimestamps.push(date.getTime());
     }
   }
 

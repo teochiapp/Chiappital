@@ -1,0 +1,99 @@
+## 0. PREGUNTAS FILOSÓFICAS (Antes de poner números)Reflexiones críticas para alinear el sistema matemático con tu perfil de trader:1. *El Horizonte de Tiempo:* ¿Estoy diseñando este score para encontrar trades rápidos de 3 a 5 días (Swing), o para subirme a tendencias gigantes de meses (Position Trading)? Un swing trader premia el Momentum diario; un position trader premia el Mansfield y el MACD Semanal.
+
+Estoy diseñando el Score para trades de Swing, puede ir de unos dias a hasta un par de meses idealmente.. Las entradas suelen ser holgadas y pueden durar pocas horas
+
+2. *El Estilo de Entrada:* ¿Me siento más cómodo comprando fortaleza absoluta (activos rompiendo máximos, sin importar si el RSI está alto) o comprando debilidad en tendencia (Pullbacks a la EMA21, buscando el descuento)? El sistema debe darle más puntos a lo que te da tranquilidad operar.
+
+Comprando debilidad en tendencia o apostando por cambios de tendencia (reversión) idealmente, se puede comprar rompiendo maximos pero generalmente despues de una larga lateralizacion.
+
+Me gusta el hecho de hacer el STOP LOSS con la EMA 21, osea que vaya subiendo el SL a medida sube la accion con la media movil
+
+3. *Gestión del Riesgo vs FOMO:* ¿Qué me duele más? ¿Quedarme afuera de un cohete por ser demasiado exigente con el puntaje, o comerme un stop-loss por comprar un activo mediocre que tenía "apenas" buen puntaje?
+
+Me duele mas comerme un stop loss y no cumplir mi sistema y encima perder dinero
+
+4. *La Prueba Ácida:* Si el Screener me tira un activo con un Score Perfecto de 100/100... ¿compraría con los ojos cerrados sin mirar el gráfico en TradingView? Si la respuesta es no, significa que a este Score le falta medir algún filtro de seguridad que sí estás mirando con los ojos.
+
+Nunca compraria directo solo por el SCORE, tendria en cuenta variables globales, sentimiento del mercado y siempre mirando el grafico.
+
+5. *Propósito del Score:* ¿Quiero que este número sea una "Guillotina" (para filtrar toda la basura y dejarme solo 5 activos vivos) o un "Ranking" (para tener una lista de 50 activos ordenados del mejor al peor)?
+
+La idea es que sea ambos, una guillotina para filtrar los activos interesantes pero automatizar un proceso de ranking para todos los valores, como informacion
+
+me gustaria armarlo principalmente por un arbol de decisión, quedaria bastante amplio pero se puede sistemizar.. No importa tanto que respete los 0/100 puntos sino que refleje que acciones van a la guillotina y cuales esta interesante de seguir
+
+Arbol de Decisión Temporal:
+
+Lo más importante es la estructura de la tendencia, junto con el movimiento actual (si es pullback o reversión confirmada) (estilo propuesto por Weistein en su libro)
+
+El Analisis para el Score seria:
+
+Acción -> ¿Que estructura/Scoring EMA tiene?
+
+- Fuerte Alcista (Uptrend):
+
+En este caso probablemente ya sea tarde la entrada, puede sumar algunos puntos, pero lo ideal es esperar un pullback.. tambien hacer un breakout de maximos o de resistencia puede sumar bastante..* 
+Pullback (Descanso en medias): __ pts* 
+Reversión Confirmada: __ pts* 
+Reversión Temprana: __ pts* 
+Lateral: __ pts* 
+Bajista: __ pts
+
+La idea es continuar para cada uno de los estados presentados arriba (bajista, lateral, etc), despues de ese analisis haria la pregunta: 
+Como es el RS? (relative strenght)? 
+Esto es bastante importante en la estrategia 
+
+COmo esta la variedad del volumen (RVol)? Esto es mas importante en algunos casos que otros 
+
+Como esta el MACD? Esto es un indicador de momentum y afectaria distinto cada estado 
+
+Tiene un RSI saludable? Esto no es tan relevante, solo que no tenga un RSI mayor a 80 y algunas pocas verificaciones más idealmente 
+
+Es un activo saludable de Largo Plazo? Esto haria un diferencial para empresas en base al analisis tecnico semanal o de largo plazo.. Ya que no seria lo mismo para el Score comprar una empresa como Google a comprar una como Upstart o Rokku.. (deberia priorizar empresas muy alcistas y de gran calidad) 
+
+Las velas japonesas son saludables? esto no se como aplicarlo aún pero es importante 
+
+Tiene red flags/green flags como por ejemplo Death Cross o una fuga despues de una larga lateralizacion (green flag)?
+
+## ARquitectura General
+
+ACCIÓN
+│
+├── 1. ¿QUÉ ESTRUCTURA TIENE?
+│
+│   ├── 🟢 Pullback
+│   ├── 🔵 Reversión Confirmada
+│   ├── 🔵 Reversión Temprana
+│   ├── 🟢 Tendencia Alcista
+│   ├── ⚪ Lateral
+│   └── 🔴 Bajista
+│
+└── 2. EVALUAR LA CALIDAD DEL SETUP
+│
+├── Relative Strength
+├── Volumen / RVOL
+├── MACD
+├── RSI
+├── Salud de Largo Plazo
+├── Price Action / Velas
+└── Green Flags / Red Flags
+
+La clave es que **cada rama ua los mismos indicadores de forma diferente**.
+
+Un MACD alcista no vale lo mismo en un pullback que en una reversión. Un volumen alto tampoco.
+
+# NIVEL 1: LA ESTRUCTURA DEFINE EL POTENCIAL BASE
+
+Yo no intentaría repartir exactamente 100 puntos.
+
+Usaría algo parecido a un **Score Base + Ajustadores**, y después lo normalizás si querés mostrarlo de 0 a 100.
+
+| Setup | Base | Interpretación |
+| --- | --- | --- |
+| 🟢 **Pullback** | **60** | Tu setup principal |
+| 🔵 **Reversión confirmada** | **50** | Setup importante, pero con más riesgo |
+| 🟦 **Reversión temprana** | **35** | Watchlist, necesita confirmaciones |
+| 📈 Alcista | **45** | Buena acción, no necesariamente buen punto de entrada |
+| ⚪ **Lateral / Consolidación** | **20** | Bajo interés salvo que construya una base |
+| 🔴 **Bajista** | 5 | Prácticamente descartada para long |
+| Breakout | 50 |  |

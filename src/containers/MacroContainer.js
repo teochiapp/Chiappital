@@ -39,7 +39,7 @@ const MacroContainer = () => {
         const macroSymbols = ['^TNX', 'DX-Y.NYB', '^VIX', 'QQQ', 'SPY', 'IGV', 'SMH', 'IWM'];
         
         // Fetch Commodities (Yahoo)
-        const commoditySymbols = ['CL=F', 'GC=F', 'SI=F', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
+        const commoditySymbols = ['CL=F', 'XAUUSD=X', 'XAGUSD=X', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
 
         // 4. Fetch DolarAPI (Argentina)
         const fetchDolarApi = fetch('https://dolarapi.com/v1/dolares').then(res => res.json()).catch(() => []);
@@ -297,8 +297,8 @@ const MacroContainer = () => {
           let name = '';
           switch (item.symbol) {
             case 'CL=F': name = '🛢️ Petróleo'; break;
-            case 'GC=F': name = '🥇 Oro'; break;
-            case 'SI=F': name = '🥈 Plata'; break;
+            case 'XAUUSD=X': name = '🥇 Oro'; break;
+            case 'XAGUSD=X': name = '🥈 Plata'; break;
             case 'HG=F': name = '🟠 Cobre'; break;
             case 'ZS=F': name = '🌱 Soja'; break;
             case 'ZW=F': name = '🌾 Trigo'; break;

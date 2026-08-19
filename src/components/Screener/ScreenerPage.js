@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, Target, ChevronRight, BellRing, Activity, BarChart2, Award } from 'lucide-react';
+import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, 
+Target, ChevronRight, BellRing, Activity, BarChart2, Award, Bitcoin, PlayCircle } from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import symbolSearchService from '../../services/symbolSearchService';
@@ -9,7 +10,19 @@ import rsiService from '../../services/rsiService';
 import CreateAlertModal from '../Alerts/CreateAlertModal';
 import { colors } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
+import ETFComponentsModal from './ETFComponentsModal';
 
+export const getTVSymbol = (symbol) => {
+  if (!symbol) return '';
+  if (symbol === 'XAUUSD=X') return 'XAUUSD';
+  if (symbol === 'XAGUSD=X') return 'XAGUSD';
+  if (symbol === 'CL=F') return 'USOIL';
+  if (symbol === 'HG=F') return 'COPPER';
+  if (symbol === 'NG=F') return 'NATGAS';
+  if (symbol.endsWith('=X')) return symbol.replace('=X', '');
+  if (symbol.endsWith('=F')) return symbol.replace('=F', '1!');
+  return symbol;
+};
 
 // ── MAPEOS LAB (constantes de módulo, fuera del componente para evitar re-creación) ─
 const MAP_REGION = {
@@ -51,6 +64,7 @@ const REGION_LABELS = {
   JP:     'Japón',
   IN:     'India',
   Global: 'Criptos',
+  Commodities: 'Commodities',
 };
 
 // Códigos ISO 3166-1 alpha-2 para flagcdn.com
@@ -63,10 +77,11 @@ const REGION_ISO = {
   JP:     'jp',
   IN:     'in',
   Global: null, // sin bandera
+  Commodities: null, // sin bandera
 };
 
 // Componente bandera + nombre
-const RegionFlag = ({ code, showName = true }) => {
+export const RegionFlag = ({ code, showName = true }) => {
   const iso = REGION_ISO[code];
   const name = REGION_LABELS[code] || code;
   return (
@@ -79,7 +94,9 @@ const RegionFlag = ({ code, showName = true }) => {
             alt={name}
             style={{ borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
           />
-        : <span style={{ fontSize: '1rem' }}>🌐</span>
+        : (code === 'Commodities' 
+            ? <Layers size={18} color="#eab308" style={{ flexShrink: 0 }} /> 
+            : <Bitcoin size={18} color="#f59e0b" style={{ flexShrink: 0 }} />)
       }
       {showName && <span>{name}</span>}
     </RegionFlagWrap>
@@ -99,6 +116,7 @@ const ScreenerPage = () => {
   const [selectedScanMacd, setSelectedScanMacd] = useState([]);
   const [selectedScanDrawdown, setSelectedScanDrawdown] = useState([]);
   const [selectedScanRs, setSelectedScanRs] = useState([]);
+  const [selectedScanOpScore, setSelectedScanOpScore] = useState([]);
   const [groupMode, setGroupMode]   = useState('general'); // 'region' | 'sector' | 'general'
   const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
@@ -126,6 +144,66 @@ const ScreenerPage = () => {
     setAlertInitialData({ symbol, currentPrice: price });
     setShowAlertModal(true);
   };
+
+  // ── OP Score Modal ────────────────────────────────────────────────────────
+  const [showOpScoreModal, setShowOpScoreModal] = useState(false);
+  const [opScoreModalData, setOpScoreModalData] = useState(null);
+
+  const handleOpenOpScore = (stock) => {
+    if (!stock.opScoreConclusions || stock.opScoreConclusions.length === 0) return;
+    setOpScoreModalData(stock);
+    setShowOpScoreModal(true);
+  };
+
+  // ── ETF Component Drill-down Modal ────────────────────────────────────────
+  const [selectedETF, setSelectedETF] = useState(null);
+  
+  const handleOpenETF = (symbol) => {
+    const symbolLower = symbol.toLowerCase();
+    
+    // Buscar en MAP_REGION
+    const regionEntries = Object.entries(MAP_REGION);
+    const rMatch = regionEntries.find(([k, v]) => v === symbolLower);
+    if (rMatch) {
+      const regionName = rMatch[0];
+      setSelectedETF({
+        symbol,
+        title: `${symbol} · ${REGION_LABELS[regionName] || regionName}`,
+        type: 'Región',
+        key: regionName,
+        filterType: 'region'
+      });
+      return;
+    }
+    
+    // Buscar en MAP_SECTOR
+    const sectorEntries = Object.entries(MAP_SECTOR);
+    const sMatch = sectorEntries.find(([k, v]) => v === symbolLower);
+    if (sMatch) {
+      const sectorName = sMatch[0];
+      setSelectedETF({
+        symbol,
+        title: `${symbol} · ${sectorName}`,
+        type: 'Sector',
+        key: sectorName,
+        filterType: 'sector'
+      });
+      return;
+    }
+  };
+
+  const handleCloseETF = () => setSelectedETF(null);
+
+  const etfComponents = useMemo(() => {
+    if (!selectedETF || !stockData || stockData.length === 0) return [];
+    let comps = [];
+    if (selectedETF.filterType === 'region') {
+      comps = stockData.filter(s => s.region === selectedETF.key && s.symbol.toUpperCase() !== selectedETF.symbol.toUpperCase());
+    } else if (selectedETF.filterType === 'sector') {
+      comps = stockData.filter(s => s.sector === selectedETF.key && s.symbol.toUpperCase() !== selectedETF.symbol.toUpperCase());
+    }
+    return comps.sort((a, b) => (b.opScore || 0) - (a.opScore || 0));
+  }, [stockData, selectedETF]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchScreenerData(false); }, []);
@@ -175,6 +253,8 @@ const ScreenerPage = () => {
           setupState: quoteData?.setupState ?? null,
           setupVerdict: quoteData?.setupVerdict ?? null,
           setupFactors: quoteData?.setupFactors ?? null,
+          opScore: quoteData?.opScore ?? null,
+          opScoreConclusions: quoteData?.opScoreConclusions ?? null,
           status: quoteData?.status || 'ERROR'
         };
       });
@@ -269,9 +349,9 @@ const ScreenerPage = () => {
           if (s.weeklyMacd === null || s.weeklyMacd === 'N/A') return false;
           const isGoldenCross = (s.weeklyMacdPrev !== null && s.weeklyMacdPrevSignal !== null && s.weeklyMacdPrev <= s.weeklyMacdPrevSignal && s.weeklyMacd > s.weeklyMacdSignal);
           const isBullishGrowing = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist);
-          const isBullishShrinking = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && !(s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist);
+          const isBullishShrinking = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist <= s.weeklyMacdPrevHist);
           const isBearishGrowing = (s.weeklyMacd <= s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist);
-          const isBearishShrinking = (s.weeklyMacd <= s.weeklyMacdSignal) && !(s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist);
+          const isBearishShrinking = (s.weeklyMacd <= s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist >= s.weeklyMacdPrevHist);
           
           return selectedScanMacd.some(m => {
             if (m === 'Golden Cross') return isGoldenCross;
@@ -310,6 +390,19 @@ const ScreenerPage = () => {
         });
       }
 
+      if (selectedScanOpScore.length > 0) {
+        pool = pool.filter(s => {
+          if (typeof s.opScore !== 'number') return false;
+          return selectedScanOpScore.some(r => {
+            if (r === '>= 80') return s.opScore >= 80;
+            if (r === '60 - 79') return s.opScore >= 60 && s.opScore < 80;
+            if (r === '40 - 59') return s.opScore >= 40 && s.opScore < 60;
+            if (r === '< 40') return s.opScore < 40;
+            return false;
+          });
+        });
+      }
+
       const results = pool
         .filter(s => s.emaDistance !== null && Math.abs(s.emaDistance) <= scanThreshold)
         .sort((a, b) => Math.abs(a.emaDistance) - Math.abs(b.emaDistance));
@@ -318,7 +411,7 @@ const ScreenerPage = () => {
       setScanRan(true);
       setScanLoading(false);
     }, 300);
-  }, [stockData, selectedScanRegions, selectedScanSectors, scanThreshold, countryData, sectorData]);
+  }, [stockData, selectedScanRegions, selectedScanSectors, selectedScanRsi, selectedScanMacd, selectedScanDrawdown, selectedScanRs, selectedScanOpScore, scanThreshold, countryData, sectorData]);
 
   // Sectores disponibles para el scan (independientes y solo ALCISTAS)
   const scanSectors = useMemo(() => {
@@ -484,7 +577,7 @@ const ScreenerPage = () => {
       }
       return a.localeCompare(b);
     });
-  }, [visibleData, groupMode]);
+  }, [visibleData, groupMode, filterRegion, filterSector]);
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -643,6 +736,9 @@ const ScreenerPage = () => {
                         <Th $w="105px" $sort $center onClick={() => handleSort('rsValue')}>
                           RS 12W <SortIcon col="rsValue" />
                         </Th>
+                        <Th $w="90px" $sort $center onClick={() => handleSort('opScore')}>
+                          OP Score <SortIcon col="opScore" />
+                        </Th>
                         <Th $w="90px" $center>Acciones</Th>
                       </tr>
                     </thead>
@@ -651,7 +747,18 @@ const ScreenerPage = () => {
                         <Row key={s.symbol} $even={i % 2 === 0}>
                           <Td $w="220px">
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <SymTxt>{s.symbol}</SymTxt>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <SymTxt>{s.symbol}</SymTxt>
+                                {(Object.values(MAP_REGION).includes(s.symbol.toLowerCase()) || Object.values(MAP_SECTOR).includes(s.symbol.toLowerCase())) && (
+                                  <PlayCircle 
+                                    size={16} 
+                                    color="#3b82f6" 
+                                    style={{ cursor: 'pointer', flexShrink: 0 }}
+                                    onClick={(e) => { e.stopPropagation(); handleOpenETF(s.symbol); }}
+                                    title="Ver componentes vinculados"
+                                  />
+                                )}
+                              </div>
                               <NameTxt style={{ fontSize: '0.75rem', marginTop: '2px', whiteSpace: 'normal', overflow: 'visible' }}>{s.name}</NameTxt>
                             </div>
                           </Td>
@@ -666,14 +773,21 @@ const ScreenerPage = () => {
                             </PriceTxt>
                           </Td>
                           <Td $w="95px" $right>
-                            {s.changePercent === null ? (
-                              <MetaTxt>—</MetaTxt>
-                            ) : (
-                              <ChangeBadge $pos={s.changePercent >= 0}>
-                                {s.changePercent >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-                                {Math.abs(s.changePercent).toFixed(2)}%
-                              </ChangeBadge>
-                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                              {s.changePercent === null ? (
+                                <MetaTxt>—</MetaTxt>
+                              ) : (
+                                <ChangeBadge $pos={s.changePercent >= 0}>
+                                  {s.changePercent >= 0 ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+                                  {Math.abs(s.changePercent).toFixed(2)}%
+                                </ChangeBadge>
+                              )}
+                              {s.setupFactors?.volume?.rvol >= 1.2 && (
+                                <VolBadge $acc={s.setupFactors.volume.isAccumulationDay}>
+                                  {s.setupFactors.volume.isAccumulationDay ? '🔥' : '🔻'} {s.setupFactors.volume.rvol}x Vol
+                                </VolBadge>
+                              )}
+                            </div>
                           </Td>
                           <Td $w="105px" $right>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
@@ -696,6 +810,7 @@ const ScreenerPage = () => {
                                     whiteSpace: 'normal',
                                     color: 
                                       s.setupState === 'strong_uptrend' ? '#10b981' :
+                                      s.setupState === 'bullish_breakout' ? '#f97316' :
                                       s.setupState === 'bullish_pullback' ? '#3b82f6' :
                                       s.setupState === 'bullish_reversal_confirmed' ? '#8b5cf6' :
                                       s.setupState === 'early_bullish_reversal' ? '#d946ef' :
@@ -792,9 +907,24 @@ const ScreenerPage = () => {
                             )}
                           </Td>
                           <Td $w="90px" $center>
+                            {s.opScore === null || s.opScore === undefined ? (
+                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', color: '#64748b'}}>
+                                N/A
+                              </MetaTxt>
+                            ) : (
+                              <OpScoreCircle 
+                                $score={s.opScore} 
+                                onClick={() => handleOpenOpScore(s)}
+                                title="Ver Conclusiones"
+                              >
+                                {s.opScore}
+                              </OpScoreCircle>
+                            )}
+                          </Td>
+                          <Td $w="90px" $center>
                             <ActionsWrap>
                               <TVLink 
-                                href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`} 
+                                href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${getTVSymbol(s.symbol)}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 title="Ver en TradingView"
@@ -953,6 +1083,20 @@ const ScreenerPage = () => {
               ))}
             </PillGroup>
           </ScanFilterBlock>
+
+          <ScanFilterBlock>
+            <ScanFilterLabel><Target size={12}/> OP Score</ScanFilterLabel>
+            <PillGroup>
+              <Pill $active={selectedScanOpScore.length === 0} onClick={() => setSelectedScanOpScore([])}>
+                Todos
+              </Pill>
+              {['>= 80', '60 - 79', '40 - 59', '< 40'].map(val => (
+                <Pill key={val} $active={selectedScanOpScore.includes(val)} onClick={() => toggleFilter(setSelectedScanOpScore, val)}>
+                  {val}
+                </Pill>
+              ))}
+            </PillGroup>
+          </ScanFilterBlock>
         
               {/* Umbral EMA */}
               <ScanFilterBlock>
@@ -989,8 +1133,20 @@ const ScreenerPage = () => {
                     <ScanResultsTitle>
                       {scanResults.length > 0
                         ? <>✅ {scanResults.length} acción{scanResults.length !== 1 ? 'es' : ''} cerca de EMA 21</>
-                        : <>❌ Sin resultados dentro de ±{scanThreshold}%</>}
+                        : <>❌ Sin resultados con los filtros actuales</>}
                     </ScanResultsTitle>
+                    
+                    <ScanActiveFiltersBox>
+                      {selectedScanRegions.length > 0 && <ActiveFilterPill>Regiones: {selectedScanRegions.join(', ')}</ActiveFilterPill>}
+                      {selectedScanSectors.length > 0 && <ActiveFilterPill>Sectores: {selectedScanSectors.join(', ')}</ActiveFilterPill>}
+                      {selectedScanRsi.length > 0 && <ActiveFilterPill>RSI: {selectedScanRsi.join(', ')}</ActiveFilterPill>}
+                      {selectedScanMacd.length > 0 && <ActiveFilterPill>MACD: {selectedScanMacd.join(', ')}</ActiveFilterPill>}
+                      {selectedScanDrawdown.length > 0 && <ActiveFilterPill>Drawdown: {selectedScanDrawdown.join(', ')}</ActiveFilterPill>}
+                      {selectedScanRs.length > 0 && <ActiveFilterPill>RS: {selectedScanRs.join(', ')}</ActiveFilterPill>}
+                      {selectedScanOpScore.length > 0 && <ActiveFilterPill>OP Score: {selectedScanOpScore.join(', ')}</ActiveFilterPill>}
+                      <ActiveFilterPill>Cerca EMA 21: ±{scanThreshold.toFixed(1)}%</ActiveFilterPill>
+                    </ScanActiveFiltersBox>
+
                     {scanResults.length === 0 && emaReadyCount.ready < emaReadyCount.total && (
                       <ScanResultsHint>
                         {emaReadyCount.total - emaReadyCount.ready} acciones aún calculando EMA — volvé a scanear en unos segundos.
@@ -1015,7 +1171,7 @@ const ScreenerPage = () => {
                         </ScanEmaChip>
                         <ActionsWrap>
                           <ScanTVLink
-                            href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${s.symbol}`}
+                            href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${getTVSymbol(s.symbol)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Ver en TradingView"
@@ -1036,6 +1192,15 @@ const ScreenerPage = () => {
         </ScanOverlay>
       )}
 
+      <ETFComponentsModal 
+        selectedETF={selectedETF} 
+        etfComponents={etfComponents} 
+        onClose={handleCloseETF} 
+        onOpenOpScore={handleOpenOpScore} 
+        onOpenAlert={handleOpenAlert} 
+      />
+
+
       {/* ── Modal Nueva Alerta ────────────────────────────────────────── */}
       <CreateAlertModal 
         isOpen={showAlertModal} 
@@ -1045,6 +1210,50 @@ const ScreenerPage = () => {
           // Opcionalmente recargar algo si fuera necesario
         }}
       />
+
+      {/* ── Modal OP Score ────────────────────────────────────────── */}
+      {showOpScoreModal && opScoreModalData && (
+        <ScanOverlay onClick={() => setShowOpScoreModal(false)}>
+          <ScanPanel onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%' }}>
+            <ScanPanelHeader>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Target size={18} color="#8b5cf6" /> 
+                OP Score - {opScoreModalData.symbol}
+              </h3>
+              <ScanCloseBtn onClick={() => setShowOpScoreModal(false)}><X size={18} /></ScanCloseBtn>
+            </ScanPanelHeader>
+            <ScanBody>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <OpScoreCircle $score={opScoreModalData.opScore} style={{ width: '60px', height: '60px', fontSize: '1.5rem', cursor: 'default' }}>
+                  {opScoreModalData.opScore}
+                </OpScoreCircle>
+                <div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#f8fafc' }}>{opScoreModalData.name}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Análisis Estructural Completo</div>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h4 style={{ margin: '0 0 4px 0', color: '#e2e8f0', fontSize: '0.95rem' }}>Conclusiones:</h4>
+                {opScoreModalData.opScoreConclusions.map((conc, idx) => (
+                  <div key={idx} style={{ 
+                    padding: '12px 16px', 
+                    background: 'rgba(15, 23, 42, 0.6)', 
+                    borderRadius: '6px', 
+                    borderLeft: '3px solid #8b5cf6',
+                    fontSize: '0.95rem',
+                    lineHeight: '1.5',
+                    color: '#cbd5e1',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {conc}
+                  </div>
+                ))}
+              </div>
+            </ScanBody>
+          </ScanPanel>
+        </ScanOverlay>
+      )}
     </Layout>
   );
 };
@@ -1284,13 +1493,13 @@ const ScanRunBtn = styled.button`
   &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 `;
 
-const ScanResultsSection = styled.div`
+export const ScanResultsSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 `;
 
-const ScanResultsHeader = styled.div`
+export const ScanResultsHeader = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -1298,19 +1507,35 @@ const ScanResultsHeader = styled.div`
   border-bottom: 1px solid rgba(255,255,255,0.06);
 `;
 
-const ScanResultsTitle = styled.div`
+const ScanActiveFiltersBox = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+`;
+
+const ActiveFilterPill = styled.span`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+`;
+
+export const ScanResultsTitle = styled.div`
   font-family: 'Unbounded', sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   color: #e2e8f0;
 `;
 
-const ScanResultsHint = styled.div`
+export const ScanResultsHint = styled.div`
   font-size: 0.72rem;
   color: #475569;
 `;
 
-const ScanResultRow = styled.div`
+export const ScanResultRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1326,21 +1551,21 @@ const ScanResultRow = styled.div`
   }
 `;
 
-const ScanResultLeft = styled.div`
+export const ScanResultLeft = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
 `;
 
-const ScanResultSymbol = styled.span`
+export const ScanResultSymbol = styled.span`
   font-family: 'Unbounded', sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   color: white;
 `;
 
-const ScanResultName = styled.span`
+export const ScanResultName = styled.span`
   font-size: 0.75rem;
   color: #64748b;
   white-space: nowrap;
@@ -1349,14 +1574,14 @@ const ScanResultName = styled.span`
   max-width: 200px;
 `;
 
-const ScanResultMeta = styled.div`
+export const ScanResultMeta = styled.div`
   display: flex;
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.1rem;
 `;
 
-const ScanResultSector = styled.span`
+export const ScanResultSector = styled.span`
   font-size: 0.65rem;
   color: #334155;
   background: rgba(255,255,255,0.05);
@@ -1364,7 +1589,7 @@ const ScanResultSector = styled.span`
   border-radius: 4px;
 `;
 
-const ScanResultRight = styled.div`
+export const ScanResultRight = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1372,14 +1597,14 @@ const ScanResultRight = styled.div`
   flex-shrink: 0;
 `;
 
-const ScanResultPrice = styled.span`
+export const ScanResultPrice = styled.span`
   font-size: 0.85rem;
   font-weight: 700;
   color: white;
   font-variant-numeric: tabular-nums;
 `;
 
-const ScanEmaChip = styled.span`
+export const ScanEmaChip = styled.span`
   font-size: 0.72rem;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
@@ -1393,7 +1618,7 @@ const ScanEmaChip = styled.span`
     : p.$pos ? 'rgba(52,211,153,0.25)' : 'rgba(244,63,94,0.25)'};
 `;
 
-const ScanTVLink = styled.a`
+export const ScanTVLink = styled.a`
   color: #2962FF;
   display: flex;
   align-items: center;
@@ -1653,18 +1878,25 @@ const ChangeBadge = styled.div`
   color:${p=>p.$pos?'#34d399':'#f43f5e'};
 `;
 
+const VolBadge = styled.div`
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:.2rem;
+  font-size:.65rem;font-weight:600;
+  color:${p=>p.$acc?'#34d399':'#f59e0b'};
+  margin-top: 2px;
+`;
+
 const MetaTxt = styled.span`color:#334155;font-size:.75rem;`;
 
 const Neutral = styled.span`color:#1e293b;font-size:.72rem;margin-left:2px;`;
 
-const ActionsWrap = styled.div`
+export const ActionsWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
 `;
 
-const AlertActionBtn = styled.button`
+export const AlertActionBtn = styled.button`
   color: #f59e0b;
   display: flex;
   align-items: center;
@@ -1681,7 +1913,7 @@ const AlertActionBtn = styled.button`
   }
 `;
 
-const RegionFlagWrap = styled.div`
+export const RegionFlagWrap = styled.div`
   display: flex;
   align-items: center;
   gap: .45rem;
@@ -1699,4 +1931,31 @@ const ColorDot = styled.span`
   height: 8px;
   border-radius: 50%;
   margin-right: 6px;
+`;
+
+export const OpScoreCircle = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  background: ${p => {
+    if (p.$score >= 80) return 'linear-gradient(135deg, #22c55e, #16a34a)';
+    if (p.$score >= 60) return 'linear-gradient(135deg, #eab308, #ca8a04)';
+    if (p.$score >= 40) return 'linear-gradient(135deg, #f97316, #ea580c)';
+    return 'linear-gradient(135deg, #ef4444, #dc2626)';
+  }};
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 0 auto;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  }
 `;

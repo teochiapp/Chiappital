@@ -501,12 +501,48 @@ async function initializeDatabase() {
       condition_type ENUM('above', 'below') NOT NULL,
       is_active     TINYINT(1) NOT NULL DEFAULT 1,
       notes         TEXT DEFAULT NULL,
+      email_enabled TINYINT(1) NOT NULL DEFAULT 0,
+      email_recipient VARCHAR(255) DEFAULT NULL,
+      email_subject VARCHAR(255) DEFAULT NULL,
+      email_template TEXT DEFAULT NULL,
+      email_includes TEXT DEFAULT NULL,
+      email_image_url VARCHAR(255) DEFAULT NULL,
       created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       INDEX idx_user_alerts (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  // Migración: Agregar columnas de Email a market_alerts (por si la tabla ya existía)
+  try {
+    await db.execute(`
+      ALTER TABLE market_alerts 
+      ADD COLUMN email_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER notes,
+      ADD COLUMN email_recipient VARCHAR(255) DEFAULT NULL AFTER email_enabled,
+      ADD COLUMN email_subject VARCHAR(255) DEFAULT NULL AFTER email_recipient,
+      ADD COLUMN email_template TEXT DEFAULT NULL AFTER email_subject,
+      ADD COLUMN email_includes TEXT DEFAULT NULL AFTER email_template;
+    `);
+    console.log('✅ Migración: Columnas de Email agregadas a market_alerts');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de Email a market_alerts:', error.message);
+    }
+  }
+
+  // Migración: Agregar columna email_image_url
+  try {
+    await db.execute(`
+      ALTER TABLE market_alerts 
+      ADD COLUMN email_image_url VARCHAR(255) DEFAULT NULL AFTER email_includes;
+    `);
+    console.log('✅ Migración: Columna email_image_url agregada a market_alerts');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al agregar email_image_url:', error.message);
+    }
+  }
 
   // ─── Market Data Sync ────────────────────────────────────────────────────────
 
@@ -543,7 +579,11 @@ async function initializeDatabase() {
       macd_prev_weekly DECIMAL(10, 2) DEFAULT NULL,
       macd_prev_signal DECIMAL(10, 2) DEFAULT NULL,
       macd_prev_hist DECIMAL(10, 2) DEFAULT NULL,
-      drawdown_52w DECIMAL(10, 4) DEFAULT NULL,
+      setup_state VARCHAR(50) DEFAULT NULL,
+      setup_verdict VARCHAR(255) DEFAULT NULL,
+      setup_factors JSON DEFAULT NULL,
+      op_score INT DEFAULT NULL,
+      op_score_conclusions JSON DEFAULT NULL,
       source VARCHAR(50) DEFAULT NULL,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       status ENUM('LIVE', 'STALE', 'ERROR', 'SYNCING') DEFAULT 'LIVE',
@@ -590,6 +630,20 @@ async function initializeDatabase() {
   } catch (error) {
     if (error.code !== 'ER_DUP_FIELDNAME') {
       console.error('⚠️ Error al intentar agregar columnas de Setup:', error.message);
+    }
+  }
+
+  // Migración: Agregar columnas de OP Score a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN op_score INT DEFAULT NULL AFTER setup_factors,
+      ADD COLUMN op_score_conclusions JSON DEFAULT NULL AFTER op_score;
+    `);
+    console.log('✅ Migración: Columnas de OP Score agregadas a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columnas de OP Score:', error.message);
     }
   }
 

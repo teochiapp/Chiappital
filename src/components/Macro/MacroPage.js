@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Globe, 
+  
   TrendingUp, 
   DollarSign, 
   BarChart2, 
@@ -107,8 +107,8 @@ const MacroPage = ({ data, loading, error }) => {
       case 'IGV/SMH': tvSymbol = 'IGV/SMH'; break;
       case 'IWM/SPY': tvSymbol = 'IWM/SPY'; break;
       case 'CL=F': tvSymbol = 'CL1!'; break;
-      case 'GC=F': tvSymbol = 'GOLD'; break;
-      case 'SI=F': tvSymbol = 'SILVER'; break;
+      case 'XAUUSD=X': tvSymbol = 'XAUUSD'; break;
+      case 'XAGUSD=X': tvSymbol = 'XAGUSD'; break;
       case 'HG=F': tvSymbol = 'HG1!'; break;
       case 'ZS=F': tvSymbol = 'ZS1!'; break;
       case 'ZW=F': tvSymbol = 'ZW1!'; break;

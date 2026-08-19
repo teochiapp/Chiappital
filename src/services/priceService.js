@@ -214,6 +214,8 @@ class PriceService {
             setupState: snapshot[cacheKey].setupState,
             setupVerdict: snapshot[cacheKey].setupVerdict,
             setupFactors: snapshot[cacheKey].setupFactors,
+            opScore: snapshot[cacheKey].opScore,
+            opScoreConclusions: snapshot[cacheKey].opScoreConclusions,
             status: snapshot[cacheKey].status,
             updatedAt: snapshot[cacheKey].updatedAt
           };
@@ -225,7 +227,7 @@ class PriceService {
             isDelayed: snapshot[cacheKey].source !== 'finnhub'
           });
         } else {
-          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, status: 'ERROR', updatedAt: null };
+          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, opScore: null, opScoreConclusions: null, status: 'ERROR', updatedAt: null };
         }
       });
       
@@ -236,7 +238,7 @@ class PriceService {
       // Fallback básico si el backend falla: retornar mock o error
       const quotes = {};
       symbols.forEach(symbol => {
-         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, status: 'ERROR', updatedAt: null };
+         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, opScore: null, opScoreConclusions: null, status: 'ERROR', updatedAt: null };
       });
       return quotes;
     }
