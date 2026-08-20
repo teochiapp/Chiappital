@@ -1083,6 +1083,23 @@ async function calculateDailySetup(symbol) {
   } else if (isLateral) {
     state = 'lateral_trend';
     verdict = 'Lateral';
+  } else {
+    // Si no es Uptrend, ni Bearish, ni Lateral, es una transición o ruido
+    if (currentEma200 && currentEma21 && currentSma30) {
+      if (currentEma21 < currentSma30 && currentSma30 >= currentEma200) {
+        state = 'bearish_transition';
+        verdict = 'Transición Bajista';
+      } else if (currentEma21 > currentSma30 && currentSma30 <= currentEma200) {
+        state = 'bullish_transition';
+        verdict = 'Transición Alcista';
+      } else {
+        state = 'messy_chop';
+        verdict = 'Ruido / Sin Tendencia';
+      }
+    } else {
+      state = 'messy_chop';
+      verdict = 'Ruido / Sin Tendencia';
+    }
   }
 
   return {
