@@ -987,7 +987,7 @@ async function calculateDailySetup(symbol) {
       let improvementSignals = 0;
       if (currentRsi !== null && currentRsi > 45) improvementSignals++;
       if (macdDailyBullish) improvementSignals++;
-      if (currentHist !== null && prevHist !== null && currentHist > prevHist) improvementSignals++;
+      // NOTA: no se repite macdDailyBullish aquí — era una condición duplicada (currentHist > prevHist)
       if (ema21Slope5Dir === 'UP') improvementSignals++;
       if (ema21Trend === 'ACCELERATING') improvementSignals++;
 

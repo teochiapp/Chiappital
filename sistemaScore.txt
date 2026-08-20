@@ -67,6 +67,7 @@ ACCIÓN
 │   ├── 🟢 Tendencia Alcista
 │   ├── ⚪ Lateral
 │   └── 🔴 Bajista
+│   └──    Breakout
 │
 └── 2. EVALUAR LA CALIDAD DEL SETUP
 │

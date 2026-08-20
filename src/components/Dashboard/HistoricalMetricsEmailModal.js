@@ -5,14 +5,16 @@ import { Mail, X, RefreshCw, Send } from 'lucide-react';
 const FREQUENT_EMAILS = [
   'ciro.chiappero@henriwillig.com',
   'tomasrcv@gmail.com',
-  'jchiappero@gmail.com'
+  'jchiappero@hotmail.com'
 ];
 
-const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSend }) => {
+const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSend, accountType }) => {
   const [recipient, setRecipient] = useState('');
   const [customMessage, setCustomMessage] = useState('Adjunto el resumen de rendimiento del mes. ¡Saludos!');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ show: false, msg: '', type: '' });
+
+  const accountName = accountType === 'compartida' ? 'Cuenta Compartida' : 'Cuenta Teo';
 
   if (!isOpen || !monthData) return null;
 
@@ -43,7 +45,8 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
         recipient,
         customMessage,
         monthData,
-        ytdData
+        ytdData,
+        accountName
       });
       showFeedback('Resumen enviado correctamente');
       setTimeout(onClose, 1500);
@@ -57,6 +60,7 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
   const formatCurrency = (val) => `$${parseFloat(val).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`;
   const formatPercent = (val) => `${parseFloat(val).toFixed(2)}%`;
   const profit = parseFloat(monthData.usd_end) - parseFloat(monthData.usd_start);
+  const capitalFinal = parseFloat(monthData.usd_end) + parseFloat(monthData.deposits);
 
   return (
     <ModalOverlay onClick={onClose}>
@@ -114,33 +118,21 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
             </Label>
             <PreviewCard>
               <PreviewHeader>
-                <strong>Asunto:</strong> Resumen Mensual: {monthData.month_year} - Chiappital
+                <strong>Asunto:</strong> Resumen Mensual: {monthData.month_year} - {accountName}
               </PreviewHeader>
               <PreviewBody>
                 {customMessage && <div style={{ marginBottom: '16px', fontStyle: 'italic', color: '#64748b' }}>"{customMessage}"</div>}
                 
-                <h4 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>Rendimiento del Mes</h4>
+                <h4 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>Rendimiento del Mes ({accountName})</h4>
                 <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.85rem' }}>
                   <li>Capital Inicial: <strong>{formatCurrency(monthData.usd_start)}</strong></li>
                   <li>Aportes: <strong>{formatCurrency(monthData.deposits)}</strong></li>
-                  <li>Capital Final: <strong>{formatCurrency(monthData.usd_end)}</strong></li>
+                  <li>Capital Final: <strong>{formatCurrency(capitalFinal)}</strong></li>
                   <li>Ganancia: <strong style={{ color: profit >= 0 ? '#10b981' : '#ef4444' }}>{profit > 0 ? '+' : ''}{formatCurrency(profit)}</strong></li>
                   <li>Var. Cartera: <strong style={{ color: parseFloat(monthData.var_percent) >= 0 ? '#10b981' : '#ef4444' }}>{formatPercent(monthData.var_percent)}</strong></li>
                   <li>Var. SPY: <strong>{formatPercent(monthData.var_spy)}</strong></li>
                   <li>Diferencia: <strong style={{ color: parseFloat(monthData.difference) >= 0 ? '#10b981' : '#ef4444' }}>{formatPercent(monthData.difference)}</strong></li>
                 </ul>
-
-                {ytdData && (
-                  <>
-                    <h4 style={{ margin: '16px 0 8px 0', color: '#1e293b' }}>Resumen Anual (YTD)</h4>
-                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.85rem' }}>
-                      <li>YTD Cartera: <strong style={{ color: ytdData.ytd >= 0 ? '#10b981' : '#ef4444' }}>{formatPercent(ytdData.ytd)}</strong></li>
-                      <li>YTD Ganancia: <strong style={{ color: ytdData.profit >= 0 ? '#10b981' : '#ef4444' }}>{ytdData.profit > 0 ? '+' : ''}{formatCurrency(ytdData.profit)}</strong></li>
-                      <li>YTD SPY: <strong>{formatPercent(ytdData.spy)}</strong></li>
-                      <li>Diferencia: <strong style={{ color: ytdData.diff >= 0 ? '#10b981' : '#ef4444' }}>{formatPercent(ytdData.diff)}</strong></li>
-                    </ul>
-                  </>
-                )}
               </PreviewBody>
             </PreviewCard>
 

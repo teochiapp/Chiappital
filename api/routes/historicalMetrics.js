@@ -128,7 +128,7 @@ router.post('/', async (req, res) => {
 // Enviar resumen por correo
 router.post('/send-summary', async (req, res) => {
   try {
-    const { recipient, customMessage, monthData, ytdData } = req.body;
+    const { recipient, customMessage, monthData, accountName } = req.body;
 
     if (!recipient) {
       return res.status(400).json({ error: { message: 'Se requiere al menos un destinatario' } });
@@ -138,6 +138,7 @@ router.post('/send-summary', async (req, res) => {
     const formatPercent = (val) => `${parseFloat(val).toFixed(2)}%`;
 
     const profit = parseFloat(monthData.usd_end) - parseFloat(monthData.usd_start);
+    const capitalFinal = parseFloat(monthData.usd_end) + parseFloat(monthData.deposits);
     const profitColor = profit >= 0 ? '#10b981' : '#ef4444';
     const diffColor = parseFloat(monthData.difference) >= 0 ? '#10b981' : '#ef4444';
 
@@ -175,35 +176,23 @@ router.post('/send-summary', async (req, res) => {
               <img src="https://chiappital.surcodes.com/logo-simple-trade.png" alt="Logo" class="logo-img" />
               <span class="logo-text"><span style="color: #fbbf24;">CHIAPP</span>ITAL</span>
             </div>
-            <h1 class="header-title">Resumen Mensual: ${monthData.month_year}</h1>
+            <h1 class="header-title">Resumen Mensual: ${monthData.month_year} - ${accountName}</h1>
           </div>
           <div class="content">
             ${customMessage ? `<div class="message">${customMessage}</div>` : ''}
             
             <div class="stats-box">
-              <h3 class="stats-title">Rendimiento del Mes</h3>
+              <h3 class="stats-title">Rendimiento del Mes (${accountName})</h3>
               <table>
                 <tr><td class="td-label">Capital Inicial</td><td class="td-value">${formatCurrency(monthData.usd_start)}</td></tr>
                 <tr><td class="td-label">Aportes</td><td class="td-value">${formatCurrency(monthData.deposits)}</td></tr>
-                <tr><td class="td-label">Capital Final</td><td class="td-value">${formatCurrency(monthData.usd_end)}</td></tr>
+                <tr><td class="td-label">Capital Final</td><td class="td-value">${formatCurrency(capitalFinal)}</td></tr>
                 <tr><td class="td-label">Ganancia (USD)</td><td class="td-value" style="color: ${profitColor}">${profit > 0 ? '+' : ''}${formatCurrency(profit)}</td></tr>
                 <tr><td class="td-label">Variación Cartera</td><td class="td-value" style="color: ${parseFloat(monthData.var_percent) >= 0 ? '#10b981' : '#ef4444'}">${formatPercent(monthData.var_percent)}</td></tr>
                 <tr><td class="td-label">Variación SPY</td><td class="td-value">${formatPercent(monthData.var_spy)}</td></tr>
                 <tr><td class="td-label">Diferencia vs SPY</td><td class="td-value" style="color: ${diffColor}">${formatPercent(monthData.difference)}</td></tr>
               </table>
             </div>
-
-            ${ytdData ? `
-            <div class="stats-box" style="margin-top: 16px;">
-              <h3 class="stats-title">Resumen Anual (YTD)</h3>
-              <table>
-                <tr><td class="td-label">YTD Cartera</td><td class="td-value" style="color: ${ytdData.ytd >= 0 ? '#10b981' : '#ef4444'}">${formatPercent(ytdData.ytd)}</td></tr>
-                <tr><td class="td-label">Ganancia YTD (USD)</td><td class="td-value" style="color: ${ytdData.profit >= 0 ? '#10b981' : '#ef4444'}">${ytdData.profit > 0 ? '+' : ''}${formatCurrency(ytdData.profit)}</td></tr>
-                <tr><td class="td-label">YTD SPY</td><td class="td-value">${formatPercent(ytdData.spy)}</td></tr>
-                <tr><td class="td-label">Diferencia YTD</td><td class="td-value" style="color: ${ytdData.diff >= 0 ? '#10b981' : '#ef4444'}">${formatPercent(ytdData.diff)}</td></tr>
-              </table>
-            </div>
-            ` : ''}
           </div>
         </div>
         <div class="footer">
@@ -217,7 +206,7 @@ router.post('/send-summary', async (req, res) => {
 
     const emailResult = await sendEmail({
       to: recipient,
-      subject: `Resumen Mensual: ${monthData.month_year} - Chiappital`,
+      subject: `Resumen Mensual: ${monthData.month_year} - ${accountName}`,
       text: customMessage || `Adjunto el resumen mensual de ${monthData.month_year}`,
       html: html
     });

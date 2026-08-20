@@ -1,15 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { DollarSign, Edit3, TrendingUp, RefreshCw, Check, X } from 'lucide-react';
+import { DollarSign, TrendingUp, RefreshCw } from 'lucide-react';
 import { colors } from '../../styles/colors';
-import { useApiBalances } from '../../hooks/useApiBalances';
+import { useApiMetrics } from '../../hooks/useApiMetrics';
 
 const OverviewMetrics = () => {
-  const { balance, updateBalance, loading: balanceLoading } = useApiBalances();
+  const { metrics, loading: balanceLoading } = useApiMetrics();
   const [dolarMep, setDolarMep] = useState(null);
   const [loadingDolar, setLoadingDolar] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState('');
+
+  const balance = useMemo(() => {
+    if (!metrics || metrics.length === 0) return 0;
+    
+    const monthMap = { 'ENERO': 0, 'FEBRERO': 1, 'MARZO': 2, 'ABRIL': 3, 'MAYO': 4, 'JUNIO': 5, 'JULIO': 6, 'AGOSTO': 7, 'SEPTIEMBRE': 8, 'OCTUBRE': 9, 'NOVIEMBRE': 10, 'DICIEMBRE': 11 };
+    const parseMonthYear = (str) => {
+      if (!str) return new Date(0);
+      const match = str.match(/([A-Z]+) \((\d{4})\)/);
+      if (match) return new Date(parseInt(match[2]), monthMap[match[1]]);
+      return new Date(0);
+    };
+
+    const sortedMetrics = [...metrics].sort((a, b) => parseMonthYear(a.month_year) - parseMonthYear(b.month_year));
+    const lastMetric = sortedMetrics[sortedMetrics.length - 1];
+    
+    return parseFloat(lastMetric.usd_end) || 0;
+  }, [metrics]);
 
   const fetchDolar = async () => {
     try {
@@ -32,19 +47,6 @@ const OverviewMetrics = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleEditClick = () => {
-    setEditValue(balance.toString());
-    setIsEditing(true);
-  };
-
-  const handleSaveClick = async () => {
-    const val = parseFloat(editValue);
-    if (!isNaN(val)) {
-      await updateBalance(val);
-    }
-    setIsEditing(false);
-  };
-
   const balanceARS = balance && dolarMep ? balance * dolarMep : 0;
 
   return (
@@ -56,31 +58,9 @@ const OverviewMetrics = () => {
             <DollarSign size={32} />
           </DollarIcon>
           
-          {isEditing ? (
-            <EditControls>
-              <InputWrapper>
-                <DollarPrefix>$</DollarPrefix>
-                <Input 
-                  type="number" 
-                  value={editValue} 
-                  onChange={e => setEditValue(e.target.value)} 
-                  autoFocus
-                  placeholder="0"
-                />
-              </InputWrapper>
-              <IconButton onClick={handleSaveClick} className="save"><Check size={20} /></IconButton>
-              <IconButton onClick={() => setIsEditing(false)} className="cancel"><X size={20} /></IconButton>
-            </EditControls>
-          ) : (
-            <>
-              <MainBalance>
-                {balanceLoading ? '...' : `$${balance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
-              </MainBalance>
-              <EditButton onClick={handleEditClick}>
-                <Edit3 size={18} />
-              </EditButton>
-            </>
-          )}
+          <MainBalance>
+            {balanceLoading ? '...' : `$${balance.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+          </MainBalance>
         </BalanceWrapper>
       </BalanceSection>
 
@@ -200,117 +180,7 @@ const MainBalance = styled.h1`
   }
 `;
 
-const EditButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-`;
-
-const EditControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  flex-wrap: wrap;
-`;
-
-const InputWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-`;
-
-const DollarPrefix = styled.span`
-  position: absolute;
-  left: 1rem;
-  color: ${colors.secondary};
-  font-size: 2rem;
-  font-weight: 800;
-  font-family: 'Unbounded', sans-serif;
-
-  @media (max-width: 768px) {
-    font-size: 1.5rem;
-    left: 0.8rem;
-  }
-`;
-
-const Input = styled.input`
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 12px;
-  padding: 0.5rem 1rem 0.5rem 3rem;
-  width: 250px;
-  max-width: 100%;
-  font-family: 'Unbounded', sans-serif;
-  transition: all 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${colors.secondary};
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-  }
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.2);
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    font-size: 1.8rem;
-    padding-left: 2.5rem;
-  }
-`;
-
-const IconButton = styled.button`
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  color: white;
-  transition: all 0.2s ease;
-
-  &.save {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    &:hover { 
-      background: rgba(16, 185, 129, 0.4); 
-      transform: translateY(-2px);
-    }
-  }
-
-  &.cancel {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    &:hover { 
-      background: rgba(239, 68, 68, 0.4); 
-      transform: translateY(-2px);
-    }
-  }
-`;
 
 const MetricsGrid = styled.div`
   display: grid;

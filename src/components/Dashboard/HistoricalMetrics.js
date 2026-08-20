@@ -320,6 +320,7 @@ const HistoricalMetrics = () => {
         monthData={selectedMetricForEmail}
         ytdData={ytdDataForEmail}
         onSend={sendHistoricalSummary}
+        accountType={accountType}
       />
 
       <TabsContainer>

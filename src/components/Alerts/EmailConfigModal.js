@@ -6,7 +6,7 @@ const EmailConfigModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
   const FREQUENT_EMAILS = [
     'ciro.chiappero@henriwillig.com',
     'tomasrcv@gmail.com',
-    'jchiappero@gmail.com'
+    'jchiappero@hotmail.com'
   ];
 
   const [enabled, setEnabled] = useState(false);
