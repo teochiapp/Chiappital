@@ -683,8 +683,8 @@ class SymbolSearchService {
     return [
       // 🌾 Commodities
       { symbol: 'CL=F', name: 'Petróleo', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
-      { symbol: 'XAUUSD=X', name: 'Oro', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
-      { symbol: 'XAGUSD=X', name: 'Plata', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+      { symbol: 'GC=F', name: 'Oro', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+      { symbol: 'SI=F', name: 'Plata', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
       { symbol: 'HG=F', name: 'Cobre', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
       { symbol: 'ZS=F', name: 'Soja', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
       { symbol: 'ZW=F', name: 'Trigo', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },

@@ -33,13 +33,13 @@ const MacroContainer = () => {
         const targetEarningsDate = `${earningsDate.getFullYear()}-${pad(earningsDate.getMonth() + 1)}-${pad(earningsDate.getDate())}`;
 
         // 2. Fetch Forex (Yahoo)
-        const forexSymbols = ['EURUSD=X', 'JPY=X', 'BRL=X', 'CNY=X', 'KRW=X'];
+        const forexSymbols = ['DX-Y.NYB', 'EURUSD=X', 'JPY=X', 'CNY=X', 'BRL=X', 'KRW=X'];
 
         // 3. Fetch Macro (Yahoo) - incluye ETFs para ratios
-        const macroSymbols = ['^TNX', 'DX-Y.NYB', '^VIX', 'QQQ', 'SPY', 'IGV', 'SMH', 'IWM'];
+        const macroSymbols = ['SPY', 'QQQ', 'IWM', '^VIX', '^TNX', 'SMH', 'IGV'];
         
         // Fetch Commodities (Yahoo)
-        const commoditySymbols = ['CL=F', 'XAUUSD=X', 'XAGUSD=X', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
+        const commoditySymbols = ['CL=F', 'GC=F', 'SI=F', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
 
         // 4. Fetch DolarAPI (Argentina)
         const fetchDolarApi = fetch('https://dolarapi.com/v1/dolares').then(res => res.json()).catch(() => []);

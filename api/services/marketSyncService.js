@@ -889,23 +889,24 @@ async function calculateDailySetup(symbol) {
   let isUptrend = false;
   let isBearish = false;
 
+  // BULLISH/BEARISH STRUCTURE
   if (currentEma200 && currentEma21 && currentSma30) {
-    if (currentPrice > currentEma21 && currentEma21 > currentSma30 && currentSma30 > currentEma200) {
-      if (isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT && ema21Distance >= MIN_SEPARATION_PCT) {
+    if (currentEma21 > currentSma30 && currentSma30 > currentEma200) {
+      if (isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT) {
         isUptrend = true;
         factors.trend = 'bullish';
       }
-    } else if (currentPrice < currentEma21 && currentEma21 < currentSma30 && currentSma30 < currentEma200) {
+    } else if (currentEma21 < currentSma30 && currentSma30 < currentEma200) {
       if (isEma21AllDown && isSma30AllDown && ((currentSma30 - currentEma200) / currentEma200) * 100 <= -MIN_SEPARATION_PCT) {
         isBearish = true;
         factors.trend = 'bearish';
       }
     }
   } else if (currentEma21 && currentSma30) {
-    if (currentPrice > currentEma21 && currentEma21 > currentSma30 && isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT && ema21Distance >= MIN_SEPARATION_PCT) {
+    if (currentEma21 > currentSma30 && isEma21AllUp && isSma30AllUp && ema21AboveSma30Pct >= MIN_SEPARATION_PCT) {
       isUptrend = true;
       factors.trend = 'bullish';
-    } else if (currentPrice < currentEma21 && currentEma21 < currentSma30 && isEma21AllDown && isSma30AllDown) {
+    } else if (currentEma21 < currentSma30 && isEma21AllDown && isSma30AllDown) {
       isBearish = true;
       factors.trend = 'bearish';
     }
@@ -1050,22 +1051,35 @@ async function calculateDailySetup(symbol) {
     state = 'early_bullish_reversal';
     verdict = 'Reversión';
   } else if (isUptrend) {
-    // Detectar si el precio está demasiado extendido respecto a la EMA21 —
-    // se usan ambos criterios en conjunto: distancia porcentual Y distancia en ATRs
-    // para que sea robusto a distintas volatilidades.
-    const distToEma21AtrExtended = factors.distToEma21Atr;
-    const isExtended = ema21Distance !== null && ema21Distance > 8
-      && distToEma21AtrExtended !== null && distToEma21AtrExtended > 2.5;
-    if (isExtended) {
-      state = 'strong_uptrend_extended';
-      verdict = 'Alcista Tardío';
+    // Si la estructura es alcista pero el precio rompió ambas medias (EMA21 y SMA30),
+    // la tendencia de corto plazo está invalidada o en gran peligro.
+    if (!factors.priceAboveEma21 && !factors.priceAboveSma30) {
+      state = 'neutral';
+      verdict = 'Tendencia en peligro';
     } else {
-      state = 'strong_uptrend';
-      verdict = 'Alcista';
+      // Detectar si el precio está demasiado extendido respecto a la EMA21
+      const distToEma21AtrExtended = factors.distToEma21Atr;
+      const isExtended = ema21Distance !== null && ema21Distance > 8
+        && distToEma21AtrExtended !== null && distToEma21AtrExtended > 2.5;
+      
+      if (isExtended) {
+        state = 'strong_uptrend_extended';
+        verdict = 'Alcista Tardío';
+      } else {
+        state = 'strong_uptrend';
+        verdict = 'Alcista';
+      }
     }
   } else if (isBearish) {
-    state = 'bearish_trend';
-    verdict = 'Bajista';
+    // Si la estructura es bajista pero el rebote cruzó por encima de ambas medias 
+    // sin llegar a ser una reversión confirmada, el setup bajista se desdibuja.
+    if (factors.priceAboveEma21 && factors.priceAboveSma30) {
+      state = 'neutral';
+      verdict = 'Bajista perdiendo fuerza';
+    } else {
+      state = 'bearish_trend';
+      verdict = 'Bajista';
+    }
   } else if (isLateral) {
     state = 'lateral_trend';
     verdict = 'Lateral';
