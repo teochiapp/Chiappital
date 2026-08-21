@@ -38,7 +38,16 @@ async function seedSymbols() {
     { symbol: 'SPY', name: 'SPDR S&P 500 ETF Trust', sector: 'ETF', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'ETF' },
     { symbol: 'QQQ', name: 'Invesco QQQ Trust', sector: 'ETF', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'ETF' },
     { symbol: 'DIA', name: 'SPDR Dow Jones Industrial Average ETF Trust', sector: 'ETF', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'ETF' },
-    { symbol: 'IWM', name: 'iShares Russell 2000 ETF', sector: 'ETF', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'ETF' }
+    { symbol: 'IWM', name: 'iShares Russell 2000 ETF', sector: 'ETF', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'ETF' },
+    // Commodities (futuros Yahoo Finance)
+    { symbol: 'CL=F', name: 'Petróleo', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'GC=F', name: 'Oro', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'SI=F', name: 'Plata', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'HG=F', name: 'Cobre', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'ZS=F', name: 'Soja', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'ZW=F', name: 'Trigo', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'ZC=F', name: 'Maíz', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
+    { symbol: 'NG=F', name: 'Gas Natural', sector: 'Materias Primas', macroCategory: 'Materias Primas', region: 'Commodities', currency: 'USD', type: 'Commodity' },
   ];
 
   symbols = [...symbols, ...extras];

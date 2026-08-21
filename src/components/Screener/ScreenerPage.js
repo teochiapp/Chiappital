@@ -131,6 +131,7 @@ const ScreenerPage = () => {
   const [showScan, setShowScan]         = useState(false);
   const [selectedScanRegions, setSelectedScanRegions] = useState([]);
   const [selectedScanSectors, setSelectedScanSectors] = useState([]);
+  const [selectedScanStates, setSelectedScanStates] = useState([]);
   const [scanThreshold, setScanThreshold] = useState(1.0); // %
   const [scanResults, setScanResults]   = useState([]);
   const [scanRan, setScanRan]           = useState(false);
@@ -331,6 +332,13 @@ const ScreenerPage = () => {
         });
       }
 
+      if (selectedScanStates.length > 0) {
+        pool = pool.filter(s => {
+          if (!s.setupState) return false;
+          return selectedScanStates.includes(s.setupState);
+        });
+      }
+
       if (selectedScanRsi.length > 0) {
         pool = pool.filter(s => {
           if (typeof s.weeklyRsi !== 'number') return false;
@@ -411,7 +419,7 @@ const ScreenerPage = () => {
       setScanRan(true);
       setScanLoading(false);
     }, 300);
-  }, [stockData, selectedScanRegions, selectedScanSectors, selectedScanRsi, selectedScanMacd, selectedScanDrawdown, selectedScanRs, selectedScanOpScore, scanThreshold, countryData, sectorData]);
+  }, [stockData, selectedScanRegions, selectedScanSectors, selectedScanStates, selectedScanRsi, selectedScanMacd, selectedScanDrawdown, selectedScanRs, selectedScanOpScore, scanThreshold, countryData, sectorData]);
 
   // Sectores disponibles para el scan (independientes y solo ALCISTAS)
   const scanSectors = useMemo(() => {
@@ -522,16 +530,21 @@ const ScreenerPage = () => {
       let va = a[sortKey];
       let vb = b[sortKey];
       
-      // Tratar null/undefined como un valor por defecto según el tipo
-      if (va === null || va === undefined) va = (typeof vb === 'number') ? 0 : '';
-      if (vb === null || vb === undefined) vb = (typeof va === 'number') ? 0 : '';
+      const isEmpty = (val) => val === null || val === undefined || val === 'N/A' || val === '';
+      const emptyA = isEmpty(va);
+      const emptyB = isEmpty(vb);
 
-      // Si ambos son números, orden matemático
-      if (typeof va === 'number' && typeof vb === 'number') {
-        return sortDir === 'asc' ? va - vb : vb - va;
+      if (emptyA && emptyB) return 0;
+      if (emptyA) return 1;
+      if (emptyB) return -1;
+
+      const numA = Number(va);
+      const numB = Number(vb);
+
+      if (!isNaN(numA) && !isNaN(numB) && typeof va !== 'boolean' && typeof vb !== 'boolean') {
+        return sortDir === 'asc' ? numA - numB : numB - numA;
       }
 
-      // Si son strings, orden alfabético
       let strA = String(va).toLowerCase();
       let strB = String(vb).toLowerCase();
       
@@ -548,6 +561,7 @@ const ScreenerPage = () => {
       let key = 'Otros';
       if (groupMode === 'region') key = (REGION_LABELS[s.region] || s.region);
       else if (groupMode === 'sector') key = (s.sector || 'Otros');
+      else if (groupMode === 'opScore') key = 'Ranking OP Score';
       else if (groupMode === 'general') {
         const isGeneralOnlyETFs = (filterRegion === 'US' || filterRegion === 'ALL') && filterSector === 'ALL';
         if (isGeneralOnlyETFs) {
@@ -668,6 +682,13 @@ const ScreenerPage = () => {
             </GroupToggleBtn>
             <GroupToggleBtn $active={groupMode === 'sector'} onClick={() => setGroupMode('sector')}>
               Sector
+            </GroupToggleBtn>
+            <GroupToggleBtn $active={groupMode === 'opScore'} onClick={() => {
+              setGroupMode('opScore');
+              setSortKey('opScore');
+              setSortDir('desc');
+            }}>
+              OP Score
             </GroupToggleBtn>
           </GroupToggleBtns>
         </GroupToggleBar>
@@ -1015,6 +1036,33 @@ const ScreenerPage = () => {
                     </Pill>
                   ))}
                   {scanSectors.length === 0 && <span style={{ fontSize: '0.85rem', color: colors.textSecondary, fontStyle: 'italic', padding: '6px' }}>Ningún sector alcista</span>}
+                </PillGroup>
+              </ScanFilterBlock>
+
+              {/* Fila: Estados de Estructura */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><Activity size={12} /> Estructura (Setup)</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanStates.length === 0} onClick={() => setSelectedScanStates([])}>
+                    Todos
+                  </Pill>
+                  {[
+                    { id: 'bullish_breakout', label: 'Breakout' },
+                    { id: 'bullish_pullback', label: 'Pullback' },
+                    { id: 'strong_uptrend', label: 'Alcista (Base)' },
+                    { id: 'strong_uptrend_extended', label: 'Alcista (Ext)' },
+                    { id: 'bullish_reversal_confirmed', label: 'Rev. Conf.' },
+                    { id: 'early_bullish_reversal', label: 'Rev. Temprana' },
+                    { id: 'lateral_trend', label: 'Lateral' },
+                    { id: 'bearish_trend', label: 'Bajista' },
+                    { id: 'bullish_transition', label: 'Trans. Alcista' },
+                    { id: 'bearish_transition', label: 'Trans. Bajista' },
+                    { id: 'messy_chop', label: 'Tendencia Indefinida' }
+                  ].map(state => (
+                    <Pill key={state.id} $active={selectedScanStates.includes(state.id)} onClick={() => toggleFilter(setSelectedScanStates, state.id)}>
+                      {state.label}
+                    </Pill>
+                  ))}
                 </PillGroup>
               </ScanFilterBlock>
 

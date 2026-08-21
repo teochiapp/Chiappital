@@ -163,7 +163,7 @@ class SymbolSearchService {
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMNR', name: 'BANCO COMAFI SA CEDEAR EACH 8 R', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMY', name: 'Bristol-Myers Squibb Company', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BNG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'BG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BNY', name: 'BANK OF NEW YORK MELLON CORP CE', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BP', name: 'BP PCL', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BRKB', name: 'Berkshire Hathaway Inc.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
@@ -469,7 +469,7 @@ class SymbolSearchService {
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMNR', name: 'BANCO COMAFI SA CEDEAR EACH 8 R', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMY', name: 'Bristol-Myers Squibb Company', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BNG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'BG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BNY', name: 'BANK OF NEW YORK MELLON CORP CE', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BP', name: 'BP PCL', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BRKB', name: 'Berkshire Hathaway Inc.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
@@ -887,6 +887,8 @@ class SymbolSearchService {
       { symbol: 'UL', name: 'Unilever PLC', sector: 'Consumo Básico', region: 'EU', currency: 'USD', type: 'Equity' },
 
       { symbol: 'TM', name: 'Toyota Motor Corp.', sector: 'Consumo Discrecional', region: 'JP', currency: 'USD', type: 'Equity' },
+      { symbol: 'BG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'HSY', name: 'The Hershey Company', sector: 'Consumo Básico', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
 
     ];
   }
@@ -956,7 +958,7 @@ class SymbolSearchService {
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMNR', name: 'BANCO COMAFI SA CEDEAR EACH 8 R', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMY', name: 'Bristol-Myers Squibb Company', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BNG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'BG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BNY', name: 'BANK OF NEW YORK MELLON CORP CE', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BSBR', name: 'Banco Santander (Brasil) S.A.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BX', name: 'BANCO COMAFI SA CEDEAR EACH 30', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },

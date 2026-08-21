@@ -165,6 +165,12 @@ async function runSync(reason = 'manual') {
       }
 
       for (const symbol of symbolsToUpdate) {
+        // Finnhub no soporta BCBA ni futuros de commodities (=F), los enviamos directo a Yahoo
+        if (symbol.endsWith('.BA') || symbol.includes('=F')) {
+          failedFinnhubSymbols.push(symbol);
+          continue;
+        }
+
         // Control de Ventana de Tiempo (Bucket)
         const timeSinceWindow = Date.now() - finnhubWindowStart;
         if (timeSinceWindow >= FINNHUB_RATE_WINDOW_MS) {
@@ -225,6 +231,7 @@ async function runSync(reason = 'manual') {
     // 3. Fallback Yahoo para los que fallaron
     const yahooStartTime = performance.now();
     if (failedFinnhubSymbols.length > 0) {
+      yahooCount = failedFinnhubSymbols.length;
       if (Date.now() < yahooCooldownUntil) {
         logger.warn('Yahoo', `Yahoo is on cooldown until ${new Date(yahooCooldownUntil).toLocaleTimeString()}. Skipping fallback for ${failedFinnhubSymbols.length} symbols.`);
         yahooFailed += failedFinnhubSymbols.length;
@@ -235,7 +242,6 @@ async function runSync(reason = 'manual') {
         for (let i = 0; i < failedFinnhubSymbols.length; i += BATCH_SIZE) {
           const batch = failedFinnhubSymbols.slice(i, i + BATCH_SIZE);
           yahooHttpRequests++;
-          yahooCount += batch.length;
 
           try {
             const yahooResults = await fetchYahooBulk(batch);
@@ -450,7 +456,7 @@ async function runSync(reason = 'manual') {
       const dbRow = rows.find(r => r.symbol === symbol) || {};
       const finalSetupState = setup !== undefined ? setup.setup_state : dbRow.setup_state;
       const finalFactors = setup !== undefined ? setup.setup_factors : (typeof dbRow.setup_factors === 'string' ? JSON.parse(dbRow.setup_factors) : dbRow.setup_factors) || {};
-      
+
       const opData = {
         rsValue: rsiData !== undefined && rsiData.rs_value !== undefined ? rsiData.rs_value : dbRow.rs_value,
         rsPrevious: rsiData !== undefined && rsiData.rs_previous !== undefined ? rsiData.rs_previous : dbRow.rs_previous,
@@ -461,13 +467,21 @@ async function runSync(reason = 'manual') {
         rsiDaily: finalFactors.rsiDaily,
         atr14: finalFactors.atr14,
         price: finalFactors.currentPrice,
+        trend: finalFactors.trend,
         ema21: finalFactors.currentEma21,
         sma30: finalFactors.currentSma30,
         ema200: finalFactors.currentEma200,
         recentCandles: finalFactors.recentCandles,
         ema21Distance: finalFactors.priceAboveEma21Pct,
         ema21AboveSma30Pct: finalFactors.ema21AboveSma30Pct,
-        macd: finalFactors.macd
+        macd: finalFactors.macd,
+        macdWeekly: rsiData !== undefined && rsiData.macd_weekly !== undefined ? rsiData.macd_weekly : dbRow.macd_weekly,
+        macdSignal: rsiData !== undefined && rsiData.macd_signal !== undefined ? rsiData.macd_signal : dbRow.macd_signal,
+        macdHist: rsiData !== undefined && rsiData.macd_hist !== undefined ? rsiData.macd_hist : dbRow.macd_hist,
+        macdPrevHist: rsiData !== undefined && rsiData.macd_prev_hist !== undefined ? rsiData.macd_prev_hist : dbRow.macd_prev_hist,
+        macdPrevWeekly: rsiData !== undefined && rsiData.macd_prev_weekly !== undefined ? rsiData.macd_prev_weekly : dbRow.macd_prev_weekly,
+        macdPrevSignal: rsiData !== undefined && rsiData.macd_prev_signal !== undefined ? rsiData.macd_prev_signal : dbRow.macd_prev_signal,
+        sectorTrend: finalFactors.sectorTrend !== undefined ? finalFactors.sectorTrend : (dbRow.sector_trend || null)
       };
 
       let opScoreResult = null;
@@ -562,8 +576,7 @@ async function runSync(reason = 'manual') {
 // ─── Helpers (Adaptados del frontend) ──────────────────────────────────────────
 
 async function fetchFinnhub(symbol) {
-  // Ajuste de BCBA (.BA -> .BA)
-  const querySymbol = symbol.endsWith('.BA') ? symbol : symbol;
+  const querySymbol = symbol;
   const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(querySymbol)}&token=${FINNHUB_API_KEY}`;
 
   const response = await fetch(url);
@@ -586,8 +599,12 @@ async function fetchFinnhub(symbol) {
 async function fetchYahooBulk(symbols) {
   try {
     const quotes = await yahooFinance.quote(symbols);
-    return quotes.map(q => ({
-      symbol: q.symbol,
+    // Yahoo a veces devuelve q.symbol sin el sufijo '=F' para futuros de commodities
+    // (ej: devuelve 'GC' en lugar de 'GC=F'). Usamos el símbolo original de entrada
+    // para evitar el mismatch de key al guardar en newQuotes.
+    const quotesArray = Array.isArray(quotes) ? quotes : [quotes];
+    return quotesArray.map((q, idx) => ({
+      symbol: symbols[idx] || q.symbol,
       data: {
         price: q.regularMarketPrice,
         changeAmount: q.regularMarketChange,
@@ -726,7 +743,8 @@ async function calculateDailySetup(symbol) {
   try {
     data = await yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
   } catch (e) {
-    if (!symbol.includes('.')) {
+    // Los commodities (=F) y símbolos ya con sufijo no necesitan el fallback .BA
+    if (!symbol.includes('.') && !symbol.includes('=')) {
       try {
         data = await yahooFinance.chart(symbol + '.BA', { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
       } catch (e2) {
@@ -798,7 +816,10 @@ async function calculateDailySetup(symbol) {
   const ema21Slope5Dir = getDir(ema21Slope5Pct);
   const ema21Slope10Dir = getDir(ema21Slope10Pct);
   const ema21Slope20Dir = getDir(ema21Slope20Pct);
-  const ema21Trend = ema21Slope5Pct > ema21Slope10Pct ? 'ACCELERATING' : (ema21Slope5Pct < ema21Slope10Pct ? 'DECELERATING' : 'CONSTANT');
+  
+  const ema21Rate5 = ema21Slope5Pct / 5;
+  const ema21Rate10 = ema21Slope10Pct / 10;
+  const ema21Trend = ema21Rate5 > ema21Rate10 ? 'ACCELERATING' : (ema21Rate5 < ema21Rate10 ? 'DECELERATING' : 'CONSTANT');
 
   const sma30Slope5Pct = currentSma30 && prev5Sma30 ? ((currentSma30 / prev5Sma30) - 1) * 100 : 0;
   const sma30Slope10Pct = currentSma30 && prev10Sma30 ? ((currentSma30 / prev10Sma30) - 1) * 100 : 0;
@@ -807,7 +828,10 @@ async function calculateDailySetup(symbol) {
   const sma30Slope5Dir = getDir(sma30Slope5Pct);
   const sma30Slope10Dir = getDir(sma30Slope10Pct);
   const sma30Slope20Dir = getDir(sma30Slope20Pct);
-  const sma30Trend = sma30Slope5Pct > sma30Slope10Pct ? 'ACCELERATING' : (sma30Slope5Pct < sma30Slope10Pct ? 'DECELERATING' : 'CONSTANT');
+  
+  const sma30Rate5 = sma30Slope5Pct / 5;
+  const sma30Rate10 = sma30Slope10Pct / 10;
+  const sma30Trend = sma30Rate5 > sma30Rate10 ? 'ACCELERATING' : (sma30Rate5 < sma30Rate10 ? 'DECELERATING' : 'CONSTANT');
 
   let factors = {
     trend: 'neutral',
@@ -930,76 +954,90 @@ async function calculateDailySetup(symbol) {
     && ema21Slope10Dir !== 'DOWN';
   if (isLateral) factors.lateralDetected = true;
 
-  // Pullback Logic (sin cambios de lógica, solo prolijidad)
+  // Pullback Logic
   let pullbackConfirmed = false;
-  if (closes.length >= 15 && currentAtr) {
-    const isSma30TolerantUp = sma30Slope5Dir === 'UP' && sma30Slope10Dir === 'UP' && sma30Slope20Dir !== 'DOWN';
-    if (isSma30TolerantUp) {
-      let wasStrongAbove = false;
-      for (let i = Math.max(0, L - 12); i <= L - 5; i++) {
-        if (sma30Array[i] && closes[i] >= sma30Array[i] * 1.015) {
-          wasStrongAbove = true; break;
-        }
-      }
-
-      let corrected = false;
-      for (let i = L - 5; i <= L; i++) {
-        if (ema21Array[i] && sma30Array[i] && atrArray[i]) {
-          const distEma21 = Math.abs(closes[i] - ema21Array[i]);
-          const distSma30 = Math.abs(closes[i] - sma30Array[i]);
-          if (distEma21 <= 0.5 * atrArray[i] || distSma30 <= 0.5 * atrArray[i]) {
-            corrected = true; break;
-          }
-        }
-      }
-
-      // FIX: el pullback solo es válido si el precio de HOY sigue "descansando"
-      // cerca de la media. Usamos exclusivamente la distancia en ATRs (ya normaliza
-      // la volatilidad del activo), eliminando el umbral fijo de 1.5% que era
-      // demasiado estricto para acciones volátiles (BCBA, tecnología, etc.).
-      const distToEma21AtrNow = currentAtr ? Math.abs(currentPrice - currentEma21) / currentAtr : null;
-      const stillNearEma21 = distToEma21AtrNow !== null && distToEma21AtrNow <= 1.2;
-
-      // FIX: el pullback requiere isUptrend como prerequisito. Sin esto, un activo
-      // lateral/neutro que casualmente toca su EMA21 podía clasificarse como pullback
-      // en lugar de strong_uptrend, invirtiendo la cascada de prioridades.
-      if (isUptrend && wasStrongAbove && corrected && (isPriceAboveEma21 || isPriceAboveSma30) && stillNearEma21) {
-        pullbackConfirmed = true;
-        factors.pullbackDetected = true;
-      }
+  
+  // FIX: El pullback exige que la estructura sea de uptrend maduro, pero es
+  // tolerante con la caída de la pendiente rápida (5 días) ya que el precio
+  // lógicamente retrocede.
+  let isUptrendTolerant = false;
+  if (currentEma21 && currentSma30) {
+    const isEma21TolerantUp = ema21Slope10Dir === 'UP' && ema21Slope20Dir === 'UP';
+    const isSma30TolerantUp = sma30Slope10Dir === 'UP' && sma30Slope20Dir === 'UP';
+    const isStructureBullish = currentEma200 ? (currentEma21 > currentSma30 && currentSma30 > currentEma200) : (currentEma21 > currentSma30);
+    
+    if (isStructureBullish && isEma21TolerantUp && isSma30TolerantUp && (ema21AboveSma30Pct !== null && ema21AboveSma30Pct >= MIN_SEPARATION_PCT)) {
+      isUptrendTolerant = true;
     }
   }
 
-  // FIX: la reversión ahora solo se evalúa cuando el contexto es realmente bajista
-  // o lateral proveniente de debilidad reciente — antes se disparaba con
-  // "!isUptrend && !pullbackConfirmed", lo cual incluía mercados laterales sanos
-  // y generaba señales de reversión sin una tendencia bajista real detrás.
+  if (closes.length >= 15 && currentAtr && isUptrendTolerant) {
+    let wasStrongAbove = false;
+    for (let i = Math.max(0, L - 12); i <= L - 5; i++) {
+      if (sma30Array[i] && closes[i] >= sma30Array[i] * 1.015) {
+        wasStrongAbove = true; break;
+      }
+    }
+
+    let corrected = false;
+    for (let i = L - 5; i <= L; i++) {
+      if (ema21Array[i] && sma30Array[i] && atrArray[i]) {
+        const distEma21 = Math.abs(closes[i] - ema21Array[i]);
+        const distSma30 = Math.abs(closes[i] - sma30Array[i]);
+        if (distEma21 <= 0.5 * atrArray[i] || distSma30 <= 0.5 * atrArray[i]) {
+          corrected = true; break;
+        }
+      }
+    }
+
+    const distToEma21AtrNow = currentAtr ? Math.abs(currentPrice - currentEma21) / currentAtr : null;
+    const stillNearEma21 = distToEma21AtrNow !== null && distToEma21AtrNow <= 1.2;
+
+    // A pedido estricto: el precio debe haber rebotado o mantenerse POR ENCIMA de ambas medias.
+    const isPriceAboveBoth = isPriceAboveEma21 && isPriceAboveSma30;
+
+    // Nueva regla solicitada: Vela de fortaleza (rebote confirmado hoy)
+    // Puede ser una vela verde (cierre > apertura) o que cerró por encima de ayer
+    const isStrengthCandle = (closes[L] > opens[L]) || (closes[L] > closes[L - 1]);
+
+    if (wasStrongAbove && corrected && isPriceAboveBoth && stillNearEma21 && isStrengthCandle) {
+      pullbackConfirmed = true;
+      factors.pullbackDetected = true;
+    }
+  }
+
   let reversalEarly = false;
   let reversalConfirmed = false;
-  const weakContext = isBearish || (isLateral && (ema21Slope10Dir === 'DOWN' || sma30Slope10Dir === 'DOWN'));
 
-  // FIX: macdDailyBullish se calcula como variable local real. Antes se usaba
-  // factors.macdDailyBullish que nunca se seteaba (siempre undefined/falsy),
-  // haciendo que este criterio nunca aportara a improvementSignals ni a reversalConfirmed.
   const macdDailyBullish = currentHist !== null && prevHist !== null && currentHist > prevHist;
 
-  if (weakContext && !pullbackConfirmed) {
+  // FIX: Al igual que con la reversión confirmada, una reversión temprana debe venir
+  // de un contexto de debilidad estructural genuina. Antes, dependía de `isBearish` (que 
+  // matemáticamente se cancelaba si el precio rebotaba) o de `isLateral` (que exige pendiente plana).
+  const isWeakContextForEarly = isBearish || (currentEma21 < currentSma30 && sma30Slope20Dir === 'DOWN');
+
+  if (isWeakContextForEarly && !pullbackConfirmed) {
     if (isPriceAboveEma21) {
       let improvementSignals = 0;
       if (currentRsi !== null && currentRsi > 45) improvementSignals++;
       if (macdDailyBullish) improvementSignals++;
-      // NOTA: no se repite macdDailyBullish aquí — era una condición duplicada (currentHist > prevHist)
       if (ema21Slope5Dir === 'UP') improvementSignals++;
       if (ema21Trend === 'ACCELERATING') improvementSignals++;
 
+      // Si el precio cruzó la EMA21 en un contexto bajista/hundido, y al menos 2
+      // indicadores de momentum están mejorando, es una reversión temprana.
       if (improvementSignals >= 2) {
         reversalEarly = true;
         factors.reversalEarly = true;
       }
     }
 
-    const isWeakStructure = ema21Slope20Dir === 'DOWN' || sma30Slope20Dir === 'DOWN';
-    if (isWeakStructure && isPriceAboveEma21 && isPriceAboveSma30 && ema21Slope5Dir === 'UP'
+    // FIX: Una verdadera reversión exige que el activo venga de un estado genuinamente bajista 
+    // (isBearish) o que al menos haya cruzado sus medias a la baja recientemente con pendiente 
+    // negativa (EMA21 < SMA30). Un lateral con pendiente temporalmente negativa no califica.
+    const isTrueWeakStructure = isBearish || (currentEma21 < currentSma30 && sma30Slope20Dir === 'DOWN');
+
+    if (isTrueWeakStructure && isPriceAboveEma21 && isPriceAboveSma30 && ema21Slope5Dir === 'UP'
       && currentRsi !== null && currentRsi > 50 && macdDailyBullish) {
       reversalConfirmed = true;
       factors.reversalConfirmed = true;
@@ -1012,18 +1050,20 @@ async function calculateDailySetup(symbol) {
     // Máximo de los últimos 20 días excluyendo hoy
     const max20 = Math.max(...closes.slice(Math.max(0, L - 20), L));
     const isNewHigh = currentPrice > max20;
-    
+
     // Si rompe un máximo de 20 días con fuerte volumen y está sobre sus medias
     if (isNewHigh && currentRVol !== null && currentRVol >= 1.2 && isAccumulationDay && isPriceAboveEma21 && isPriceAboveSma30) {
       // Para diferenciar de una tendencia alcista ya disparada, comprobamos que 
       // hubo cierta consolidación (el máximo de 20 días no se tocó en los últimos 5 días)
       // O venía de un contexto lateral
       const max5 = Math.max(...closes.slice(Math.max(0, L - 5), L));
-      const wasConsolidating = max5 < max20 || isLateral; 
-      
+      const wasConsolidating = max5 < max20 || isLateral;
+
       if (wasConsolidating) {
         breakoutConfirmed = true;
         factors.breakoutDetected = true;
+        factors.breakoutResistance = max20;
+        factors.breakoutLateral = isLateral;
       }
     }
   }
@@ -1061,7 +1101,7 @@ async function calculateDailySetup(symbol) {
       const distToEma21AtrExtended = factors.distToEma21Atr;
       const isExtended = ema21Distance !== null && ema21Distance > 8
         && distToEma21AtrExtended !== null && distToEma21AtrExtended > 2.5;
-      
+
       if (isExtended) {
         state = 'strong_uptrend_extended';
         verdict = 'Alcista Tardío';
@@ -1086,19 +1126,19 @@ async function calculateDailySetup(symbol) {
   } else {
     // Si no es Uptrend, ni Bearish, ni Lateral, es una transición o ruido
     if (currentEma200 && currentEma21 && currentSma30) {
-      if (currentEma21 < currentSma30 && currentSma30 >= currentEma200) {
+      if (currentEma21 < currentSma30) {
         state = 'bearish_transition';
         verdict = 'Transición Bajista';
-      } else if (currentEma21 > currentSma30 && currentSma30 <= currentEma200) {
+      } else if (currentEma21 > currentSma30) {
         state = 'bullish_transition';
         verdict = 'Transición Alcista';
       } else {
         state = 'messy_chop';
-        verdict = 'Ruido / Sin Tendencia';
+        verdict = 'Tendencia Indefinida';
       }
     } else {
       state = 'messy_chop';
-      verdict = 'Ruido / Sin Tendencia';
+      verdict = 'Tendencia Indefinida';
     }
   }
 
@@ -1156,13 +1196,13 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
   let closes = [];
   let highs = [];
   let validTimestamps = [];
-  
+
   const lastTimestamp = new Date(data.quotes[data.quotes.length - 1].date).getTime();
   let endIdx = data.quotes.length;
   if (Date.now() < lastTimestamp + (7 * 24 * 60 * 60 * 1000)) {
     endIdx = data.quotes.length - 1;
   }
-  
+
   for (let i = 0; i < endIdx; i++) {
     const q = data.quotes[i];
     if (q.close !== null && q.close !== undefined && !isNaN(q.close) && q.high !== null && q.high !== undefined && !isNaN(q.high)) {
@@ -1328,5 +1368,6 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
 
 module.exports = {
   runSync,
-  calculateWeeklyIndicators
+  calculateWeeklyIndicators,
+  calculateDailySetup
 };

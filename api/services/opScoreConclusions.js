@@ -35,6 +35,24 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
         if (val > 0) conclusions.push(`💪 Fuerza Relativa Positiva (+${val} pts).`);
         else if (val < 0) conclusions.push(`🔻 Fuerza Relativa Negativa (${val} pts).`);
         break;
+      case 'SECTOR_STRONG_BULLISH':
+        conclusions.push(`🚀 Viento a favor (Sector): Fuerte tendencia alcista global (+${val} pts).`);
+        break;
+      case 'SECTOR_BULLISH':
+        conclusions.push(`📈 Viento a favor (Sector): Tendencia alcista global (+${val} pts).`);
+        break;
+      case 'SECTOR_NEUTRAL':
+        conclusions.push(`➖ Contexto de Sector: Neutral (0 pts).`);
+        break;
+      case 'SECTOR_WEAK':
+        conclusions.push(`⚠️ Viento en contra (Sector): Contexto débil (${val} pts).`);
+        break;
+      case 'SECTOR_BEARISH':
+        conclusions.push(`⛔ Viento en contra (Sector): Tendencia bajista global (${val} pts).`);
+        break;
+      case 'SECTOR_BEARISH_CAP':
+        conclusions.push(`🚨 LIMITACIÓN POR SECTOR: Setup individual mitigado por fuerte contexto sectorial bajista.`);
+        break;
       case 'CAP_RS_WEAK_DETERIORATING':
         conclusions.push("⛔ RIESGO ESTRUCTURAL: RS Muy Débil y deteriorándose. Puntaje máximo limitado a 50.");
         break;
@@ -129,6 +147,193 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
       case 'INVALID_BREAK_SUPPORT':
         conclusions.push("💀 RUPTURA GRAVE: El precio ha roto la EMA21 y SMA30 por un margen amplio.");
         break;
+
+      // ─── STRONG UPTREND FLAGS ───────────────────────────────────────────────
+      case 'BASE_STRONG_UPTREND':
+        conclusions.push(`✅ Estructura base confirmada: Fuerte tendencia alcista (+${val} pts).`);
+        break;
+      case 'SU_LOST_EMA21': conclusions.push(`🔴 Precio por debajo de la EMA21 en estructura alcista (${val} pts).`); break;
+      case 'SU_NEAR_EMA21': conclusions.push(`🟢 Cerca de EMA21: excelente timing de entrada (+${val} pts).`); break;
+      case 'SU_HEALTHY_EXTENSION': conclusions.push(`🟢 Extensión saludable respecto a medias (+${val} pts).`); break;
+      case 'SU_MATURE': conclusions.push(`🟡 Tendencia madura: el recorrido empieza a limitarse (+${val} pts).`); break;
+      case 'SU_EXTENDED': conclusions.push(`🟠 Precio extendido respecto a la EMA21 (${val} pts).`); break;
+      case 'SU_OVEREXTENDED': conclusions.push(`🔴 Precio MUY extendido respecto a la EMA21 (${val} pts).`); break;
+      
+      case 'SU_RS':
+        if (val > 0) conclusions.push(`💪 Fuerza Relativa Positiva (+${val} pts).`);
+        else if (val < 0) conclusions.push(`🔻 Fuerza Relativa Negativa (${val} pts).`);
+        break;
+      case 'SU_CAP_RS_WEAK_DETERIORATING': conclusions.push(`⛔ CAP ESTRUCTURAL: RS Muy Débil y deteriorándose (Máx 50).`); break;
+      case 'SU_CAP_RS_WEAK': conclusions.push(`⚠️ CAP: RS Muy Débil (Máx 55).`); break;
+
+      case 'SU_MACD_WEEKLY_BULLISH_ACCEL': conclusions.push(`📈 MACD Semanal Alcista Acelerando (+${val} pts).`); break;
+      case 'SU_MACD_WEEKLY_BULLISH_STABLE': conclusions.push(`📈 MACD Semanal Alcista Estable (+${val} pts).`); break;
+      case 'SU_MACD_WEEKLY_BULLISH_DECEL': conclusions.push(`⚖️ MACD Semanal Alcista Desacelerando (+${val} pts).`); break;
+      case 'SU_MACD_WEEKLY_BEARISH_IMPROVING': conclusions.push(`⚖️ MACD Semanal Bajista pero Mejorando (+${val} pts).`); break;
+      case 'SU_MACD_WEEKLY_BEARISH': conclusions.push(`📉 MACD Semanal Bajista Acelerando (${val} pts).`); break;
+      case 'SU_CAP_MACD_WEEKLY_BEARISH': conclusions.push(`⚠️ CAP: Momentum estructural semanal en contra (Máx 50).`); break;
+      case 'SU_MACD_WEEKLY_BULLISH_CROSS_BONUS': conclusions.push(`📈 BONUS: Cruce Alcista Reciente en MACD Semanal (+${val} pts).`); break;
+      
+      case 'SU_MACD_DAILY_BULLISH_ACCEL': conclusions.push(`📈 MACD Diario Alcista Acelerando (+${val} pts).`); break;
+      case 'SU_MACD_DAILY_BULLISH': conclusions.push(`📈 MACD Diario Alcista (+${val} pts).`); break;
+      case 'SU_MACD_DAILY_BEARISH_ACCEL': conclusions.push(`📉 MACD Diario Bajista Acelerando (${val} pts).`); break;
+      case 'SU_MACD_DAILY_BEARISH': conclusions.push(`📉 MACD Diario Bajista (${val} pts).`); break;
+
+      case 'SU_RSI_DAILY_HEALTHY': conclusions.push(`✅ RSI Diario Constructivo (+${val} pts).`); break;
+      case 'SU_RSI_DAILY_ELEVATED': conclusions.push(`ℹ️ RSI Diario Elevado (+${val} pts).`); break;
+      case 'SU_RSI_DAILY_HIGH': conclusions.push(`⚠️ RSI Diario Alto (${val} pts).`); break;
+      case 'SU_RSI_DAILY_EXTREME': conclusions.push(`🚨 RSI Diario Extremo (${val} pts).`); break;
+      case 'SU_CAP_RSI_EXTREME_EXTENDED': conclusions.push(`⛔ CAP: Precio extendido + RSI extremo (Máx 55).`); break;
+
+      case 'SU_RSI_WEEKLY_HEALTHY': conclusions.push(`✅ RSI Semanal Constructivo (+${val} pts).`); break;
+      case 'SU_RSI_WEEKLY_ELEVATED': conclusions.push(`ℹ️ RSI Semanal Elevado (+${val} pts).`); break;
+      case 'SU_RSI_WEEKLY_HIGH': conclusions.push(`⚠️ RSI Semanal Alto (${val} pts).`); break;
+      case 'SU_RSI_WEEKLY_LOW': conclusions.push(`⚠️ RSI Semanal Débil (${val} pts).`); break;
+
+      case 'SU_LT_STRONG': conclusions.push(`🏆 Salud Largo Plazo Fuerte (+${val} pts).`); break;
+      case 'SU_LT_HEALTHY': conclusions.push(`✅ Salud Largo Plazo Buena (+${val} pts).`); break;
+      case 'SU_LT_NEUTRAL': conclusions.push(`ℹ️ Salud Largo Plazo Neutral (+${val} pts).`); break;
+      case 'SU_LT_NEUTRAL_NO_DD': conclusions.push(`ℹ️ Precio sobre EMA200 (sin datos de drawdown) (+${val} pts).`); break;
+      case 'SU_LT_WEAK': conclusions.push(`💀 Salud Largo Plazo Muy Débil (${val} pts).`); break;
+      case 'SU_LT_VERY_WEAK': conclusions.push(`💀 Salud Largo Plazo Pésima (${val} pts).`); break;
+      case 'SU_LT_BELOW_EMA200': conclusions.push(`🔴 Precio por debajo de la EMA200 (${val} pts).`); break;
+
+      case 'SU_VOLUME_CONFIRMING_TREND': conclusions.push(`✅ Expansión de volumen alcista positivo (+${val} pts).`); break;
+      case 'SU_VOLUME_DISTRIBUTION': conclusions.push(`🚨 Día de Distribución: Alto volumen en venta (${val} pts).`); break;
+      case 'SU_CAP_DISTRIBUTION': conclusions.push(`⚠️ CAP: Fuerte distribución reciente (Máx 50).`); break;
+      case 'SU_VOLUME_NORMAL': conclusions.push(`ℹ️ Volumen normal (+${val} pts).`); break;
+      case 'SU_VOLUME_DRY': conclusions.push(`ℹ️ Volumen seco (+${val} pts).`); break;
+
+      case 'SU_STRONG_CLOSE': conclusions.push(`💪 Fuerte cierre intradiario (+${val} pts).`); break;
+      case 'SU_REPEATED_UPPER_WICKS': conclusions.push(`⚠️ Presencia recurrente de mechas superiores (${val} pts).`); break;
+      case 'SU_WEAK_CLOSE': conclusions.push(`🔴 Cierre débil intradiario (${val} pts).`); break;
+      case 'SU_GIANT_BEAR_CANDLE': conclusions.push(`🚨 Vela bajista anómala y gigante (${val} pts).`); break;
+      case 'SU_CAP_STRONG_DISTRIBUTION': conclusions.push(`⛔ CAP: Distribución severa reciente (Máx 45).`); break;
+
+      // ─── BULLISH BREAKOUT ───────────────────────────────────────────────────
+      case 'BASE_BREAKOUT': conclusions.push(`🚀 Setup detectado: Breakout Alcista. Puntaje base: ${val} pts.`); break;
+      case 'BO_CLEAN_BREAKOUT': conclusions.push(`✅ Breakout Limpio: cierre sólido y distancia clara (+${val} pts).`); break;
+      case 'BO_VOLUME_CONVICTION': conclusions.push(`🔥 Convicción de Volumen: fuerte entrada de capital (+${val} pts).`); break;
+      case 'BO_VOLUME_REJECTED': conclusions.push(`🚨 Volumen de Rechazo: alta participación pero cierre débil (${val} pts).`); break;
+      case 'BO_VOLUME_WEAK': conclusions.push(`📉 Breakout sin volumen: falta de participación (${val} pts).`); break;
+      case 'BO_RSI_WEAK': conclusions.push(`⚠️ RSI Débil: falta momentum (${val} pts).`); break;
+      case 'BO_RSI_EARLY': conclusions.push(`✅ RSI Temprano (+${val} pts).`); break;
+      case 'BO_RSI_SOLID': conclusions.push(`✅ RSI Sólido y apoyando el quiebre (+${val} pts).`); break;
+      case 'BO_RSI_HEALTHY': conclusions.push(`✅ RSI Saludable (+${val} pts).`); break;
+      case 'BO_RSI_ELEVATED': conclusions.push(`⚠️ RSI Elevado (${val} pts).`); break;
+      case 'BO_RSI_OVEREXTENDED': conclusions.push(`🚨 RSI Sobreextendido: el quiebre puede estar agotado (${val} pts).`); break;
+      case 'BO_MARGINAL_BREAKOUT': conclusions.push(`🎯 Breakout Marginal: quiebre técnico pero sin separación clara (+${val} pts).`); break;
+      case 'BO_MODERATE_BREAKOUT': conclusions.push(`🎯 Breakout Moderado: buena distancia desde la base (+${val} pts).`); break;
+      case 'BO_EXTENDED': conclusions.push(`ℹ️ Breakout Extendido: el precio ya se alejó de la base (${val} pts).`); break;
+      case 'BO_SEVERELY_EXTENDED': conclusions.push(`🚨 Breakout Muy Extendido: alto riesgo de reversión (${val} pts).`); break;
+      case 'BO_QUALITY_BASE': conclusions.push(`🏰 Base de Calidad: consolidación lateral clara previa al quiebre (+${val} pts).`); break;
+      case 'BO_MACD_WEEKLY_ACCEL': conclusions.push(`📈 MACD Semanal Acelerando a favor (+${val} pts).`); break;
+      case 'BO_MACD_FRESH_CROSS': conclusions.push(`📈 Cruce reciente de MACD diario (+${val} pts).`); break;
+      case 'BO_STRONG_CLOSE': conclusions.push(`💪 Vela de quiebre con cierre muy fuerte (+${val} pts).`); break;
+      case 'BO_SHOOTING_STAR': conclusions.push(`🚨 Shooting Star: rechazo severo intradía tras el quiebre (${val} pts).`); break;
+      case 'BO_UPPER_REJECTION': conclusions.push(`⚠️ Mecha superior importante: rechazo intradía (${val} pts).`); break;
+      case 'BO_FAILED_BREAKOUT': conclusions.push(`🚨 Falso Quiebre: el precio perforó la resistencia pero volvió a caer (${val} pts).`); break;
+
+      // ─── BULLISH REVERSAL CONFIRMED ─────────────────────────────────────────
+      case 'BASE_REVERSAL_CONFIRMED': conclusions.push(`🎯 Setup detectado: Reversión Alcista Confirmada. Puntaje base: ${val} pts.`); break;
+      case 'RC_FULL_REVERSAL': conclusions.push(`🔥 Reversión desde Estructura Bajista: superó la fuerte presión vendedora previa (+${val} pts).`); break;
+      case 'RC_RSI_BARELY_CROSSED': conclusions.push(`⚠️ RSI al límite: cruzó los 50 pero sigue muy débil (${val} pts).`); break;
+      case 'RC_RSI_SOLID': conclusions.push(`✅ RSI Sólido y constructivo (+${val} pts).`); break;
+      case 'RC_RSI_HEALTHY': conclusions.push(`✅ RSI Saludable (+${val} pts).`); break;
+      case 'RC_RSI_ELEVATED': conclusions.push(`⚠️ RSI Elevado: perdiendo margen de subida (${val} pts).`); break;
+      case 'RC_RSI_OVEREXTENDED': conclusions.push(`🚨 RSI Sobreextendido: alto riesgo de agotamiento (${val} pts).`); break;
+      case 'RC_SUSTAINED': conclusions.push(`✅ Persistencia: recuperación sostenida por encima de las medias (+${val} pts).`); break;
+      case 'RC_FRESH_UNCONFIRMED': conclusions.push(`⚠️ Reversión fresca: primer día cumpliendo las condiciones, alto riesgo de whipsaw (${val} pts).`); break;
+      case 'RC_WHIPSAW_RISK': conclusions.push(`🌪️ Riesgo de Whipsaw: historial reciente de cruces falsos a la baja (${val} pts).`); break;
+      case 'RC_CAP_REPEATED_WHIPSAW': conclusions.push(`🛡️ Techo por Whipsaw: demasiados amagues recientes.`); break;
+      case 'RC_VOLUME_CONVICTION': conclusions.push(`🔥 Convicción Institucional: Fuerte volumen de compra con cierre sólido (+${val} pts).`); break;
+      case 'RC_VOLUME_POSITIVE': conclusions.push(`✅ Volumen positivo confirmando la ruptura (+${val} pts).`); break;
+      case 'RC_VOLUME_REJECTED': conclusions.push(`⚠️ Volumen alto pero con cierre débil/rechazo superior (${val} pts).`); break;
+      case 'RC_VOLUME_WEAK': conclusions.push(`📉 Volumen muy débil: falta de convicción en el quiebre (${val} pts).`); break;
+      case 'RC_MACD_FRESH_CROSS': conclusions.push(`📈 Momentum Temprano: MACD acaba de cruzar al alza (+${val} pts).`); break;
+      case 'RC_RS': conclusions.push(val > 0 ? `💪 Fuerza Relativa a favor (+${val} pts).` : `🔻 Fuerza Relativa en contra (${val} pts).`); break;
+
+      // ─── EARLY BULLISH REVERSAL ─────────────────────────────────────────────
+      case 'BASE_EARLY_REVERSAL': conclusions.push(`🌱 Setup detectado: Reversión Alcista Temprana. Puntaje base: ${val} pts.`); break;
+      case 'EBR_RS_VERY_STRONG': conclusions.push(`💪 Fuerza Relativa Excelente (+${val} pts).`); break;
+      case 'EBR_RS_STRONG': conclusions.push(`💪 Fuerza Relativa Fuerte (+${val} pts).`); break;
+      case 'EBR_RS_POSITIVE': conclusions.push(`✅ Fuerza Relativa Positiva (+${val} pts).`); break;
+      case 'EBR_RS_WEAK': conclusions.push(`⚠️ Fuerza Relativa Débil (${val} pts).`); break;
+      case 'EBR_RS_VERY_WEAK': conclusions.push(`🚨 Fuerza Relativa Muy Débil (${val} pts).`); break;
+      case 'EBR_RS_IMPROVING': conclusions.push(`✅ Tendencia RS Mejorando (+${val} pts).`); break;
+      case 'EBR_RS_DETERIORATING': conclusions.push(`⚠️ Tendencia RS Deteriorando (${val} pts).`); break;
+      case 'EBR_CAP_RS_COLLAPSING': conclusions.push(`⛔ CAP: RS Colapsando (Máx 45).`); break;
+      case 'EBR_CAP_VERY_WEAK_RS': conclusions.push(`⛔ CAP: RS Muy Débil (Máx 55).`); break;
+      case 'EBR_RSI_WEAK_RECOVERY': conclusions.push(`⚠️ Recuperación RSI débil (${val} pts).`); break;
+      case 'EBR_RSI_CROSSING_50': conclusions.push(`✅ RSI Cruzando 50 (+${val} pts).`); break;
+      case 'EBR_RSI_SOLID': conclusions.push(`✅ RSI Sólido (+${val} pts).`); break;
+      case 'EBR_RSI_HEALTHY': conclusions.push(`✅ RSI Saludable (+${val} pts).`); break;
+      case 'EBR_RSI_ELEVATED': conclusions.push(`⚠️ RSI Elevado (${val} pts).`); break;
+      case 'EBR_RSI_OVEREXTENDED': conclusions.push(`🚨 RSI Sobreextendido (${val} pts).`); break;
+      case 'EBR_MACD_ACCELERATING': conclusions.push(`📈 MACD Acelerando (+${val} pts).`); break;
+      case 'EBR_MACD_IMPROVING': conclusions.push(`✅ MACD Mejorando (+${val} pts).`); break;
+      case 'EBR_MACD_EARLY_POSITIVE': conclusions.push(`✅ MACD apenas positivo (+${val} pts).`); break;
+      case 'EBR_MACD_FRESH_CROSS': conclusions.push(`📈 Cruce fresco de MACD (+${val} pts).`); break;
+      case 'EBR_MACD_LOSING_MOMENTUM': conclusions.push(`⚠️ MACD Perdiendo Momentum (${val} pts).`); break;
+      case 'EBR_NEAR_EMA21': conclusions.push(`✅ Precio muy cerca de EMA21 (+${val} pts).`); break;
+      case 'EBR_APPROACHING_EMA21': conclusions.push(`✅ Acercándose a EMA21 (+${val} pts).`); break;
+      case 'EBR_FAR_FROM_EMA21': conclusions.push(`⚠️ Muy lejos de EMA21 (${val} pts).`); break;
+      case 'EBR_ABOVE_EMA21': conclusions.push(`✅ Precio por encima de EMA21 (+${val} pts).`); break;
+      case 'EBR_STRUCTURAL_RECOVERY': conclusions.push(`📈 Recuperación estructural (SMA30) (+${val} pts).`); break;
+      case 'EBR_RECOVERY_PERSISTENT': conclusions.push(`✅ Recuperación persistente (+${val} pts).`); break;
+      case 'EBR_RECOVERY_DEVELOPING': conclusions.push(`✅ Recuperación en desarrollo (+${val} pts).`); break;
+      case 'EBR_WHIPSAW_RISK': conclusions.push(`⚠️ Riesgo de Whipsaw (${val} pts).`); break;
+      case 'EBR_REPEATED_WHIPSAW': conclusions.push(`🚨 Whipsaw Repetido (${val} pts).`); break;
+      case 'EBR_VOLUME_CONVICTION': conclusions.push(`🔥 Convicción de Volumen (+${val} pts).`); break;
+      case 'EBR_VOLUME_POSITIVE': conclusions.push(`✅ Volumen Positivo (+${val} pts).`); break;
+      case 'EBR_VOLUME_REJECTED': conclusions.push(`⚠️ Volumen Rechazado (${val} pts).`); break;
+      case 'EBR_VOLUME_WEAK': conclusions.push(`📉 Volumen Débil (${val} pts).`); break;
+      case 'EBR_CAP_REPEATED_WHIPSAW': conclusions.push(`⛔ CAP: Whipsaw Repetido (Máx 50).`); break;
+      case 'EBR_CAP_STRUCTURAL_RISK': conclusions.push(`⛔ CAP: Riesgo Estructural severo (Máx 45).`); break;
+      case 'EBR_LT_HIGH_QUALITY_CORRECTION': conclusions.push(`✅ Corrección de alta calidad a largo plazo (+${val} pts).`); break;
+      case 'EBR_LT_MODERATE_CORRECTION': conclusions.push(`✅ Corrección moderada a largo plazo (+${val} pts).`); break;
+      case 'EBR_LT_WEAK_CORRECTION': conclusions.push(`⚠️ Estructura a largo plazo débil (${val} pts).`); break;
+      case 'EBR_LT_CRASH': conclusions.push(`🚨 Crash estructural a largo plazo (${val} pts).`); break;
+
+      // ─── TRANSICION ALCISTA (BULLISH TRANSITION) ────────
+      case 'BASE_TRANSITION': conclusions.push(`🏁 Setup detectado: Transición Alcista Temprana. Puntaje base: ${val} pts.`); break;
+      case 'RS_TRANSITION':
+        if (val > 0) conclusions.push(`💪 Fuerte liderazgo inicial: excelente fuerza relativa (+${val} pts).`);
+        else conclusions.push(`🔻 Aún muestra debilidad relativa importante (${val} pts).`);
+        break;
+      case 'BT_STRONG_VOLUME': conclusions.push(`✅ Volumen Institucional de Ruptura: Fuerte presión de compra confirmando la transición (+${val} pts).`); break;
+      case 'BT_GOOD_VOLUME': conclusions.push(`✅ Volumen positivo acompañando la transición (+${val} pts).`); break;
+      case 'BT_WEAK_VOLUME': conclusions.push(`⚠️ Transición seca: subida sin volumen que eleva fuertemente el riesgo de cruce falso (${val} pts).`); break;
+      case 'BT_MACD_CROSS': conclusions.push(`📈 Momentum confirmado: MACD acaba de cruzar al alza (+${val} pts).`); break;
+      case 'BT_MACD_ACCEL': conclusions.push(`✅ Momentum constructivo: MACD en terreno positivo y acelerando (+${val} pts).`); break;
+      case 'BT_MACD_BEARISH': conclusions.push(`⚠️ Divergencia: el precio cruza pero el MACD sigue hundido y acelerando a la baja (${val} pts).`); break;
+      case 'BT_ABOVE_EMA200': conclusions.push(`✅ Rompió la EMA200: la transición logró superar la resistencia de largo plazo (+${val} pts).`); break;
+      case 'BT_RESISTANCE_EMA200': conclusions.push(`⛔ Pared a la vista: precio extremadamente cerca de chocar contra la resistencia de la EMA200 (${val} pts).`); break;
+      case 'CAP_BT_EMA200': conclusions.push(`🛡️ Riesgo inminente de rechazo en la EMA200: se aplica techo de seguridad al puntaje.`); break;
+      case 'BT_FAR_BELOW_EMA200': conclusions.push(`📉 Recuperación desde el fondo: la EMA200 aún está muy lejos por encima (${val} pts).`); break;
+      case 'BT_WHIPSAW': conclusions.push(`🌪️ Patrón de Whipsaw (Serrucho): demasiados cruces recientes de EMA sin tendencia clara. Ruido extremo (${val} pts).`); break;
+      case 'CAP_BT_WHIPSAW': conclusions.push(`🛡️ Alta probabilidad de cruce falso por Whipsaw: se hunde el techo de puntuación.`); break;
+
+      // ─── TRANSICION BAJISTA (BEARISH TRANSITION) ────────
+      case 'BASE_BEARISH_TRANSITION': conclusions.push(`🔻 Setup detectado: Transición Bajista Temprana. Puntaje base: ${val} pts.`); break;
+      case 'BEAR_T_RS':
+        if (val > 0) conclusions.push(`🛡️ Señal de rescate: mejora la fuerza relativa a pesar del quiebre (+${val} pts).`);
+        else conclusions.push(`🔴 Confirma la caída: fuerza relativa débil acompañando el quiebre (${val} pts).`);
+        break;
+      case 'BEAR_T_SELLING_CONFIRMATION': conclusions.push(`🚨 Volumen Confirmando Quiebre: Fuerte presión de venta empujando abajo el precio (${val} pts).`); break;
+      case 'BEAR_T_REBOUND_VOLUME': conclusions.push(`✅ Volumen de Rescate: Compradores apareciendo fuertemente tras el quiebre (+${val} pts).`); break;
+      case 'BEAR_T_MACD_BEARISH_ACCEL': conclusions.push(`📉 Momentum bajista acelerando a la baja (${val} pts).`); break;
+      case 'BEAR_T_MACD_BEARISH_DECEL': conclusions.push(`🛡️ Momentum bajista perdiendo fuerza (+${val} pts).`); break;
+      case 'BEAR_T_MACD_EARLY_BULLISH': conclusions.push(`✅ Señal de rescate: MACD cruzando al alza tempranamente (+${val} pts).`); break;
+      case 'BEAR_T_EMA200_BREAKDOWN_ATTEMPT': conclusions.push(`🚨 Riesgo Crítico: Intentando perforar el soporte histórico de la EMA200 con volumen (${val} pts).`); break;
+      case 'BEAR_T_EMA200_SUPPORT_TEST': conclusions.push(`ℹ️ Testeando el soporte de la EMA200.`); break;
+      case 'BEAR_T_BELOW_EMA200': conclusions.push(`📉 Daño estructural: ya ha perdido la EMA200 (${val} pts).`); break;
+      case 'BEAR_T_FALSE_BREAKDOWN_SIGNAL': conclusions.push(`🛡️ Indicios de Whipsaw (Quiebre Falso): el precio ha recuperado la EMA21 recientemente (+${val} pts).`); break;
+      case 'BT_LT_HIGH_QUALITY_CORRECTION': conclusions.push(`✅ Corrección saludable: el activo mantiene buena estructura macro (+${val} pts).`); break;
+      case 'BT_LT_MODERATE_CORRECTION': conclusions.push(`ℹ️ Corrección moderada en el macro (+${val} pts).`); break;
+      case 'BT_LT_WEAK_CORRECTION': conclusions.push(`📉 Estructura macro débil (${val} pts).`); break;
+      case 'BT_LT_CRASH': conclusions.push(`🚨 Crash macro: caída profunda con pérdida severa de momentum (${val} pts).`); break;
+      case 'CAP_BT_LT_CRASH': conclusions.push(`⛔ CAP: Estructura macro colapsada.`); break;
 
       // ─── LATERAL FLAGS ──────────────────────────────────────────────────────
       case 'RANGE_LOW':
