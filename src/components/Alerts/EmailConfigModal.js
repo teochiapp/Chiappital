@@ -4,7 +4,7 @@ import { Mail, X, RefreshCw, Send, CheckSquare, Square } from 'lucide-react';
 import alertService from '../../services/alertService';
 const EmailConfigModal = ({ isOpen, onClose, initialData = null, onSuccess }) => {
   const FREQUENT_EMAILS = [
-    'ciro.chiappero@henriwillig.com',
+    'cirochiappero@gmail.com',
     'tomasrcv@gmail.com',
     'jchiappero@hotmail.com'
   ];

@@ -107,13 +107,13 @@ async function runSync(reason = 'manual') {
         symbolsToUpdate.push(row.symbol);
       }
 
-      // Necesita actualizar EMA / Setup? (cada 12 horas o si falta el setup)
-      if (!row.ema_updated_at || row.setup_state === null || (now.getTime() - new Date(row.ema_updated_at).getTime()) > 12 * 60 * 60 * 1000) {
+      // Necesita actualizar EMA / Setup? (cada 1 hora o si falta el setup)
+      if (!row.ema_updated_at || row.setup_state === null || (now.getTime() - new Date(row.ema_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
         symbolsForEma.push(row.symbol);
       }
 
-      // Necesita actualizar RSI/MACD/Drawdown/RS? (cada 12 horas o si alguno no se calculó)
-      if (!row.rsi_updated_at || row.macd_weekly === null || row.drawdown_52w === null || row.rs_value === null || (now.getTime() - new Date(row.rsi_updated_at).getTime()) > 12 * 60 * 60 * 1000) {
+      // Necesita actualizar RSI/MACD/Drawdown/RS? (cada 1 hora o si alguno no se calculó)
+      if (!row.rsi_updated_at || row.macd_weekly === null || row.drawdown_52w === null || row.rs_value === null || (now.getTime() - new Date(row.rsi_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
         symbolsForRsi.push({ symbol: row.symbol, index_symbol: row.index_symbol });
       }
     }
@@ -319,6 +319,11 @@ async function runSync(reason = 'manual') {
               const { rsi, macd } = ind;
               const quoteData = newQuotes.get(sym) || {};
 
+              if (index_symbol) {
+                quoteData.market_regime = await calculateIndexRegime(index_symbol);
+              }
+              quoteData.index_symbol = index_symbol; // Needed for grouping
+
               if (rsi && rsi.current !== null) {
                 quoteData.rsi_weekly = rsi.current;
                 quoteData.rsi_previous = rsi.previous;
@@ -351,6 +356,99 @@ async function runSync(reason = 'manual') {
           }
         });
         await Promise.allSettled(promises);
+      }
+      
+      // --- Z-SCORE POST-PROCESSING ---
+      // We process the full universe of RS values (DB + freshly calculated)
+      const rsGroups = new Map();
+      for (const row of rows) {
+        if (!row.index_symbol) continue;
+        
+        let currentRsValue = row.rs_value;
+        let currentRsPrev = row.rs_previous;
+        let currentRegime = null;
+        
+        const fresh = newRsis.get(row.symbol);
+        if (fresh && fresh.rs_value !== undefined) {
+          currentRsValue = fresh.rs_value;
+          currentRsPrev = fresh.rs_previous;
+        }
+        if (fresh && fresh.market_regime) {
+          currentRegime = fresh.market_regime;
+        }
+
+        if (currentRsValue !== null && currentRsValue !== undefined && currentRsPrev !== null && currentRsPrev !== undefined) {
+          if (!rsGroups.has(row.index_symbol)) {
+            rsGroups.set(row.index_symbol, []);
+          }
+          rsGroups.get(row.index_symbol).push({
+            symbol: row.symbol,
+            rsValue: currentRsValue,
+            rsPrev: currentRsPrev,
+            regime: currentRegime
+          });
+        }
+      }
+
+      for (const [idxSym, group] of rsGroups.entries()) {
+        // Obtenemos el regime para este grupo en caso de que lo necesitemos guardar
+        // (Podemos llamar a calculateIndexRegime que está cacheada)
+        const groupRegime = await calculateIndexRegime(idxSym);
+        
+        if (group.length >= 10) {
+          const meanV = group.reduce((sum, item) => sum + item.rsValue, 0) / group.length;
+          const stdV = Math.sqrt(group.reduce((sum, item) => sum + Math.pow(item.rsValue - meanV, 2), 0) / group.length) || 1;
+          
+          const meanP = group.reduce((sum, item) => sum + item.rsPrev, 0) / group.length;
+          const stdP = Math.sqrt(group.reduce((sum, item) => sum + Math.pow(item.rsPrev - meanP, 2), 0) / group.length) || 1;
+
+          for (const item of group) {
+            const zV = (item.rsValue - meanV) / stdV;
+            const zP = (item.rsPrev - meanP) / stdP;
+            
+            let state = 'Neutral';
+            const isRising = zV > zP;
+            
+            if (zV > 1.5) {
+               state = isRising ? 'Very Strong & Rising' : 'Very Strong but Weakening';
+            } else if (zV > 0.5 && zV <= 1.5) {
+               state = isRising ? 'Positive & Rising' : 'Positive but Weakening';
+            } else if (zV > -0.5 && zV <= 0.5) {
+               state = isRising ? 'Neutral & Rising' : 'Neutral & Falling';
+            } else if (zV > -1.5 && zV <= -0.5) {
+               state = isRising ? 'Weak but Recovering' : 'Weak & Falling';
+            } else if (zV <= -1.5) {
+               state = isRising ? 'Very Weak but Recovering' : 'Very Weak & Falling';
+            }
+            
+            if (!newRsis.has(item.symbol)) {
+               newRsis.set(item.symbol, {});
+            }
+            const quoteData = newRsis.get(item.symbol);
+            quoteData.rs_value = item.rsValue;
+            quoteData.rs_previous = item.rsPrev;
+            quoteData.rs_state = state;
+            quoteData.market_regime = groupRegime;
+          }
+        } else {
+          // Fallback a los estados originales si N < 10
+          for (const item of group) {
+            let state = 'Neutral';
+            if (item.rsValue > 0) {
+              state = (item.rsValue > item.rsPrev) ? 'Strong & Rising' : 'Strong but Weakening';
+            } else {
+              state = (item.rsValue > item.rsPrev) ? 'Weak but Recovering' : 'Weak & Falling';
+            }
+            if (!newRsis.has(item.symbol)) {
+               newRsis.set(item.symbol, {});
+            }
+            const quoteData = newRsis.get(item.symbol);
+            quoteData.rs_value = item.rsValue;
+            quoteData.rs_previous = item.rsPrev;
+            quoteData.rs_state = state;
+            quoteData.market_regime = groupRegime;
+          }
+        }
       }
     }
     const timeRsi = performance.now() - rsiStartTime;
@@ -448,6 +546,14 @@ async function runSync(reason = 'manual') {
           updateValues.push(rsiData.rs_value, rsiData.rs_previous, rsiData.rs_state);
           onDuplicateUpdate.push('rs_value = VALUES(rs_value)', 'rs_previous = VALUES(rs_previous)', 'rs_state = VALUES(rs_state)', 'rs_updated_at = VALUES(rs_updated_at)');
         }
+        if (rsiData.market_regime !== undefined) {
+          if (!updateQuery.endsWith(', ') && !updateQuery.endsWith('rs_updated_at') && !updateQuery.endsWith('drawdown_52w') && !updateQuery.endsWith('macd_prev_hist') && !updateQuery.endsWith('rsi_updated_at')) updateQuery += ', ';
+          else if (updateQuery.endsWith('rs_updated_at') || updateQuery.endsWith('drawdown_52w') || updateQuery.endsWith('macd_prev_hist') || updateQuery.endsWith('rsi_updated_at')) updateQuery += ', ';
+          updateQuery += 'market_regime';
+          updatePlaceholders.push('?');
+          updateValues.push(rsiData.market_regime);
+          onDuplicateUpdate.push('market_regime = VALUES(market_regime)');
+        }
       } else {
         updateQuery = updateQuery.replace(/, $/, '');
       }
@@ -458,6 +564,7 @@ async function runSync(reason = 'manual') {
       const finalFactors = setup !== undefined ? setup.setup_factors : (typeof dbRow.setup_factors === 'string' ? JSON.parse(dbRow.setup_factors) : dbRow.setup_factors) || {};
 
       const opData = {
+        marketRegime: rsiData !== undefined && rsiData.market_regime !== undefined ? rsiData.market_regime : dbRow.market_regime,
         rsValue: rsiData !== undefined && rsiData.rs_value !== undefined ? rsiData.rs_value : dbRow.rs_value,
         rsPrevious: rsiData !== undefined && rsiData.rs_previous !== undefined ? rsiData.rs_previous : dbRow.rs_previous,
         rsState: rsiData !== undefined && rsiData.rs_state !== undefined ? rsiData.rs_state : dbRow.rs_state,
@@ -481,7 +588,8 @@ async function runSync(reason = 'manual') {
         macdPrevHist: rsiData !== undefined && rsiData.macd_prev_hist !== undefined ? rsiData.macd_prev_hist : dbRow.macd_prev_hist,
         macdPrevWeekly: rsiData !== undefined && rsiData.macd_prev_weekly !== undefined ? rsiData.macd_prev_weekly : dbRow.macd_prev_weekly,
         macdPrevSignal: rsiData !== undefined && rsiData.macd_prev_signal !== undefined ? rsiData.macd_prev_signal : dbRow.macd_prev_signal,
-        sectorTrend: finalFactors.sectorTrend !== undefined ? finalFactors.sectorTrend : (dbRow.sector_trend || null)
+        sectorTrend: finalFactors.sectorTrend !== undefined ? finalFactors.sectorTrend : (dbRow.sector_trend || null),
+        daysSinceTrigger: finalFactors.daysSinceTrigger
       };
 
       let opScoreResult = null;
@@ -1003,6 +1111,22 @@ async function calculateDailySetup(symbol) {
     if (wasStrongAbove && corrected && isPriceAboveBoth && stillNearEma21 && isStrengthCandle) {
       pullbackConfirmed = true;
       factors.pullbackDetected = true;
+
+      // Calcular daysSinceTrigger
+      let lowestIdx = L;
+      for (let i = L - 5; i <= L; i++) {
+        if (lows[i] < lows[lowestIdx]) lowestIdx = i;
+      }
+      let triggerDay = L;
+      for (let i = lowestIdx; i <= L; i++) {
+        const strengthCandle = (closes[i] > opens[i]) || (closes[i] > closes[i - 1]);
+        const priceAboveBoth = closes[i] > ema21Array[i] && closes[i] > sma30Array[i];
+        if (priceAboveBoth && strengthCandle) {
+          triggerDay = i;
+          break;
+        }
+      }
+      factors.daysSinceTrigger = L - triggerDay;
     }
   }
 
@@ -1029,6 +1153,17 @@ async function calculateDailySetup(symbol) {
       if (improvementSignals >= 2) {
         reversalEarly = true;
         factors.reversalEarly = true;
+
+        // Calcular daysSinceTrigger
+        let triggerDay = L;
+        for (let i = L; i >= L - 5; i--) {
+          if (closes[i] > ema21Array[i]) {
+            triggerDay = i;
+          } else {
+            break;
+          }
+        }
+        factors.daysSinceTrigger = L - triggerDay;
       }
     }
 
@@ -1041,6 +1176,17 @@ async function calculateDailySetup(symbol) {
       && currentRsi !== null && currentRsi > 50 && macdDailyBullish) {
       reversalConfirmed = true;
       factors.reversalConfirmed = true;
+
+      // Calcular daysSinceTrigger
+      let triggerDay = L;
+      for (let i = L; i >= L - 5; i--) {
+        if (closes[i] > ema21Array[i] && closes[i] > sma30Array[i]) {
+          triggerDay = i;
+        } else {
+          break;
+        }
+      }
+      factors.daysSinceTrigger = L - triggerDay;
     }
   }
 
@@ -1064,6 +1210,17 @@ async function calculateDailySetup(symbol) {
         factors.breakoutDetected = true;
         factors.breakoutResistance = max20;
         factors.breakoutLateral = isLateral;
+
+        // Calcular daysSinceTrigger
+        let triggerDay = L;
+        for (let i = L - 5; i <= L; i++) {
+          const max20_i = Math.max(...closes.slice(Math.max(0, i - 20), i));
+          if (closes[i] > max20_i) {
+            triggerDay = i;
+            break;
+          }
+        }
+        factors.daysSinceTrigger = L - triggerDay;
       }
     }
   }
@@ -1089,7 +1246,7 @@ async function calculateDailySetup(symbol) {
     verdict = 'Reversión con confirmación';
   } else if (reversalEarly) {
     state = 'early_bullish_reversal';
-    verdict = 'Reversión';
+    verdict = 'Reversión temprana';
   } else if (isUptrend) {
     // Si la estructura es alcista pero el precio rompió ambas medias (EMA21 y SMA30),
     // la tendencia de corto plazo está invalidada o en gran peligro.
@@ -1152,10 +1309,14 @@ async function calculateDailySetup(symbol) {
 }
 
 
-const indexPromises = new Map();
+const indexCache = new Map();
 async function getIndexHistory(indexSymbol) {
   if (!indexSymbol) return null;
-  if (indexPromises.has(indexSymbol)) return indexPromises.get(indexSymbol);
+  const now = Date.now();
+  const cached = indexCache.get(indexSymbol);
+  if (cached && (now - cached.timestamp < 24 * 60 * 60 * 1000)) {
+    return cached.promise;
+  }
 
   const promise = (async () => {
     try {
@@ -1179,8 +1340,51 @@ async function getIndexHistory(indexSymbol) {
     }
   })();
 
-  indexPromises.set(indexSymbol, promise);
+  indexCache.set(indexSymbol, { timestamp: now, promise });
   return promise;
+}
+
+const indexRegimeCache = new Map();
+async function calculateIndexRegime(indexSymbol) {
+  if (!indexSymbol) return null;
+  const now = Date.now();
+  const cached = indexRegimeCache.get(indexSymbol);
+  if (cached && (now - cached.timestamp < 12 * 60 * 60 * 1000)) {
+    return cached.regime;
+  }
+
+  const history = await getIndexHistory(indexSymbol);
+  if (!history) return 'NEUTRAL';
+
+  const sortedTimestamps = Array.from(history.keys()).sort((a, b) => a - b);
+  const closes = sortedTimestamps.map(t => history.get(t));
+
+  if (closes.length < 30) return 'NEUTRAL';
+
+  const ema30Array = calculateEMAArray(closes, 30);
+  const L = closes.length - 1;
+  const currentPrice = closes[L];
+  const currentEma30 = ema30Array[L];
+  const prev5Ema30 = L >= 5 ? ema30Array[L - 5] : ema30Array[0];
+  const prev10Ema30 = L >= 10 ? ema30Array[L - 10] : ema30Array[0];
+
+  const getDir = (pct) => pct >= 0.20 ? 'UP' : (pct <= -0.20 ? 'DOWN' : 'FLAT');
+  const ema30Slope5Pct = currentEma30 && prev5Ema30 ? ((currentEma30 / prev5Ema30) - 1) * 100 : 0;
+  const ema30Slope10Pct = currentEma30 && prev10Ema30 ? ((currentEma30 / prev10Ema30) - 1) * 100 : 0;
+  const ema30Slope5Dir = getDir(ema30Slope5Pct);
+  const ema30Slope10Dir = getDir(ema30Slope10Pct);
+
+  let regime = 'NEUTRAL';
+  if (currentEma30) {
+    if (currentPrice > currentEma30 && ema30Slope5Dir === 'UP' && ema30Slope10Dir === 'UP') {
+      regime = 'BULLISH';
+    } else if (currentPrice < currentEma30 && ema30Slope5Dir === 'DOWN' && ema30Slope10Dir === 'DOWN') {
+      regime = 'BEARISH';
+    }
+  }
+
+  indexRegimeCache.set(indexSymbol, { timestamp: now, regime });
+  return regime;
 }
 
 async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod = 14) {

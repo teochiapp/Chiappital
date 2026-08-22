@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Terminal, Copy, Trash2, X, RefreshCw } from 'lucide-react';
+import { Terminal, Copy, Trash2, X, RefreshCw, Zap } from 'lucide-react';
 import loggerService from '../../services/loggerService';
 import { colors } from '../../styles/colors';
 
@@ -76,6 +76,20 @@ const DebugConsole = () => {
       });
       loggerService.clearLogs();
       loggerService.success('Caché de localStorage y memoria completamente purgada.', 'CACHE');
+    }
+  };
+
+  const handleForceSync = async () => {
+    try {
+      loggerService.info('Enviando petición de Force Sync al backend...', 'SYSTEM');
+      const res = await fetch('http://localhost:3001/api/market/sync-now', { method: 'POST' });
+      if (res.ok) {
+        loggerService.success('Force Sync iniciado en el servidor.', 'SYSTEM');
+      } else {
+        loggerService.error(`Error al iniciar Force Sync: ${res.status}`, 'SYSTEM');
+      }
+    } catch (e) {
+      loggerService.error(`Error de conexión al forzar Sync: ${e.message}`, 'SYSTEM');
     }
   };
 
@@ -186,6 +200,10 @@ const DebugConsole = () => {
 
             {/* Acciones */}
             <ActionsContainer>
+              <ActionButton onClick={handleForceSync} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                <Zap size={14} />
+                Forzar Sync
+              </ActionButton>
               <ActionButton onClick={handleCopyReport}>
                 <Copy size={14} />
                 {copied ? '¡Copiado!' : 'Copiar Diagnóstico'}

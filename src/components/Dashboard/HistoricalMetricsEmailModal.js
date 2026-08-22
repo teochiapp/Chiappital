@@ -3,7 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { Mail, X, RefreshCw, Send } from 'lucide-react';
 
 const FREQUENT_EMAILS = [
-  'ciro.chiappero@henriwillig.com',
+  'cirochiappero@gmail.com',
   'tomasrcv@gmail.com',
   'jchiappero@hotmail.com'
 ];

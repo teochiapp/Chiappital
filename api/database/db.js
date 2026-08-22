@@ -706,6 +706,18 @@ async function initializeDatabase() {
       console.error('⚠️ Error al intentar agregar columnas de RS:', error.message);
     }
   }
+  // Migración: Agregar columna de Market Regime a market_snapshot
+  try {
+    await db.execute(`
+      ALTER TABLE market_snapshot 
+      ADD COLUMN market_regime VARCHAR(20) DEFAULT NULL AFTER sector_trend;
+    `);
+    console.log('✅ Migración: Columna market_regime agregada a market_snapshot');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al intentar agregar columna market_regime:', error.message);
+    }
+  }
 
   console.log('✅ Base de datos inicializada correctamente');
 }

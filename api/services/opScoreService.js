@@ -13,6 +13,46 @@ function calculateOpScore(setupState, data) {
   const conclusions = []; // Collect internal flags for conclusions
   const pushConclusion = (text) => conclusions.push(text);
 
+  // ─── TRANSLATE Z-SCORE RS STATE TO COMPATIBLE STRINGS ───
+  // Esto mapea las bandas estadísticas finas a los buckets que el scoring ya tiene balanceados
+  if (data.rsState) {
+    const s = data.rsState;
+    if (s === 'Very Strong & Rising') {
+      data.rsState = 'Very Strong';
+    } else if (s === 'Very Strong but Weakening') {
+      data.rsState = 'Strong but Weakening';
+    } else if (s === 'Positive & Rising') {
+      data.rsState = 'Strong';
+    } else if (s === 'Positive but Weakening') {
+      data.rsState = 'Positive';
+    } else if (s === 'Neutral & Rising') {
+      data.rsState = 'Positive';
+    } else if (s === 'Neutral & Falling') {
+      data.rsState = 'Neutral';
+    } else if (s === 'Weak but Recovering') {
+      data.rsState = 'Weak but Recovering';
+    } else if (s === 'Weak & Falling') {
+      data.rsState = 'Weak & Falling';
+    } else if (s === 'Very Weak but Recovering' || s === 'Very Weak & Falling') {
+      data.rsState = 'Very Weak';
+    }
+  }
+
+  // ─── INTRADAY LIGHTWEIGHT VALIDATION ───────────────────────────────────────
+  // Si es un setup alcista pero el precio en vivo ya rompió ambas medias por
+  // más de 0.5 ATR, invalidamos el setup para evitar mostrar data "stale" hasta
+  // que corra el próximo ciclo completo de medias.
+  const isBullishSetup = ['bullish_breakout', 'bullish_pullback', 'bullish_reversal_confirmed', 'early_bullish_reversal', 'strong_uptrend', 'strong_uptrend_extended'].includes(setupState);
+  if (isBullishSetup && data.price && data.ema21 && data.sma30 && data.atr14) {
+    if (data.price < data.ema21 && data.price < data.sma30) {
+      const distanceToMedia = Math.min(data.ema21, data.sma30) - data.price;
+      if (distanceToMedia > (0.5 * data.atr14)) {
+        isValid = false;
+        pushConclusion('INVALID_BREAK_SUPPORT');
+      }
+    }
+  }
+
   if (setupState === 'bullish_breakout') {
     // ─── BULLISH BREAKOUT ────────────────────────────────────────────────────
     
@@ -200,7 +240,7 @@ function calculateOpScore(setupState, data) {
     else if (rsState === 'Strong' || rsState === 'Strong but Weakening') rsScore += 10;
     else if (rsState === 'Positive') rsScore += 5;
     else if (rsState === 'Weak' || rsState === 'Weak but Recovering') rsScore -= 8;
-    else if (rsState === 'Very Weak') rsScore -= 15;
+    else if (rsState === 'Very Weak' || rsState === 'Weak & Falling') rsScore -= 15;
 
     if (rsTrend === 'IMPROVING') rsScore += 5;
     else if (rsTrend === 'DETERIORATING') rsScore -= 5;
@@ -208,7 +248,7 @@ function calculateOpScore(setupState, data) {
     rawScore += rsScore;
     pushConclusion(`RS:${rsScore}`);
 
-    if (rsState === 'Very Weak') {
+    if (rsState === 'Very Weak' || rsState === 'Weak & Falling') {
       if (rsTrend === 'DETERIORATING') {
         scoreCap = scoreCap === null ? 50 : Math.min(scoreCap, 50);
         pushConclusion('CAP_RS_WEAK_DETERIORATING');
@@ -353,14 +393,6 @@ function calculateOpScore(setupState, data) {
         }
       }
 
-      // Invalidación (Breakout de medias)
-      if (current.close < data.ema21 && current.close < data.sma30) {
-        const distanceToMedia = Math.min(data.ema21, data.sma30) - current.close;
-        if (data.atr14 && distanceToMedia > (0.5 * data.atr14)) {
-          isValid = false;
-          pushConclusion('INVALID_BREAK_SUPPORT');
-        }
-      }
     }
     rawScore += paScore;
 
@@ -402,7 +434,7 @@ function calculateOpScore(setupState, data) {
     else if (rsState === 'Strong' || rsState === 'Strong but Weakening') rsScore += 10;
     else if (rsState === 'Positive') rsScore += 5;
     else if (rsState === 'Weak' || rsState === 'Weak but Recovering') rsScore -= 8;
-    else if (rsState === 'Very Weak') rsScore -= 15;
+    else if (rsState === 'Very Weak' || rsState === 'Weak & Falling') rsScore -= 15;
 
     if (rsTrend === 'IMPROVING') rsScore += 5;
     else if (rsTrend === 'DETERIORATING') rsScore -= 5;
@@ -410,7 +442,7 @@ function calculateOpScore(setupState, data) {
     rawScore += rsScore;
     if (rsScore !== 0) pushConclusion(`RC_RS:${rsScore}`);
 
-    if (rsState === 'Very Weak') {
+    if (rsState === 'Very Weak' || rsState === 'Weak & Falling') {
       if (rsTrend === 'DETERIORATING') {
         scoreCap = scoreCap === null ? 60 : Math.min(scoreCap, 60);
       } else {
@@ -711,7 +743,7 @@ function calculateOpScore(setupState, data) {
     else if (rsState === 'Strong' || rsState === 'Strong but Weakening') rsScore += 10;
     else if (rsState === 'Positive') rsScore += 5;
     else if (rsState === 'Weak' || rsState === 'Weak but Recovering') rsScore -= 10;
-    else if (rsState === 'Very Weak') rsScore -= 15;
+    else if (rsState === 'Very Weak' || rsState === 'Weak & Falling') rsScore -= 15;
     
     rawScore += rsScore;
     pushConclusion(`RS_TRANSITION:${rsScore}`);
@@ -1124,6 +1156,56 @@ function calculateOpScore(setupState, data) {
       lateralZoneCap = 52;
     }
     scoreCap = scoreCap === null ? lateralZoneCap : Math.min(scoreCap, lateralZoneCap);
+
+    score = rawScore;
+
+  } else if (setupState === 'messy_chop') {
+    // ─── MESSY CHOP OP SCORE ───────────────────────────────────────────────
+    // Filosofía: Ruido de mercado, tendencia indefinida. Castigado severamente por falta de ventaja estadística.
+
+    // 1. BASE SCORE
+    rawScore = 10;
+    pushConclusion('BASE_MESSY_CHOP:10');
+
+    // 2. PENALIZACIÓN WHIPSAW (Serrucho en EMA21)
+    let whipsawCount = 0;
+    if (data.recentCandles && data.recentCandles.length > 1 && data.ema21) {
+      const lastCandles = data.recentCandles.slice(-10);
+      for (let i = 1; i < lastCandles.length; i++) {
+        const prevC = lastCandles[i-1].close;
+        const currC = lastCandles[i].close;
+        if ((prevC < data.ema21 && currC > data.ema21) || (prevC > data.ema21 && currC < data.ema21)) {
+          whipsawCount++;
+        }
+      }
+      if (whipsawCount >= 3) {
+        rawScore -= 10;
+        pushConclusion('MESSY_CHOP_WHIPSAW:-10');
+      }
+    }
+
+    // 3. CAP MÁXIMO ESTRICTO
+    scoreCap = 25;
+    pushConclusion('CAP_MESSY_CHOP:25');
+
+    score = rawScore;
+
+  } else if (setupState === 'neutral') {
+    // ─── NEUTRAL OP SCORE ───────────────────────────────────────────────
+    // Filosofía: La tendencia de fondo está amenazada por rupturas de corto plazo.
+    // Riesgo elevado, posible cambio de tendencia o lateralización.
+
+    rawScore = 15;
+    pushConclusion('BASE_NEUTRAL:15');
+
+    // Penalización por debilidad
+    if (data.price && data.ema200 && data.price < data.ema200) {
+      rawScore -= 5;
+      pushConclusion('NEUTRAL_BELOW_EMA200:-5');
+    }
+
+    scoreCap = 35;
+    pushConclusion('CAP_NEUTRAL:35');
 
     score = rawScore;
 
@@ -1938,12 +2020,20 @@ function calculateOpScore(setupState, data) {
     }
     rawScore += suPaScore;
 
-    // 9. CAP GLOBAL: strong_uptrend nunca supera 75
-    scoreCap = scoreCap === null ? 75 : Math.min(scoreCap, 75);
-    score = Math.max(15, rawScore);
+    // 9. CAP GLOBAL: strong_uptrend nunca supera 60
+    scoreCap = scoreCap === null ? 60 : Math.min(scoreCap, 60);
+    score = Math.max(10, rawScore);
 
   } else {
     // Otros setups: sin calculo por ahora
+  }
+
+  // ─── TRIGGER RECENCY DECAY ──────────────────────────────────────────────────
+  if (data.daysSinceTrigger !== undefined && data.daysSinceTrigger > 1 && isValid) {
+    const decayScore = -2 * (data.daysSinceTrigger - 1);
+    score += decayScore;
+    rawScore += decayScore;
+    pushConclusion(`TRIGGER_DECAY_${data.daysSinceTrigger}D:${decayScore}`);
   }
 
   // ─── GLOBAL SECTOR MODIFIER ────────────────────────────────────────────────
@@ -1988,10 +2078,44 @@ function calculateOpScore(setupState, data) {
     score = Math.max(0, score);
   }
 
-  // APPLY CAPS
+  // ─── GLOBAL MARKET REGIME MODIFIER ──────────────────────────────────────────
+  if (data.marketRegime && isValid) {
+    const mr = data.marketRegime.trim().toUpperCase();
+    let regimeScore = 0;
+
+    if (mr === 'BULLISH') {
+      regimeScore = 5;
+      pushConclusion(`REGIME_BULLISH:${regimeScore}`);
+    } else if (mr === 'BEARISH') {
+      regimeScore = -5;
+      pushConclusion(`REGIME_BEARISH:${regimeScore}`);
+      
+      // Caps contextuales por régimen bajista
+      if (setupState === 'bullish_breakout' || setupState === 'bullish_pullback') {
+        scoreCap = scoreCap === null ? 80 : Math.min(scoreCap, 80);
+        pushConclusion('REGIME_BEARISH_CAP');
+      } else if (setupState === 'bullish_reversal_confirmed') {
+        scoreCap = scoreCap === null ? 75 : Math.min(scoreCap, 75);
+        pushConclusion('REGIME_BEARISH_CAP');
+      } else if (setupState === 'early_bullish_reversal' || setupState === 'strong_uptrend') {
+        scoreCap = scoreCap === null ? 65 : Math.min(scoreCap, 65);
+        pushConclusion('REGIME_BEARISH_CAP');
+      }
+    } else {
+      pushConclusion('REGIME_NEUTRAL:0');
+    }
+
+    score += regimeScore;
+    rawScore += regimeScore;
+    score = Math.max(0, score);
+  }
+
+  // APPLY CAPS (Soft Cap)
   if (scoreCap !== null && score > scoreCap) {
-    pushConclusion(`CAPPED_AT:${scoreCap}`);
-    score = scoreCap;
+    const excess = score - scoreCap;
+    const dampedExcess = Math.floor(excess * 0.2);
+    score = scoreCap + dampedExcess;
+    pushConclusion(`SOFT_CAPPED_AT:${scoreCap}`);
   }
 
   // Generar conclusiones legibles pasándole los internal flags generados

@@ -38,6 +38,8 @@ const MAP_REGION = {
 const MAP_SECTOR = {
   'Software': 'igv',
   'Semiconductores': 'smh',
+  'Inteligencia Artificial': 'botz',
+  'IA': 'botz',
   'Criptomonedas': 'btc',
   'Consumo Discrecional': 'xly',
   'Comunicaciones': 'xlc',
@@ -78,6 +80,17 @@ const REGION_ISO = {
   IN:     'in',
   Global: null, // sin bandera
   Commodities: null, // sin bandera
+};
+
+const ACTIONABLE_STATES = new Set([
+  'bullish_breakout',
+  'bullish_pullback',
+  'bullish_reversal_confirmed',
+  'early_bullish_reversal'
+]);
+
+const isActionable = (setupState) => {
+  return ACTIONABLE_STATES.has(setupState);
 };
 
 // Componente bandera + nombre
@@ -595,7 +608,11 @@ const ScreenerPage = () => {
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('asc'); }
+    else { 
+      setSortKey(key); 
+      const defaultDesc = ['price', 'changePercent', 'emaDistance', 'weeklyRsi', 'weeklyMacd', 'rsValue', 'opScore', 'drawdown52w'];
+      setSortDir(defaultDesc.includes(key) ? 'desc' : 'asc'); 
+    }
   };
 
   // Al cambiar región, resetear filtro de sector
@@ -821,7 +838,7 @@ const ScreenerPage = () => {
                                   {s.emaDistance >= 0 ? '+' : ''}{s.emaDistance.toFixed(2)}%
                                 </ChangeBadge>
                               )}
-                              {s.setupState && s.setupVerdict && s.setupState !== 'neutral' && (
+                              {s.setupState && s.setupVerdict && (
                                 <div 
                                   style={{
                                     marginTop: '4px',
@@ -840,7 +857,18 @@ const ScreenerPage = () => {
                                       '#94a3b8'
                                   }}
                                 >
-                                  {s.setupVerdict}
+                                  {(() => {
+                                    if (s.setupVerdict === 'Transición Alcista') {
+                                      return <><span style={{color: '#eab308'}}>Transición</span> <span style={{color: '#10b981'}}>Alcista</span></>;
+                                    }
+                                    if (s.setupVerdict === 'Transición Bajista') {
+                                      return <><span style={{color: '#eab308'}}>Transición</span> <span style={{color: '#ef4444'}}>Bajista</span></>;
+                                    }
+                                    if (s.setupVerdict === 'Alcista Tardío') {
+                                      return <><span style={{color: '#10b981'}}>Alcista</span> <span style={{color: '#ef4444'}}>Tardío</span></>;
+                                    }
+                                    return s.setupVerdict;
+                                  })()}
                                 </div>
                               )}
                             </div>
@@ -1057,7 +1085,8 @@ const ScreenerPage = () => {
                     { id: 'bearish_trend', label: 'Bajista' },
                     { id: 'bullish_transition', label: 'Trans. Alcista' },
                     { id: 'bearish_transition', label: 'Trans. Bajista' },
-                    { id: 'messy_chop', label: 'Tendencia Indefinida' }
+                    { id: 'messy_chop', label: 'Tendencia Indefinida' },
+                    { id: 'neutral', label: 'Peligro (Neutral)' }
                   ].map(state => (
                     <Pill key={state.id} $active={selectedScanStates.includes(state.id)} onClick={() => toggleFilter(setSelectedScanStates, state.id)}>
                       {state.label}

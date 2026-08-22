@@ -22,6 +22,8 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
     case 'early_bullish_reversal': conclusions.push("🔍 Reversión temprana: Signos de mejora en momentum, requiere confirmación."); break;
     case 'lateral_trend': conclusions.push("➖ Tendencia lateral: El activo se encuentra comprimido sin dirección clara."); break;
     case 'bearish_trend': conclusions.push("⚠️ Tendencia bajista: Estructura débil por debajo de sus principales medias."); break;
+    case 'messy_chop': conclusions.push("🌪️ Tendencia Indefinida (Choppy): El precio se encuentra atrapado en ruido de mercado sin dirección clara. Alto riesgo de falsos quiebres (serruchos). Se recomienda evitar."); break;
+    case 'neutral': conclusions.push("⚠️ Neutral / En Peligro: La tendencia de fondo está siendo amenazada por quiebres recientes a corto plazo. Riesgo de reversión o lateralización."); break;
     default: conclusions.push("ℹ️ Estructura neutra o sin definir.");
   }
 
@@ -34,6 +36,7 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
       case 'RS':
         if (val > 0) conclusions.push(`💪 Fuerza Relativa Positiva (+${val} pts).`);
         else if (val < 0) conclusions.push(`🔻 Fuerza Relativa Negativa (${val} pts).`);
+        else conclusions.push(`➖ Fuerza Relativa Neutral (0 pts).`);
         break;
       case 'SECTOR_STRONG_BULLISH':
         conclusions.push(`🚀 Viento a favor (Sector): Fuerte tendencia alcista global (+${val} pts).`);
@@ -52,6 +55,18 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
         break;
       case 'SECTOR_BEARISH_CAP':
         conclusions.push(`🚨 LIMITACIÓN POR SECTOR: Setup individual mitigado por fuerte contexto sectorial bajista.`);
+        break;
+      case 'REGIME_BULLISH':
+        conclusions.push(`📈 Viento Global a favor (Régimen): Tendencia de mercado alcista (+${val} pts).`);
+        break;
+      case 'REGIME_BEARISH':
+        conclusions.push(`⛔ Viento Global en contra (Régimen): Tendencia de mercado bajista (${val} pts).`);
+        break;
+      case 'REGIME_NEUTRAL':
+        conclusions.push(`➖ Contexto Global (Régimen): Neutral (0 pts).`);
+        break;
+      case 'REGIME_BEARISH_CAP':
+        conclusions.push(`🚨 LIMITACIÓN POR RÉGIMEN: Setup mitigado por tendencia macro-mercado bajista.`);
         break;
       case 'CAP_RS_WEAK_DETERIORATING':
         conclusions.push("⛔ RIESGO ESTRUCTURAL: RS Muy Débil y deteriorándose. Puntaje máximo limitado a 50.");
@@ -251,7 +266,11 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
       case 'RC_VOLUME_REJECTED': conclusions.push(`⚠️ Volumen alto pero con cierre débil/rechazo superior (${val} pts).`); break;
       case 'RC_VOLUME_WEAK': conclusions.push(`📉 Volumen muy débil: falta de convicción en el quiebre (${val} pts).`); break;
       case 'RC_MACD_FRESH_CROSS': conclusions.push(`📈 Momentum Temprano: MACD acaba de cruzar al alza (+${val} pts).`); break;
-      case 'RC_RS': conclusions.push(val > 0 ? `💪 Fuerza Relativa a favor (+${val} pts).` : `🔻 Fuerza Relativa en contra (${val} pts).`); break;
+      case 'RC_RS': 
+        if (val > 0) conclusions.push(`💪 Fuerza Relativa a favor (+${val} pts).`);
+        else if (val < 0) conclusions.push(`🔻 Fuerza Relativa en contra (${val} pts).`);
+        else conclusions.push(`➖ Fuerza Relativa Neutral (0 pts).`);
+        break;
 
       // ─── EARLY BULLISH REVERSAL ─────────────────────────────────────────────
       case 'BASE_EARLY_REVERSAL': conclusions.push(`🌱 Setup detectado: Reversión Alcista Temprana. Puntaje base: ${val} pts.`); break;
@@ -604,6 +623,32 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
         break;
       case 'CAPPED_BEARISH':
         conclusions.push("🚧 Puntaje limitado: la estructura sigue siendo bajista y no debe competir con setups de entrada confirmados.");
+        break;
+        
+      // ─── MESSY CHOP ─────────────────────────────────────────────────────────
+      case 'BASE_MESSY_CHOP':
+        conclusions.push(`🌪️ Setup detectado: Tendencia Indefinida. Puntaje base muy bajo debido a la falta de ventaja estadística (${val} pts).`);
+        break;
+      case 'MESSY_CHOP_WHIPSAW':
+        conclusions.push(`⚠️ Whipsaw detectado: demasiados cruces recientes en las medias sin continuación (${val} pts).`);
+        break;
+      case 'CAP_MESSY_CHOP':
+        conclusions.push(`🛑 CAP APLICADO: El puntaje máximo está severamente limitado a ${val} para evitar operar en ruido.`);
+        break;
+
+      // ─── NEUTRAL ────────────────────────────────────────────────────────────
+      case 'BASE_NEUTRAL':
+        conclusions.push(`⚠️ Setup detectado: Tendencia en Peligro (Neutral). Puntaje base bajo por pérdida de niveles clave (${val} pts).`);
+        break;
+      case 'NEUTRAL_BELOW_EMA200':
+        conclusions.push(`🔴 Debilidad Adicional: El precio ha perdido también la EMA200, mostrando deterioro a largo plazo (${val} pts).`);
+        break;
+      case 'CAP_NEUTRAL':
+        conclusions.push(`🛑 CAP APLICADO: El puntaje máximo está limitado a ${val} debido al riesgo estructural actual.`);
+        break;
+
+      case 'SOFT_CAPPED_AT':
+        conclusions.push(`🚧 Puntaje moderado: El setup es excelente pero estructuralmente tiene un tope sugerido. Se ha aplicado un Soft Cap.`);
         break;
     }
   });

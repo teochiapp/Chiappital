@@ -73,7 +73,9 @@ async function seedSymbols() {
   for (const sym of uniqueSymbols) {
     const exchange = sym.region === 'US' ? 'US' : 'BA'; // Simplificación
     const priority = (['SPY', 'QQQ', 'AAPL', 'MSFT', 'AMZN', 'NVDA', 'META', 'GOOGL', 'TSLA'].includes(sym.symbol)) ? 1 : 2;
-    const index_symbol = MAP_REGION[sym.region] || null;
+    let index_symbol = MAP_REGION[sym.region] || null;
+    if (sym.symbol === 'BTC') index_symbol = 'SPY';
+    if (sym.symbol === 'ETH') index_symbol = 'BTC';
 
     await db.execute(
       `REPLACE INTO tracked_symbols (symbol, name, exchange, market, enabled, priority, index_symbol)
