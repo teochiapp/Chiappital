@@ -31,7 +31,7 @@ const Header = () => {
     <HeaderContainer>
       <HeaderTop>
         <HeaderBrand>
-          <AppLogo size="32px" fontSize="1.5rem" />
+          <AppLogo />
           <AccountBadge className={accountType}>
             {accountType === 'propia' ? <Wallet size={14} /> : <Users size={14} />}
             <span className="badge-text">

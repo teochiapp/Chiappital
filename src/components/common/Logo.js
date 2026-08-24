@@ -5,7 +5,8 @@ import { colors } from '../../styles/colors';
 const LogoContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: ${props => props.gap || '0.75rem'};
+  justify-content: center;
+  gap: ${props => props.gap || '0'};
 `;
 
 const LogoImage = styled.img`
@@ -21,25 +22,22 @@ const LogoImage = styled.img`
 `;
 
 const LogoText = styled.span`
-  font-family: 'Unbounded', sans-serif;
-  font-weight: ${props => props.weight || '700'};
-  font-size: ${props => props.fontSize || '2.5rem'};
-  letter-spacing: -0.02em;
-`;
-
-const FirstPart = styled.span`
-  color: #ffffff; 
-`;
-
-const SecondPart = styled.span`
-  color: ${colors.secondary}; /* Dorado */
+  font-family: 'Vanilla Whale', sans-serif;
+  font-weight: ${props => props.weight || 'normal'};
+  font-size: 4rem;
+  letter-spacing: normal;
+  color: #9B1B30;
+  margin: 0;
+  line-height: 1;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
 `;
 
 const Logo = ({
-  size = '68px',
-  fontSize = '3rem',
-  weight = '700',
-  gap = '0.75rem',
+  size = '82px',
+  fontSize = '4rem',
+  weight = 'normal',
+  gap = '0',
   showText = true,
   className,
   onClick,
@@ -79,8 +77,7 @@ const Logo = ({
           fontSize={fontSize}
           weight={weight}
         >
-          <FirstPart>Chiapp</FirstPart>
-          <SecondPart>ital</SecondPart>
+          Chiappital
         </LogoText>
       )}
     </LogoContainer>

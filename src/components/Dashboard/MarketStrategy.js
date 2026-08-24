@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Edit3, Check, X, Clock } from 'lucide-react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { colors } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
+
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'clean']
+  ],
+};
 
 const MarketStrategy = () => {
   const { marketStrategy, updateMarketStrategy } = useLabData();
@@ -87,18 +98,28 @@ const MarketStrategy = () => {
 
       <ContentSection>
         {isEditing ? (
-          <TextArea
+          <StyledQuill
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={setText}
+            modules={quillModules}
             placeholder="Escribe tus pensamientos del mercado aquí para guiarte en tu toma de decisiones..."
-            autoFocus
+            theme="snow"
           />
         ) : (
           <TextDisplay>
             {marketStrategy?.text ? (
-              marketStrategy.text.split('\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))
+              /<[a-z][\s\S]*>/i.test(marketStrategy.text) ? (
+                <div 
+                  className="ql-editor view-mode" 
+                  dangerouslySetInnerHTML={{ __html: marketStrategy.text }} 
+                />
+              ) : (
+                <div className="ql-editor view-mode">
+                  {marketStrategy.text.split('\n').map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+              )
             ) : (
               <EmptyState onClick={handleEditClick}>
                 No hay ninguna estrategia definida actualmente. Haz clic aquí o en el botón de editar para añadir tus pensamientos sobre el mercado.
@@ -249,33 +270,65 @@ const ContentSection = styled.div`
   width: 100%;
 `;
 
-const TextArea = styled.textarea`
+const StyledQuill = styled(ReactQuill)`
   width: 100%;
-  min-height: 120px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
   border-radius: 12px;
-  padding: 1rem;
-  font-family: inherit;
-  font-size: 1rem;
-  line-height: 1.5;
-  resize: vertical;
-  transition: all 0.3s ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${colors.secondary};
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  overflow: hidden;
+  
+  .ql-toolbar {
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.3);
+    
+    button {
+      color: #9ca3af;
+      &:hover { color: white; }
+    }
+    
+    .ql-stroke { stroke: #9ca3af; }
+    .ql-fill { fill: #9ca3af; }
+    .ql-picker { color: #9ca3af; }
+    
+    .ql-active {
+      .ql-stroke { stroke: ${colors.secondary} !important; }
+      .ql-fill { fill: ${colors.secondary} !important; }
+      color: ${colors.secondary} !important;
+    }
+    button:hover {
+      .ql-stroke { stroke: white !important; }
+      .ql-fill { fill: white !important; }
+    }
+    
+    .ql-picker-options {
+      background: #1f2937;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+    }
   }
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+  
+  .ql-container {
+    border: none;
+    font-family: inherit;
+    font-size: 1rem;
+    color: white;
+    
+    .ql-editor {
+      min-height: 120px;
+      padding: 1rem;
+      line-height: 1.6;
+      
+      &.ql-blank::before {
+        color: rgba(255, 255, 255, 0.3);
+        font-style: italic;
+      }
+    }
   }
 `;
 
 const TextDisplay = styled.div`
-  padding: 1rem;
+  padding: 0;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -284,12 +337,42 @@ const TextDisplay = styled.div`
   color: #e5e7eb;
   min-height: 80px;
 
-  p {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
+  .ql-editor.view-mode {
+    padding: 1rem;
     
-    &:last-child {
-      margin-bottom: 0;
+    p {
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      padding-left: 1.5rem;
+      
+      li {
+        margin-bottom: 0.25rem;
+      }
+    }
+
+    h1, h2, h3 {
+      color: white;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+      
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+    
+    a {
+      color: ${colors.secondary};
+      text-decoration: underline;
     }
   }
 `;

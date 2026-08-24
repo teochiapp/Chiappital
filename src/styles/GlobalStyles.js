@@ -1,6 +1,14 @@
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyles = createGlobalStyle`
+  @font-face {
+    font-family: "Vanilla Whale";
+    src: url("/fonts/Vanilla Whale.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: block;
+  }
+
   * {
     margin: 0;
     padding: 0;

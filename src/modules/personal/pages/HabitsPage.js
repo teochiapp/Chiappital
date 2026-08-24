@@ -57,7 +57,10 @@ const HabitsPage = () => {
   const getStreak = (habit) => {
     let streak = 0;
     const d = new Date();
-    const days = habit.days_of_week || [0,1,2,3,4,5,6];
+    let days = habit.days_of_week || [0,1,2,3,4,5,6];
+    if (typeof days === 'string') {
+      try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
+    }
     // Fecha de creación (solo la parte de fecha)
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     
@@ -87,7 +90,10 @@ const HabitsPage = () => {
   const getCompletionRate = (habit) => {
     let completed = 0;
     let scheduled = 0;
-    const days = habit.days_of_week || [0,1,2,3,4,5,6];
+    let days = habit.days_of_week || [0,1,2,3,4,5,6];
+    if (typeof days === 'string') {
+      try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
+    }
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     for (let i = 0; i < 30; i++) {
       const d = new Date();
@@ -137,12 +143,18 @@ const HabitsPage = () => {
 
   const handleEdit = (habit) => {
     setEditingHabit(habit);
+    
+    let parsedDays = habit.days_of_week;
+    if (typeof parsedDays === 'string') {
+      try { parsedDays = JSON.parse(parsedDays); } catch(e) { parsedDays = [0,1,2,3,4,5,6]; }
+    }
+
     setFormData({ 
       name: habit.name, 
       description: habit.description || '', 
       color: habit.color || '#52B788', 
       frequency: habit.frequency || 'daily',
-      days_of_week: habit.days_of_week || [0,1,2,3,4,5,6]
+      days_of_week: parsedDays || [0,1,2,3,4,5,6]
     });
     setShowForm(true);
   };
@@ -262,8 +274,16 @@ const HabitsPage = () => {
               return selectedDateStr >= h.created_at.split('T')[0];
             });
 
-            const habitsToday = filteredHabits.filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(selectedDayOfWeek));
-            const habitsOther = filteredHabits.filter(h => !(h.days_of_week || [0,1,2,3,4,5,6]).includes(selectedDayOfWeek));
+            const getHabitDays = (h) => {
+              let days = h.days_of_week || [0,1,2,3,4,5,6];
+              if (typeof days === 'string') {
+                try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
+              }
+              return days;
+            };
+
+            const habitsToday = filteredHabits.filter(h => getHabitDays(h).includes(selectedDayOfWeek));
+            const habitsOther = filteredHabits.filter(h => !getHabitDays(h).includes(selectedDayOfWeek));
             
             const renderHabitCard = (habit, isOther = false) => {
               const completedToday = (habit.completions || []).includes(selectedDateStr);
@@ -340,7 +360,11 @@ const HabitsPage = () => {
                 const dayOfWeek = dDate.getDay();
                 // Solo incluir hábitos que ya existían en esa fecha
                 const scheduledHabits = habits.filter(h => {
-                  if (!(h.days_of_week || [0,1,2,3,4,5,6]).includes(dayOfWeek)) return false;
+                  let hDays = h.days_of_week || [0,1,2,3,4,5,6];
+                  if (typeof hDays === 'string') {
+                    try { hDays = JSON.parse(hDays); } catch(e) { hDays = [0,1,2,3,4,5,6]; }
+                  }
+                  if (!hDays.includes(dayOfWeek)) return false;
                   if (h.created_at) {
                     const createdDate = h.created_at.split('T')[0];
                     if (dateStr < createdDate) return false;

@@ -44,7 +44,7 @@ const LoginContainer = () => {
 
       <LoginCard>
         <LogoWrapper>
-          <Logo size="64px" fontSize="2.2rem" gap="1rem" />
+          <Logo size="100px" fontSize="5rem" />
         </LogoWrapper>
 
         <Title>

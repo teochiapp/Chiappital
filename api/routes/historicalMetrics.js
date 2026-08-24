@@ -153,9 +153,8 @@ router.post('/send-summary', async (req, res) => {
         .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
         .card { background-color: #0f172a; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
         .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logo-container { margin-bottom: 16px; display: inline-block; }
-        .logo-img { width: 40px; height: 40px; vertical-align: middle; margin-right: 12px; }
-        .logo-text { color: #f8fafc; font-size: 24px; font-weight: 800; vertical-align: middle; }
+        .logo-container { margin-bottom: 24px; text-align: center; }
+        .logo-img { max-height: 55px; width: auto; vertical-align: middle; }
         .header-title { margin: 0; font-size: 16px; font-weight: 500; color: #94a3b8; text-transform: uppercase; }
         .content { padding: 32px 24px; }
         .message { font-size: 16px; line-height: 1.6; color: #e2e8f0; margin-bottom: 24px; white-space: pre-wrap; }
@@ -173,8 +172,7 @@ router.post('/send-summary', async (req, res) => {
         <div class="card">
           <div class="header">
             <div class="logo-container">
-              <img src="https://chiappital.surcodes.com/logo-simple-trade.png" alt="Logo" class="logo-img" />
-              <span class="logo-text"><span style="color: #fbbf24;">CHIAPP</span>ITAL</span>
+              <img src="https://chiappital.surcodes.com/img/Logo-Email.png" alt="Chiappital Logo" class="logo-img" />
             </div>
             <h1 class="header-title">Resumen Mensual: ${monthData.month_year} - ${accountName}</h1>
           </div>
@@ -186,8 +184,8 @@ router.post('/send-summary', async (req, res) => {
               <table>
                 <tr><td class="td-label">Capital Inicial</td><td class="td-value">${formatCurrency(monthData.usd_start)}</td></tr>
                 <tr><td class="td-label">Aportes</td><td class="td-value">${formatCurrency(monthData.deposits)}</td></tr>
-                <tr><td class="td-label">Capital Final</td><td class="td-value">${formatCurrency(capitalFinal)}</td></tr>
                 <tr><td class="td-label">Ganancia (USD)</td><td class="td-value" style="color: ${profitColor}">${profit > 0 ? '+' : ''}${formatCurrency(profit)}</td></tr>
+                <tr><td class="td-label">Capital Final</td><td class="td-value">${formatCurrency(capitalFinal)}</td></tr>
                 <tr><td class="td-label">Variación Cartera</td><td class="td-value" style="color: ${parseFloat(monthData.var_percent) >= 0 ? '#10b981' : '#ef4444'}">${formatPercent(monthData.var_percent)}</td></tr>
                 <tr><td class="td-label">Variación SPY</td><td class="td-value">${formatPercent(monthData.var_spy)}</td></tr>
                 <tr><td class="td-label">Diferencia vs SPY</td><td class="td-value" style="color: ${diffColor}">${formatPercent(monthData.difference)}</td></tr>

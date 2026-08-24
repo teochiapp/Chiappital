@@ -531,8 +531,9 @@ const ScreenerPage = () => {
   const visibleData = useMemo(() => {
     let d = stockData;
     
-    // Si no estamos en General, excluimos los ETFs
-    if (groupMode !== 'general') {
+    // Si estamos en modo 'region' o 'sector', excluimos los ETFs.
+    // Si estamos en 'general' o 'opScore', mostramos todo.
+    if (groupMode === 'region' || groupMode === 'sector') {
       d = d.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     }
     
@@ -854,6 +855,7 @@ const ScreenerPage = () => {
                                       s.setupState === 'early_bullish_reversal' ? '#d946ef' :
                                       s.setupState === 'bearish_trend' ? '#ef4444' :
                                       s.setupState === 'lateral_trend' ? '#eab308' :
+                                      s.setupState === 'neutral' ? '#ef4444' :
                                       '#94a3b8'
                                   }}
                                 >
@@ -866,6 +868,9 @@ const ScreenerPage = () => {
                                     }
                                     if (s.setupVerdict === 'Alcista Tardío') {
                                       return <><span style={{color: '#10b981'}}>Alcista</span> <span style={{color: '#ef4444'}}>Tardío</span></>;
+                                    }
+                                    if (s.setupVerdict === 'Tendencia en Peligro' || s.setupVerdict === 'Tendencia en peligro') {
+                                      return <span style={{color: '#ef4444'}}>{s.setupVerdict}</span>;
                                     }
                                     return s.setupVerdict;
                                   })()}

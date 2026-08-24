@@ -41,6 +41,7 @@ import { AlertsProvider } from './context/AlertsContext';
 import Header from './components/common/Header';
 import DebugConsole from './components/common/DebugConsole';
 
+
 // Personal Hub Layout
 import PersonalLayout from './modules/personal/components/PersonalLayout';
 
@@ -127,6 +128,7 @@ function App() {
                                     </ProtectedRoute>
                                 }
                             />
+
 
                             {/* ─── Personal Hub (ruta oculta, acceso directo por URL) ─── */}
                             <Route
