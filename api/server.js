@@ -121,9 +121,27 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       logger.info('Server', `Health: http://localhost:${PORT}/api/health`);
     });
 
+    let lastResetDate = null;
+
     // Iniciar scheduler de market data sync (cada 1 minuto)
     setInterval(() => {
       logger.debug('Scheduler', 'MarketSync scheduler tick');
+      
+      const nyTime = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+      const currentDateString = nyTime.toDateString();
+      
+      // A medianoche (NY time), resetear los OP Scores y Setups
+      if (nyTime.getHours() === 0 && nyTime.getMinutes() === 0) {
+        if (lastResetDate !== currentDateString) {
+          lastResetDate = currentDateString;
+          const { resetDailyData } = require('./services/marketSyncService');
+          resetDailyData().then(() => {
+            runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
+          });
+          return; // Esperamos al siguiente tick para normalidad
+        }
+      }
+
       runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
     }, 60000); // 1 minuto
     

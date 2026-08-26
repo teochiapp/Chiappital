@@ -1,0 +1,2077 @@
+[
+  {
+    "book_title": "The Laws of Human Nature",
+    "author": "Robert Greene",
+    "category": "Social",
+    "concepts": [
+      {
+        "concept_name": "The Rider and the Horse",
+        "content": "\"This horse has tremendous energy and power, but without a rider it cannot be guided... Without the rider, no directed movement or purpose. Without the horse, no energy, no power.\" Metáfora griega: el caballo es la emoción, el jinete es el pensamiento racional. Ninguno sirve sin el otro."
+      },
+      {
+        "concept_name": "Confirmation Bias",
+        "content": "\"I look at the evidence and arrive at my decisions through more or less rational processes.\" Nunca acepto la validez de una idea solo porque alguien aportó \"evidencia\" — es fácil encontrar estudios que apoyan ambos lados de cualquier argumento."
+      },
+      {
+        "concept_name": "The Blame Bias",
+        "content": "Culpamos a otros o a las circunstancias porque mirar de cerca nuestros propios errores es doloroso: pone en duda nuestra sensación de superioridad y ataca el ego."
+      },
+      {
+        "concept_name": "Increase Your Reaction Time",
+        "content": "Cuando algo requiere una respuesta, entrenarse para dar un paso atrás. Cuanto más se pueda postergar, mejor: la perspectiva viene con el tiempo."
+      },
+      {
+        "concept_name": "Transform Self-love into Empathy",
+        "content": "\"The deepest principle of Human Nature is the craving to be appreciated.\" —William James. La empatía cultivada permite anticipar las acciones de las personas y bajar su resistencia."
+      },
+      {
+        "concept_name": "Get to Know Them Better",
+        "content": "\"I don't like that man. I must get to know him better.\" —Abraham Lincoln"
+      },
+      {
+        "concept_name": "Listen to Understand, not to Reply",
+        "content": "Invertir el impulso normal de hablar y opinar; escuchar con calidad suficiente para poder reflejar luego lo que la otra persona dijo (o dejó sin decir)."
+      },
+      {
+        "concept_name": "Read the Pupils",
+        "content": "Las pupilas dilatadas son una respuesta automática que deja entrar más luz: señal fiable de que una persona está cómoda y le gusta lo que ve."
+      },
+      {
+        "concept_name": "Genuine vs. Fake Smile",
+        "content": "La sonrisa genuina surge espontánea, como respuesta directa a algo dicho o hecho. Aprender a distinguirla de la sonrisa social o fingida."
+      },
+      {
+        "concept_name": "Regulate Your Presence",
+        "content": "Si sos demasiado predecible o estás siempre disponible, la gente se aburre de vos. Hay que saber ausentarse selectivamente para generar más interés."
+      },
+      {
+        "concept_name": "People Never Do Something Just Once",
+        "content": "Corolario central de la ley: los patrones de comportamiento se repiten. Si alguien llega tarde a tareas simples, llegará tarde a los proyectos grandes."
+      },
+      {
+        "concept_name": "Power Reveals Character",
+        "content": "\"If you want to test a man's character, give him power.\" A menudo pensamos que el poder cambia a las personas, cuando en realidad solo revela quiénes ya eran."
+      },
+      {
+        "concept_name": "Extroverts vs. Introverts",
+        "content": "Extrovertidos: gobernados por criterios externos (\"¿qué piensan de mí?\"). Introvertidos: más sensibles, se agotan con demasiada actividad externa. No se entienden naturalmente entre sí."
+      },
+      {
+        "concept_name": "Pleasure is in the Pursuit",
+        "content": "\"At last I have what I wanted. Am I happy? Not really... pleasure isn't in the fulfillment, but in the pursuit.\" —Pierre-Augustin Caron de Beaumarchais"
+      },
+      {
+        "concept_name": "Absence Spurs Desire",
+        "content": "La presencia constante sofoca; una dosis de ausencia estratégica despierta el interés y hace que la gente desee tu regreso o posesión."
+      },
+      {
+        "concept_name": "Create Mystery",
+        "content": "Asociar tu trabajo o mensaje con algo nuevo, exótico o tabú. No definir completamente el mensaje: dejarlo vago para que la imaginación del otro lo complete."
+      },
+      {
+        "concept_name": "Elevate Your Perspective",
+        "content": "Estamos diseñados para la gratificación instantánea, pero el éxito real requiere ver más allá de lo inmediato y anticipar el efecto dominó de las propias decisiones."
+      },
+      {
+        "concept_name": "Time as an Ally",
+        "content": "En vez de ver el paso del tiempo como enemigo, considerarlo aliado: cada etapa de la vida trae oportunidades únicas de crecimiento y aprendizaje."
+      },
+      {
+        "concept_name": "Let Them Be the Star",
+        "content": "\"The true spirit of conversation consists more in bringing out the cleverness of others than in showing a great deal of it yourself.\" —Jean de La Bruyère"
+      },
+      {
+        "concept_name": "Three Universal Self-Beliefs",
+        "content": "Casi todos creemos: soy autónomo, soy inteligente a mi manera, y soy básicamente bueno. Nunca atacar estas tres creencias directamente si querés persuadir."
+      },
+      {
+        "concept_name": "Praise Effort, Not Talent",
+        "content": "Es mejor elogiar el esfuerzo que el talento: todos quieren sentir que se ganaron su buena fortuna a través del trabajo duro."
+      },
+      {
+        "concept_name": "Attitude Changes Circumstances",
+        "content": "\"The greatest discovery of my generation is the fact that human beings can alter their lives by altering their attitudes of mind.\" —William James"
+      },
+      {
+        "concept_name": "Confront Your Shadow",
+        "content": "Reconocer y examinar el lado oscuro del propio carácter para canalizar esa energía en actividad productiva, en vez de reprimirla."
+      },
+      {
+        "concept_name": "Hatred Hides Envy",
+        "content": "Detrás de un odio vehemente suele esconderse una envidia secreta e inconfesable hacia la persona odiada."
+      },
+      {
+        "concept_name": "Test for Envy",
+        "content": "Contale a un sospechoso de envidia una buena noticia tuya y notá la decepción sutil en su tono al felicitarte; contale una mala noticia y notá el destello de alegría (schadenfreude) en sus ojos."
+      },
+      {
+        "concept_name": "Turn Envy into Admiration",
+        "content": "En vez de querer dañar o robarle al que logró más, desear elevarse a su nivel: así la envidia se convierte en un motor hacia la excelencia."
+      },
+      {
+        "concept_name": "Analyze the Components of Success",
+        "content": "Después de cualquier éxito, identificar el rol de la suerte, el timing y las contribuciones de otros. Esto neutraliza la tendencia a inflar los propios poderes."
+      },
+      {
+        "concept_name": "Seek Challenges Just Above Your Skill Level",
+        "content": "La clave para crecer sin caer en grandiosidad ni en parálisis: metas simples, alcanzables en meses y no en años."
+      },
+      {
+        "concept_name": "Masculine and Feminine Balance",
+        "content": "\"What is most beautiful in virile men is something feminine; what is most beautiful in feminine women is something masculine.\" —Susan Sontag"
+      },
+      {
+        "concept_name": "Look Inward vs. Outward",
+        "content": "Los hombres tienden a mirar hacia afuera cuando fallan (culpar circunstancias); las mujeres, hacia adentro (culparse a sí mismas). El equilibrio: mirar hacia adentro ante los errores y hacia afuera ante los éxitos."
+      },
+      {
+        "concept_name": "A Reason to Live",
+        "content": "\"He who has a why to live can bear with almost any how.\" —Friedrich Nietzsche"
+      },
+      {
+        "concept_name": "Ladder of Descending Goals",
+        "content": "Tener metas grandes a largo plazo, pero bajarlas en microobjetivos diarios o semanales que den foco y eviten distracciones o desvíos que desperdicien energía."
+      },
+      {
+        "concept_name": "Madness in Groups",
+        "content": "\"Madness is something rare in individuals—but in groups, parties, peoples, and ages it is the rule.\" —Friedrich Nietzsche"
+      },
+      {
+        "concept_name": "The Need to Perform",
+        "content": "En grupo nos convertimos en actores: moldeamos lo que decimos y hacemos para que nos acepten y nos vean como miembros leales del equipo."
+      },
+      {
+        "concept_name": "Instill a Collective Sense of Purpose",
+        "content": "Un grupo funcional necesita una misión positiva que una a sus miembros, y un equipo de lugartenientes elegidos por mérito y no por simpatía o amistad."
+      },
+      {
+        "concept_name": "Balance Presence and Absence",
+        "content": "Estar demasiado presente y disponible como líder te vuelve banal; estar demasiado ausente hace que la gente no pueda identificarse con vos. El liderazgo requiere alternar ambos."
+      },
+      {
+        "concept_name": "The Excellent vs. The Common Man",
+        "content": "\"We distinguished the excellent man from the common man by saying that the former is one who makes great demands on himself, and the latter the one who makes no demands on himself.\""
+      },
+      {
+        "concept_name": "Sophisticated vs. Primitive Aggressors",
+        "content": "Los agresores primitivos explotan por sentirse inferiores y no llegan lejos. Los sofisticados (como Rockefeller) esconden sus maniobras tras una fachada y desgastan a la gente evitando la confrontación directa."
+      },
+      {
+        "concept_name": "Channel Your Assertive Energy",
+        "content": "La energía agresiva se canaliza de tres formas: hacia el trabajo (productiva), hacia afuera (pasivo-agresiva) o hacia adentro (autosabotaje). El objetivo no es reprimirla sino dirigirla."
+      },
+      {
+        "concept_name": "Virtues Belong to the Individual",
+        "content": "\"A man's shortcomings are taken from his epoch; his virtues and greatness belong to himself.\" —Johann Wolfgang von Goethe"
+      },
+      {
+        "concept_name": "Cross-Generational Awareness",
+        "content": "Si sos joven, buscá interactuar más con generaciones mayores. Si sos mayor, interactuá con los más jóvenes como par, no como figura de autoridad."
+      },
+      {
+        "concept_name": "Amor Fati",
+        "content": "\"My formula for greatness in a human being is amor fati: that one wants nothing to be other than it is, not in the future, not in the past, not in all eternity... but to love it.\" —Friedrich Nietzsche"
+      },
+      {
+        "concept_name": "Death as a Continual Deadline",
+        "content": "Pensar en la propia mortalidad como un plazo continuo que concentra la mente y da energía y urgencia a las acciones, igual que ocurre físicamente ante cualquier deadline."
+      },
+      {
+        "concept_name": "See the Mortality in Everyone",
+        "content": "En vez de buscar sentirnos superiores separándonos de los demás, ver la mortalidad compartida que nos iguala y conecta a todos."
+      }
+    ]
+  },
+  {
+    "book_title": "Atomic Habits",
+    "author": "James Clear",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "The Compound Interest of Habits",
+        "content": "\"If you can get 1 percent better each day for one year, you'll end up 37 times better by the time you're done.\" \"Habits are the compound interest of self-improvement.\""
+      },
+      {
+        "concept_name": "Habits Make Time Your Ally or Enemy",
+        "content": "Good habits hacen que el tiempo juegue a tu favor. Los malos hábitos hacen que el tiempo juegue en tu contra."
+      },
+      {
+        "concept_name": "Systems vs. Goals",
+        "content": "\"Goals are good for setting a direction, but systems are best for making progress.\" Enamorarse del proceso, no del resultado: así podés sentirte satisfecho en cualquier momento en que tu sistema esté funcionando."
+      },
+      {
+        "concept_name": "Outcomes, Processes, Identity",
+        "content": "\"Outcomes are about what you get. Processes are about what you do. Identity is about what you believe.\" El cambio de comportamiento más profundo y duradero ocurre a nivel identidad."
+      },
+      {
+        "concept_name": "Identity-Based Habits",
+        "content": "\"The most effective way to change your habits is to focus not on what you want to achieve, but on who you wish to become.\" Los hábitos importan porque cambian las creencias que tenemos sobre nosotros mismos."
+      },
+      {
+        "concept_name": "Every Action is a Vote",
+        "content": "\"Does this behavior help me become the type of person I wish to be? Does this habit cast a vote for or against my desired identity?\""
+      },
+      {
+        "concept_name": "The Purpose of Habits",
+        "content": "\"The ultimate purpose of habits is to solve the problems of life with as little energy and effort as possible.\" El habit loop escanea el entorno, predice qué va a pasar, prueba respuestas y aprende de los resultados."
+      },
+      {
+        "concept_name": "1st Law: Make It Obvious",
+        "content": "El Habits Scorecard es un ejercicio simple para volverte más consciente de tu comportamiento. \"Pointing-and-Calling\" eleva un hábito no consciente a un nivel más consciente al verbalizar tus acciones."
+      },
+      {
+        "concept_name": "Implementation Intention",
+        "content": "Fórmula: \"I will [BEHAVIOR] at [TIME] in [LOCATION].\" Ser específico sobre qué querés y cómo lo vas a lograr te ayuda a decir que no a lo que te desvía."
+      },
+      {
+        "concept_name": "Habit Stacking",
+        "content": "Fórmula: \"After [CURRENT HABIT], I will [NEW HABIT].\" Usar un hábito existente como disparador para uno nuevo."
+      },
+      {
+        "concept_name": "2nd Law: Make It Invisible (Environment)",
+        "content": "\"Small changes in context can lead to large changes in behavior over time.\" Cada hábito arranca con un cue (señal). Hacé obvias en tu entorno las señales de los buenos hábitos."
+      },
+      {
+        "concept_name": "Self-Control Is a Short-Term Strategy",
+        "content": "Las personas con alto autocontrol pasan menos tiempo en situaciones tentadoras — es más fácil evitar la tentación que resistirla. Una de las formas más prácticas de eliminar un mal hábito es reducir la exposición a su señal (cue)."
+      },
+      {
+        "concept_name": "Temptation Bundling",
+        "content": "Fórmula combinada: \"After [CURRENT HABIT], I will [HABIT I NEED]. After [HABIT I NEED], I will [HABIT I WANT].\""
+      },
+      {
+        "concept_name": "Habits as Modern Solutions to Tribal Desires",
+        "content": "\"Your habits are modern-day solutions to ancient desires.\" Si un comportamiento nos da aprobación, respeto o elogios de la tribu, lo encontramos atractivo; si desafía a la tribu, el cambio se vuelve poco atractivo."
+      },
+      {
+        "concept_name": "3rd Law: Make It Easy — Get Your Reps In",
+        "content": "El experimento de fotografía: el grupo de \"cantidad\" produjo las mejores fotos porque estuvo todo el semestre practicando y aprendiendo de sus errores, mientras el grupo de \"calidad\" solo especuló sobre la perfección. \"The most effective form of learning is practice, not planning.\""
+      },
+      {
+        "concept_name": "The Two-Minute Rule",
+        "content": "\"When you start a new habit, it should take less than two minutes to do.\" La idea es bajar la fricción de arranque al mínimo posible."
+      },
+      {
+        "concept_name": "Decisive Moments",
+        "content": "Muchos hábitos ocurren en momentos decisivos — elecciones que son como una bifurcación en el camino y te mandan hacia un día productivo o uno improductivo."
+      },
+      {
+        "concept_name": "4th Law: Make It Satisfying",
+        "content": "\"What is immediately rewarded is repeated. What is immediately punished is avoided.\" Para que un hábito se consolide, necesitás sentirte exitoso de inmediato, aunque sea de forma pequeña."
+      },
+      {
+        "concept_name": "Don't Break the Chain / Never Miss Twice",
+        "content": "Los habit trackers hacen tus hábitos satisfactorios al dar evidencia clara de progreso. Si fallás un día, volvé al camino lo antes posible — nunca falles dos veces seguidas."
+      },
+      {
+        "concept_name": "Accountability Partner & Habit Contract",
+        "content": "Un accountability partner crea un costo inmediato a la inacción: nos importa profundamente lo que otros piensan de nosotros. Un habit contract hace públicos y dolorosos los costos de romper tus promesas."
+      },
+      {
+        "concept_name": "The Goldilocks Rule",
+        "content": "La motivación máxima se mantiene trabajando en tareas de \"dificultad justamente manejable\" (just manageable difficulty). El cerebro ama un desafío, pero solo dentro de una zona óptima de dificultad."
+      },
+      {
+        "concept_name": "Fall in Love with Boredom",
+        "content": "\"The greatest threat to success is not failure but boredom.\" \"Men desire novelty to such an extent that those who are doing well wish for a change as much as those who are doing badly.\" La única forma de volverse excelente es fascinarse infinitamente con hacer lo mismo una y otra vez."
+      },
+      {
+        "concept_name": "Habits + Deliberate Practice = Mastery",
+        "content": "Cuando dominás tan bien los movimientos simples que podés ejecutarlos sin pensar, quedás libre para prestar atención a detalles más avanzados."
+      },
+      {
+        "concept_name": "Redefine Identity Through Transitions",
+        "content": "La clave para mitigar la pérdida de identidad al cambiar de rol es redefinirte de forma más amplia: \"I'm an athlete\" se convierte en \"I'm the type of person who is mentally tough and loves a physical challenge.\""
+      },
+      {
+        "concept_name": "Small Habits Compound",
+        "content": "\"It's remarkable the body you can build if you don't stop training... the knowledge... the fortune... the friendships you can build if you don't stop.\" Small habits don't add up — they compound."
+      }
+    ]
+  },
+  {
+    "book_title": "The Little Book of Talent",
+    "author": "Daniel Coyle",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Excellence Is a Habit",
+        "content": "\"We are what we repeatedly do. Excellence, then, is not an act, but a habit.\" —Aristóteles"
+      },
+      {
+        "concept_name": "Good Artists Borrow, Great Artists Steal",
+        "content": "\"Good artists borrow. Great artists steal.\" Observar y modelar a los que ya lograron lo que buscás: \"Si ella puede hacerlo, ¿por qué yo no?\""
+      },
+      {
+        "concept_name": "The Notebook as a Map",
+        "content": "Un notebook funciona como un mapa: resultados de hoy, ideas para mañana, metas para la próxima semana. Crea claridad."
+      },
+      {
+        "concept_name": "Choose Spartan Spaces",
+        "content": "Los espacios simples y humildes ayudan a enfocar la atención en la tarea de práctica profunda (alcanzar, repetir, luchar). Entre lujoso y espartano, elegí espartano — tu mente inconsciente te lo va a agradecer."
+      },
+      {
+        "concept_name": "Hard Skills vs. Soft Skills",
+        "content": "Las hard skills son de precisión repetible (ABC: Always Being Consistent), típicas de disciplinas físicas especializadas. Las soft skills tienen muchos caminos hacia un buen resultado; buscan reconocer patrones rápido, no precisión de reloj suizo."
+      },
+      {
+        "concept_name": "How to Identify a Hard vs. Soft Skill",
+        "content": "¿Hay un profesor o coach involucrado en las primeras etapas? Si la respuesta es sí, probablemente sea una hard skill. Si es no, es una soft skill."
+      },
+      {
+        "concept_name": "Fundamentals First",
+        "content": "Aprender los fundamentos solo parece aburrido — en realidad es el momento clave de inversión. Si construís el camino correcto ahora, te ahorrás mucho tiempo y problemas después. Priorizar las hard skills porque a largo plazo son más importantes para el talento."
+      },
+      {
+        "concept_name": "The Sweet Spot",
+        "content": "Hay un lugar justo en el borde de tu habilidad donde aprendés mejor y más rápido: el sweet spot. Porcentaje de intentos exitosos ideal: 50–80%."
+      },
+      {
+        "concept_name": "Chunking",
+        "content": "Practicá un \"chunk\" (fragmento) por separado hasta dominarlo — después conectá más chunks, uno por uno, igual que combinás letras para formar una palabra."
+      },
+      {
+        "concept_name": "Small Daily Practice Snacks",
+        "content": "Estás diseñado para mejorar poco a poco. Pequeñas \"snacks\" de práctica diaria son más efectivas que atracones de práctica una vez por semana."
+      },
+      {
+        "concept_name": "Turn It Into a Game",
+        "content": "\"If it can be counted, it can be turned into a game.\""
+      },
+      {
+        "concept_name": "Pay Attention to Errors",
+        "content": "Las personas que prestan atención más profunda a un error aprenden significativamente más que las que lo ignoran."
+      },
+      {
+        "concept_name": "Napping Strengthens Learning",
+        "content": "La siesta es buena para el cerebro que aprende: ayuda a fortalecer las conexiones formadas durante la práctica y prepara el cerebro para la próxima sesión."
+      },
+      {
+        "concept_name": "Summarize to Force Key Points",
+        "content": "Cerrar el libro y escribir un resumen te obliga a identificar los puntos clave, en vez de solo releer pasivamente."
+      },
+      {
+        "concept_name": "The Sandwich Technique",
+        "content": "1. Hacé el movimiento correcto. 2. Hacé el movimiento incorrecto. 3. Volvé a hacer el movimiento correcto."
+      },
+      {
+        "concept_name": "Exhaustion Is the Enemy",
+        "content": "Cuando se trata de aprender, la ciencia es clara: el agotamiento es el enemigo. La fatiga enlentece el cerebro, dispara errores, reduce la concentración y lleva a atajos que crean malos hábitos."
+      },
+      {
+        "concept_name": "Practice Right After Competition",
+        "content": "\"I always achieve my most productive practice after an actual round. Then, the mistakes are fresh in my mind and I can go to the practice tee and work specifically on those mistakes.\""
+      },
+      {
+        "concept_name": "One Kick Ten Thousand Times",
+        "content": "\"I fear not the man who has practiced ten thousand kicks once, but I fear the man who has practiced one kick ten thousand times.\" —Bruce Lee"
+      },
+      {
+        "concept_name": "5 Hours of Training per Hour of Competition",
+        "content": "Por cada hora de competencia, invertir 5 horas de entrenamiento."
+      },
+      {
+        "concept_name": "Give It a Minimum of 8 Weeks",
+        "content": "Dale a una nueva habilidad un mínimo de 8 semanas antes de evaluar el progreso."
+      }
+    ]
+  },
+  {
+    "book_title": "Eat That Frog",
+    "author": "Brian Tracy",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Eat That Frog",
+        "content": "\"An average person who develops the habit of setting clear priorities and getting important tasks completed quickly will run circles around a genius who talks a lot and makes wonderful plans but who gets very little done.\" El hábito clave: atacar la tarea más importante (el sapo) a primera hora de la mañana."
+      },
+      {
+        "concept_name": "Set the Table",
+        "content": "Decidí exactamente qué querés. Escribilo. Ponele fecha límite (y sub-fechas si hace falta). Organizá la lista en un plan y actuá de inmediato. Resolvé hacer algo todos los días que te acerque a tu meta principal."
+      },
+      {
+        "concept_name": "Plan Every Day in Advance",
+        "content": "\"Planning is bringing the future into the present so that you can do something about it now.\" Desglosá la meta en actividades paso a paso y empezá por la primera."
+      },
+      {
+        "concept_name": "The 80/20 Rule",
+        "content": "\"Twenty percent of your activities will account for 80 percent of your results.\" Resistí la tentación de resolver primero las cosas pequeñas — tu capacidad de elegir entre lo importante y lo trivial define tu éxito."
+      },
+      {
+        "concept_name": "Consider the Consequences",
+        "content": "\"Long-term thinking improves short-term decision making.\" Las personas exitosas están dispuestas a postergar la gratificación a corto plazo para obtener recompensas mucho mayores a largo plazo."
+      },
+      {
+        "concept_name": "Things That Matter Most",
+        "content": "\"Things that matter most must never be at the mercy of things that matter least.\" Nunca hay tiempo suficiente para todo, pero siempre hay tiempo suficiente para lo más importante."
+      },
+      {
+        "concept_name": "Creative Procrastination",
+        "content": "Decile que no a todo lo que no sea un uso de alto valor de tu tiempo y de tu vida. Como no podés hacer todo, elegí conscientemente qué postergar."
+      },
+      {
+        "concept_name": "Focus on Key Result Areas",
+        "content": "\"What one skill, if I developed and did it in an excellent fashion, would have the greatest positive impact on my career?\""
+      },
+      {
+        "concept_name": "One Oil Barrel at a Time",
+        "content": "Podés lograr la tarea más grande de tu vida si te disciplinás para avanzar un paso a la vez. Tu trabajo es llegar hasta donde puedas ver — desde ahí vas a ver lo suficiente para seguir avanzando."
+      },
+      {
+        "concept_name": "Upgrade Your Key Skills",
+        "content": "\"The only certain means of success is to render more and better service than is expected of you.\" \"Anytime you stop striving to get better, you're bound to get worse.\""
+      },
+      {
+        "concept_name": "Put the Pressure on Yourself",
+        "content": "\"The first requisite for success is the ability to apply your physical and mental energies to one problem incessantly without growing weary.\" Elegí tus propios sapos y comételos en orden de importancia, sin esperar que alguien más te presione."
+      },
+      {
+        "concept_name": "Maximize Your Personal Powers",
+        "content": "Hay horarios específicos del día en los que estás en tu mejor momento. Identificalos y disciplinate para usarlos en tus tareas más importantes y desafiantes."
+      },
+      {
+        "concept_name": "Get Out of the Technological Time Sinks",
+        "content": "Mucha gente corta con las noticias del diario, la TV y la radio, y aun así se mantiene bien informada — siempre hay alguien que los actualiza. Hacé lo mismo."
+      },
+      {
+        "concept_name": "Develop a Sense of Urgency",
+        "content": "\"Do It Now! Do It Now! Do It Now!\" Repetirte esta frase una y otra vez es una de las formas más simples y poderosas de ponerte en marcha."
+      },
+      {
+        "concept_name": "The Law of Three",
+        "content": "Identificá las tres cosas que hacés en tu trabajo que representan el 90% de tu contribución, y enfocate en terminarlas antes que nada. Vas a tener más tiempo para tu familia y tu vida personal."
+      },
+      {
+        "concept_name": "Identify Your Key Constraints",
+        "content": "Determiná los cuellos de botella, internos o externos, que marcan la velocidad con la que alcanzás tus metas más importantes, y enfocate en aliviarlos."
+      },
+      {
+        "concept_name": "Slice and Dice the Task",
+        "content": "Desglosá las tareas grandes y complejas en partes pequeñas, y hacé solo una parte chica de la tarea para arrancar."
+      },
+      {
+        "concept_name": "Create Large Chunks of Time",
+        "content": "Organizá tus días en torno a grandes bloques de tiempo donde puedas concentrarte por períodos extendidos en tus tareas más importantes."
+      },
+      {
+        "concept_name": "Single Handle Every Task",
+        "content": "Fijá prioridades claras, empezá de inmediato con tu tarea más importante, y trabajá sin parar hasta terminarla al 100%. Esta es la verdadera clave del alto rendimiento y la máxima productividad personal."
+      }
+    ]
+  },
+  {
+    "book_title": "Deep Work",
+    "author": "Cal Newport",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "The Commitment to Depth",
+        "content": "\"My commitment to depth has rewarded me. In the ten-year period following my college graduation, I published four books, earned a PhD, wrote peer-reviewed academic papers at a high rate, and was hired as a tenure-track professor at Georgetown University.\" —Cal Newport"
+      },
+      {
+        "concept_name": "Shallow Work",
+        "content": "Tareas logísticas no exigentes cognitivamente que se pueden completar en estado semi-distraído (responder mails, ordenar documentos, hacer trámites). Cuanto menos compromiso requiere un trabajo, más superficial es."
+      },
+      {
+        "concept_name": "The Cost of Shallow Work",
+        "content": "\"In an age of network tools, knowledge workers increasingly replace deep work with the shallow alternative—constantly sending and receiving e-mail messages like human network routers.\" Los esfuerzos grandes que requieren pensamiento profundo se fragmentan en dashes distraídas de calidad opaca."
+      },
+      {
+        "concept_name": "Shallow Work Gets You Replaced",
+        "content": "Cualquier tarea que completes en estado semi-distraído probablemente se automatice pronto, o la haga alguien más barato en otra parte del mundo. Cuanto más trabajo superficial hacés, menos raras y valiosas son tus habilidades."
+      },
+      {
+        "concept_name": "Deep Work",
+        "content": "Trabajo intelectual difícil pero importante, realizado durante largos períodos ininterrumpidos. Requiere concentración libre de distracciones para llevar tus capacidades cognitivas al límite y crear valor nuevo, difícil de replicar."
+      },
+      {
+        "concept_name": "Mark Twain's Cabin",
+        "content": "Mark Twain trabajaba en una cabaña aislada de la casa principal; su familia tenía que hacer sonar una bocina para llamar su atención a la hora de comer."
+      },
+      {
+        "concept_name": "JK Rowling's Priority",
+        "content": "Mientras escribía los libros de Harry Potter, el único tweet de JK Rowling en el primer año y medio tras unirse a Twitter fue: \"This is the real me, but you won't be hearing from me often I am afraid, as pen and paper is my priority at the moment.\""
+      },
+      {
+        "concept_name": "Bill Gates' Think Weeks",
+        "content": "Bill Gates conducía \"Think Weeks\" dos veces al año, aislándose en una cabaña junto a un lago para solo leer y pensar en grande. Una de esas semanas produjo el memo \"Internet Tidal Wave\", que llevó al desarrollo del navegador web de Microsoft."
+      },
+      {
+        "concept_name": "The 4 Deep Work Ritual Requirements (DEEP)",
+        "content": "Todo ritual de trabajo profundo necesita: espacio Dedicado, hora de finalización Exacta, secuencia de inicio fácil (Easy), y Power-ups (apoyo para el cerebro). Acrónimo: D.E.E.P."
+      },
+      {
+        "concept_name": "Dedicated Workspace",
+        "content": "\"Your ritual needs to specify a location for your deep work efforts... If it's possible to identify a location used only for depth—for instance, a conference room or quiet library—the positive effect can be even greater.\" —Cal Newport"
+      },
+      {
+        "concept_name": "Exact End Time",
+        "content": "\"Give yourself a specific time frame to keep the session a discrete challenge and not an open-ended slog.\" —Cal Newport. Un final claro te da permiso para enfocarte intensamente porque sabés exactamente cuándo termina la incomodidad."
+      },
+      {
+        "concept_name": "Easy Starting Sequence",
+        "content": "\"Your ritual needs rules and processes to keep your efforts structured. Without this structure, you'll have to mentally litigate again and again what you should and should not be doing.\" —Cal Newport. Esa deliberación constante drena reservas de fuerza de voluntad."
+      },
+      {
+        "concept_name": "Power-ups",
+        "content": "\"Your ritual needs to ensure your brain gets the support it needs to keep operating at a high level of depth\" — café, comida adecuada para mantener energía, o ejercicio liviano como caminar para despejar la mente."
+      },
+      {
+        "concept_name": "If You Don't Produce, You Won't Thrive",
+        "content": "\"If you don't produce, you won't thrive—no matter how skilled or talented you are.\" —Cal Newport"
+      }
+    ]
+  },
+  {
+    "book_title": "The Compound Effect",
+    "author": "Darren Hardy",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "The Compound Effect (Definition)",
+        "content": "\"The Compound Effect is the principle of reaping huge rewards from a series of small, smart choices.\" Fórmula: Small, Smart Choices + Consistency + Time = RADICAL DIFFERENCE."
+      },
+      {
+        "concept_name": "We're Hypnotized by Insta-Fixes",
+        "content": "El marketing comercial nos convence de problemas que no tenemos y nos vende soluciones instantáneas. Nos socializaron con finales de cuento de hadas y perdimos de vista el valor de siempre del trabajo duro y consistente."
+      },
+      {
+        "concept_name": "Life Is an Accumulation of Choices",
+        "content": "Todos entramos al mundo iguales: desnudos, asustados e ignorantes. Después de esa gran entrada, la vida que terminamos teniendo es simplemente una acumulación de todas las decisiones que tomamos."
+      },
+      {
+        "concept_name": "100% Responsibility",
+        "content": "Vos sos el único responsable de lo que hacés, no hacés, o de cómo respondés a lo que te hacen. Elegí ser 100% responsable de tu vida, eliminá todas tus excusas."
+      },
+      {
+        "concept_name": "The Formula for Getting Lucky",
+        "content": "Preparation (crecimiento personal) + Attitude (creencias/mentalidad) + Opportunity (una buena oportunidad que aparece) + Action (hacer algo al respecto) = Luck. \"It's a funny thing; the more I practice, the luckier I get.\""
+      },
+      {
+        "concept_name": "You Can't See What You Don't Look For",
+        "content": "\"You cannot see what you don't look for, and you cannot look for what you don't believe in.\""
+      },
+      {
+        "concept_name": "Small, Invisible Course Corrections",
+        "content": "Los ajustes pequeños son verdaderamente invisibles — nadie los va a notar, no va a haber aplausos ni trofeos por estas disciplinas silenciosas."
+      },
+      {
+        "concept_name": "The Horse That Wins by a Nose",
+        "content": "\"A horse wins by a nose, but gets 10 times the prize money. Is the horse 10 times faster? No, just a little bit better.\" Pequeñas ventajas consistentes producen resultados desproporcionados."
+      },
+      {
+        "concept_name": "Connect Choices to Desires",
+        "content": "\"Your choices are only meaningful when you connect them to your desires and dreams.\""
+      },
+      {
+        "concept_name": "It's Good to Hate (the Right Things)",
+        "content": "\"Contrary to social correctness, it can be good to hate. Hate disease, hate injustice, hate ignorance, hate complacency, and so on. Sometimes identifying an enemy lights your fire.\""
+      },
+      {
+        "concept_name": "You Attract What You Focus On",
+        "content": "Ignoramos el 99.9% de la información sensorial que recibimos para no volvernos locos; solo vemos, oímos o experimentamos aquello en lo que nuestra mente se enfoca. Por eso cuando \"pensás\" algo, parece que lo atraés a tu vida — en realidad ya estaba ahí, solo empezás a verlo."
+      },
+      {
+        "concept_name": "Successful People Do It Anyway",
+        "content": "Todos odian hacer las mismas cosas (lo difícil, lo tedioso). La diferencia es que la gente exitosa las hace de todas formas."
+      },
+      {
+        "concept_name": "Be the Tortoise",
+        "content": "La persona que, con suficiente tiempo, le va a ganar a casi cualquiera en cualquier competencia gracias a hábitos y comportamientos positivos aplicados con consistencia."
+      },
+      {
+        "concept_name": "The Three Influences",
+        "content": "Todos estamos afectados por tres tipos de influencias: input (qué alimenta tu mente), associations (con quién pasás el tiempo), y environment (tu entorno)."
+      },
+      {
+        "concept_name": "You Get What You Accept and Expect",
+        "content": "\"Get in life what you accept and expect you are worthy of.\""
+      },
+      {
+        "concept_name": "Find Mentors in Your Focus Areas",
+        "content": "Identificá las tres áreas de tu vida en las que más te enfocás en mejorar, y conseguite un mentor para cada una — ya sea una persona real o alguien cuyas ideas están en libros o grabaciones."
+      },
+      {
+        "concept_name": "The Little Extra",
+        "content": "\"What's the little extra you can do that exceeds expectations and accelerates your results? It takes very little extra to be EXTRAordinary.\""
+      }
+    ]
+  },
+  {
+    "book_title": "Psicología del Éxito",
+    "author": "Mario Luna",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Llena tu Copa Primero",
+        "content": "\"¿Crees que puedes llenar la copa de otros cuando mantienes la tuya vacía? Si no sabes amarte, no sabes amar. Punto. Y tampoco eres digno de ser amado.\""
+      },
+      {
+        "concept_name": "Necesitas una Vida, no una Chica",
+        "content": "\"Tú crees que necesitas una chica. Y yo te digo que necesitas una vida.\""
+      },
+      {
+        "concept_name": "Salud Extrema",
+        "content": "\"La salud extrema es el máximo índice de salud, energía y bienestar que puedes obtener en tus circunstancias personales.\" \"La idea no es llegar a viejo. Es llegar a joven muchos años.\""
+      },
+      {
+        "concept_name": "Cambios Graduales, no Radicales",
+        "content": "En lugar de quitarte los vicios de la dieta de golpe, empezá añadiendo alimentos potenciadores: más verdura y fruta cruda, pescado salvaje, infusiones saludables. Evitá los cambios bruscos."
+      },
+      {
+        "concept_name": "El Dinero y la Felicidad",
+        "content": "\"El dinero no da la felicidad, pero su ausencia te priva de ella.\""
+      },
+      {
+        "concept_name": "Lo Único que no Cambia",
+        "content": "\"Lo único que no cambia es que todo cambia.\""
+      },
+      {
+        "concept_name": "Haz que las Horas Cuenten",
+        "content": "\"No contarás las horas: harás que las horas cuenten.\" Serás tajante a la hora de perder tiempo con cosas que: 1) no son importantes, 2) no dependen de vos, 3) no te estimulan."
+      },
+      {
+        "concept_name": "Preguntas de Mayor Calidad",
+        "content": "\"La diferencia del ganador es que simplemente se hace preguntas de mayor calidad.\" \"La calidad de tu vida tiene más que ver con las preguntas que te haces que con las respuestas que te das.\""
+      },
+      {
+        "concept_name": "¿Me Construye o me Destruye?",
+        "content": "\"Si me quisiera de verdad, profunda y honestamente, ¿me permitiría experimentar lo que estoy experimentando en este momento? ¿Me construye o me destruye? Ésa es la cuestión.\""
+      },
+      {
+        "concept_name": "Sueña con más Habilidades, no con Menos Problemas",
+        "content": "\"Deja de anhelar menos problemas y empieza a soñar con más habilidades para enfrentarte a ellos.\""
+      },
+      {
+        "concept_name": "La Felicidad Está en el Proceso",
+        "content": "\"La ley del mínimo esfuerzo desemboca inexorablemente en la mínima felicidad.\" La felicidad está en el proceso, en el esfuerzo, no en el resultado."
+      },
+      {
+        "concept_name": "Hoy Haré lo que Otros no Hacen",
+        "content": "\"Hoy voy a hacer lo que otros no hacen. Así lograré mañana lo que otros no logran.\" Convertí los problemas en excusas para mejorar."
+      },
+      {
+        "concept_name": "La Psicología del Atrapado",
+        "content": "\"Quieren tener, sin hacer. Y esperan hacer sin ser.\" \"Quieren tener lo que no tienen. Pero rara vez se plantean hacer lo que no hacen o empezar a ser lo que no han sido.\" Fórmula: Ser > Hacer > Aprender."
+      },
+      {
+        "concept_name": "Las 5 Características del Ganador",
+        "content": "1) Sabe lo que quiere y por qué lo quiere. 2) Tiene un plan. 3) Va a por ello. 4) Disfruta del proceso. 5) Deja el mundo mejor de cómo se lo encuentra."
+      },
+      {
+        "concept_name": "Competir como Ganador, no como Atrapado",
+        "content": "El atrapado compite para ganarle al de al lado. El ganador compite para acercarse a su propio potencial. \"No di lo mejor de mí porque quería ganar. Gané porque quería dar lo mejor de mí.\""
+      },
+      {
+        "concept_name": "Hazte Experto de tu Vida",
+        "content": "\"Hazte un experto de tu cuerpo, de tu dinero, tu tiempo, tus emociones, tus relaciones.\" Nos comparamos solo para sacar conclusiones científicas y ser más eficientes persiguiendo un objetivo concreto."
+      },
+      {
+        "concept_name": "Belleza en el Proceso, no en el Resultado",
+        "content": "\"Busca la belleza en lo que haces y lo que creas, no en lo que obtienes.\""
+      },
+      {
+        "concept_name": "Dominar tus Emociones",
+        "content": "\"Cuanto más domines tus emociones, más dueño serás de tus acciones.\""
+      },
+      {
+        "concept_name": "Admirar el Esfuerzo, no el Pedestal",
+        "content": "\"De los triunfadores no admiro su pedestal: ¡admiro el esfuerzo con el que han logrado subirse a él!\" \"Cuando la gente habla a tus espaldas, es porque estás por delante de ellos.\""
+      },
+      {
+        "concept_name": "Descartar Conocimiento Innecesario",
+        "content": "\"No has de ser el mejor absorbiendo información. Has de ser muy bueno librándote de la basura informativa.\" \"Internet hace al listo más listo, y al tonto, más tonto.\""
+      },
+      {
+        "concept_name": "Simultanear",
+        "content": "El ejercicio, las tareas domésticas, los desplazamientos y las esperas pueden ser la oportunidad perfecta para cultivar un cerebro más agudo mientras avanzás hacia lo que querés."
+      },
+      {
+        "concept_name": "Rendimientos Decrecientes",
+        "content": "\"Lo bueno siempre es bueno. Hasta que te pasas.\""
+      },
+      {
+        "concept_name": "Aceptar para Cambiar",
+        "content": "\"Si aceptas algo... ¡puedes empezar a trabajar en cambiarlo!\""
+      },
+      {
+        "concept_name": "Sacarina Mental",
+        "content": "\"La sacarina mental es todo aquello que nos resulta estimulante pero en realidad no nos está ofreciendo nada valioso.\" Acostumbrá a tu entorno a encontrarte conectado solo durante ciertas horas que vos decidas."
+      },
+      {
+        "concept_name": "Mejora Continua en 3 Pasos",
+        "content": "1) Un poco más. 2) Un poco mejor. 3) Y necesitando un poco menos para lograrlo. Tu visión ha de ser específica, medible y que dependa de vos."
+      },
+      {
+        "concept_name": "No Malgastes Energía en lo que no Controlás",
+        "content": "Cuántas emociones y tiempo se malgastan en resultados sobre los que se tiene poco o ningún control. \"Desmotívate... con lo superfluo.\" Entender por qué lo querés es el combustible para avanzar."
+      },
+      {
+        "concept_name": "Toda Acción Te Acerca o Te Aleja",
+        "content": "\"Toda acción te da recursos o te los quita. Te acerca a tus metas o te aleja de ellas.\""
+      },
+      {
+        "concept_name": "El Ganador es Humilde",
+        "content": "\"Un ganador es humilde. Un ganador acepta la situación, aunque ésta no acaricie su vanidad.\" \"¿Vas a jugar con la probabilidad a favor o en contra?\""
+      },
+      {
+        "concept_name": "Empezá en Fase Beta",
+        "content": "Los programadores lanzan sus apps en fase beta, aún imperfectas, para testearlas y corregir errores sobre la marcha. \"Empieza con un plan en fase beta.\""
+      },
+      {
+        "concept_name": "Mueve el Culo",
+        "content": "\"Todas las ideas verdaderamente grandes se conciben caminando.\" \"Sólo hay una cosa que cae del cielo: la lluvia.\" No te esperes a estar motivado para hacer algo."
+      },
+      {
+        "concept_name": "Aprender a Hacerlo",
+        "content": "El atrapado dice: \"Es que no sé cómo se hace\". El ganador afirma: \"Hay que aprender a hacerlo\"."
+      },
+      {
+        "concept_name": "Preactivo vs. Proactivo",
+        "content": "\"La maestría no es cómo reaccionas ante un problema inesperado, sino cómo evitas que éste se dé.\" \"Ser preactivo es el plan A. Ser proactivo, el plan B.\""
+      },
+      {
+        "concept_name": "La Vida Necesita Rumbo",
+        "content": "\"La vida es un viaje. Y necesita rumbo.\" ¿Cómo hago que perseguir X me resulte estimulante? Porque si disfrutás del camino, llegás más lejos."
+      },
+      {
+        "concept_name": "Evitar el Fracaso es Evitar el Éxito",
+        "content": "\"Evitar el fracaso = Evitar el éxito.\" La principal causa de fracaso e incompetencia es la falta de dedicación, y la principal causa de la falta de dedicación es la incapacidad para disfrutar."
+      },
+      {
+        "concept_name": "Afilar el Hacha y Vitaminizar tu Labor",
+        "content": "¿Cómo puedo hacerlo más estimulante, gratificador o divertido? Enfocate en dos áreas: afilar el hacha (mejorar tu habilidad) y vitaminizar tu labor (enriquecer la tarea). El truco ante trabajos alienantes que nos infrautilizan: aumentar el reto."
+      },
+      {
+        "concept_name": "Cuidar tu Tribu",
+        "content": "Al tratar con respeto y cariño los objetos que te rodean, también lo hacés con vos mismo, y viceversa. Ser un ganador implica proteger y cuidar a tu tribu."
+      },
+      {
+        "concept_name": "El Sistema Basado en lo que Es",
+        "content": "\"El sistema que elegimos para funcionar no debe basarse en lo que debería ser. Ha de basarse en lo que de hecho es.\""
+      },
+      {
+        "concept_name": "Ego vs. Orgullo",
+        "content": "\"El ego te hace arrogante en la victoria y miedoso en la derrota. El orgullo te hace humilde en la victoria y valiente en la derrota.\" Jamás conviertas un conflicto en algo personal."
+      },
+      {
+        "concept_name": "La Ley de la Semilla",
+        "content": "\"La ley de la semilla establece que lo que siembre la mente consciente antes o después tendrá un efecto sobre la mente subconsciente.\" Si algo te supone un gran esfuerzo pero lo hacés igual, tu subconsciente verá que vas en serio y cambiará tu autoconcepto."
+      },
+      {
+        "concept_name": "MIA: Impresionarte a Ti Mismo",
+        "content": "\"Deja de esforzarte por impresionar a otros. Y empieza a hacer cosas para impresionarte a ti mismo.\" Es decir, a MIA."
+      },
+      {
+        "concept_name": "Pon a tus Demonios a Trabajar",
+        "content": "\"Pon a tus demonios a trabajar para ti.\" Transformá la frustración en motivación e inspiración, hasta que el balance sea más positivo con ellos que sin ellos."
+      }
+    ]
+  },
+  {
+    "book_title": "The Almanack of Naval Ravikant",
+    "author": "Eric Jorgenson",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Making Money Is a Skill",
+        "content": "\"Making money is not a thing you do—it's a skill you learn.\""
+      },
+      {
+        "concept_name": "Wealth vs. Money",
+        "content": "\"Wealth is having assets that earn while you sleep.\""
+      },
+      {
+        "concept_name": "Achieve Mastery Through Obsession",
+        "content": "Solo podés lograr maestría en una o dos cosas. Generalmente son cosas con las que estás obsesionado."
+      },
+      {
+        "concept_name": "If a Human Can Train You, a Computer Will Replace You",
+        "content": "\"If they can train you to do it, then eventually they will train a computer to do it.\" Sabés hacerlo mejor porque lo amás, y nadie puede competir con eso."
+      },
+      {
+        "concept_name": "Wisdom Defined",
+        "content": "\"My definition of wisdom is knowing the long-term consequences of your actions.\""
+      },
+      {
+        "concept_name": "Explain It to a Child",
+        "content": "\"I think the smartest people can explain things to a child.\""
+      },
+      {
+        "concept_name": "Get Your Ego Out of the Way",
+        "content": "\"To see the truth, you have to get your ego out of the way because your ego doesn't want to face the truth.\""
+      },
+      {
+        "concept_name": "The Brain as a Prediction Machine",
+        "content": "\"During decision-making, the brain is a memory prediction machine.\""
+      },
+      {
+        "concept_name": "Seek Principles and Mental Models",
+        "content": "\"What you want is principles. You want mental models.\" Entender lo básico es la clave para pensar con claridad."
+      },
+      {
+        "concept_name": "If You Can't Decide, the Answer Is No",
+        "content": "\"If you can't decide, the answer is no.\""
+      },
+      {
+        "concept_name": "Lean Into Short-Term Pain, Long-Term Gain",
+        "content": "\"You generally want to lean into things with short-term pain, but long-term gain.\""
+      },
+      {
+        "concept_name": "Read the 100 Great Books Over and Over",
+        "content": "\"I don't want to read everything. I just want to read the 100 great books over and over again.\" \"As long as I have a book in my hand, I don't feel like I'm wasting time.\""
+      },
+      {
+        "concept_name": "You're Just a Monkey with a Plan",
+        "content": "\"Don't take yourself so seriously. You're just a monkey with a plan.\""
+      },
+      {
+        "concept_name": "Cultivate Indifference to What You Can't Control",
+        "content": "\"A rational person can find peace by cultivating indifference to things outside of their control.\""
+      },
+      {
+        "concept_name": "Life Is a Single-Player Game",
+        "content": "\"The reality is life is a single-player game. You're born alone. You're going to die alone. All of your interpretations are alone. All your memories are alone. You're gone in three generations, and nobody cares.\""
+      },
+      {
+        "concept_name": "Three Choices in Any Situation",
+        "content": "\"In any situation in life, you always have three choices: you can change it, you can accept it, or you can leave it.\""
+      },
+      {
+        "concept_name": "Embrace Death to Accept What You Can't Change",
+        "content": "\"How do you learn to accept things you can't change? Fundamentally, it boils down to one big hack: embracing death.\""
+      },
+      {
+        "concept_name": "\"I Don't Have Time\" Means \"It's Not a Priority\"",
+        "content": "\"'I don't have time' is just another way of saying 'It's not a priority.'\""
+      },
+      {
+        "concept_name": "Meditate in Bed — Victory Either Way",
+        "content": "\"Life-hack: When in bed, meditate. Either you will have a deep meditation or fall asleep. Victory either way.\" \"Journaling is writing meditation.\""
+      },
+      {
+        "concept_name": "Impatience with Actions, Patience with Results",
+        "content": "\"Impatience with actions, patience with results.\" Set up systems, not goals."
+      },
+      {
+        "concept_name": "Inspiration Is Perishable",
+        "content": "\"Inspiration is perishable—act on it immediately.\""
+      },
+      {
+        "concept_name": "The Best Book Is the One You'll Devour",
+        "content": "\"The best book is the one you'll devour.\""
+      }
+    ]
+  },
+  {
+    "book_title": "The Daily Laws",
+    "author": "Robert Greene",
+    "category": "Social",
+    "concepts": [
+      {
+        "concept_name": "Reconnect with Your Childhood Obsession",
+        "content": "Estuviste obsesionado con algo de chico por una razón. Reconectar con eso puede llevarte de vuelta al camino de tu Life's Task. Nunca es tarde para empezar este proceso."
+      },
+      {
+        "concept_name": "Loyalty to the Task, not to the Position",
+        "content": "No estás atado a un puesto en particular; tu lealtad no es a una carrera o compañía, sino a tu Life's Task, a darle expresión completa. El cambio es inevitable — evitá metas y sueños rígidos."
+      },
+      {
+        "concept_name": "Focus on Purpose, not Outcome",
+        "content": "Si nos obsesionamos con dar la mejor charla posible, nos volvemos hiperansiosos y la performance sufre. Concentrate en mantener un alto sentido de propósito, y el éxito va a fluir naturalmente."
+      },
+      {
+        "concept_name": "You Are Irreplaceable",
+        "content": "\"In a world full of people who seem largely interchangeable, you cannot be replaced. You are one of a kind. Your combination of skills and experience is not replicable.\""
+      },
+      {
+        "concept_name": "Depending on Others Is Misery",
+        "content": "No hay nada peor que sentirse dependiente de otras personas. Tendemos a sobreestimar las habilidades de los demás y a subestimar las propias."
+      },
+      {
+        "concept_name": "Embrace Pain as Skill-Building",
+        "content": "Abrazá las experiencias negativas, las limitaciones e incluso el dolor como el medio perfecto para construir tu nivel de habilidad y afinar tu sentido de propósito."
+      },
+      {
+        "concept_name": "There Are No Magical Shortcuts",
+        "content": "El hambre por atajos mágicos y fórmulas simples de éxito fue una constante a lo largo de la historia. Pero al final, toda esa búsqueda gira en torno a algo que no existe."
+      },
+      {
+        "concept_name": "Apprentice by Helping the Master",
+        "content": "Encontrá un maestro bajo el cual aprender, pero en vez de pensar cuánto te puede dar a vos, pensá en cómo podés ayudarlo con su trabajo."
+      },
+      {
+        "concept_name": "Value Learning Above All",
+        "content": "Valorar el aprendizaje por sobre todo lo demás te lleva a las decisiones correctas: vas a optar por la situación que te dé más oportunidades de aprender, particularmente con trabajo práctico."
+      },
+      {
+        "concept_name": "Real Pleasure Comes from Overcoming Challenges",
+        "content": "El placer real viene de superar desafíos, sentir confianza en las propias habilidades y ganar fluidez. El aburrimiento deja de señalar la necesidad de distracción y pasa a señalar la necesidad de nuevos desafíos."
+      },
+      {
+        "concept_name": "Reverse Your Natural Impatience",
+        "content": "La acción individual más importante para adquirir poder creativo es revertir la impaciencia natural de querer llegar rápido al final de cualquier proyecto."
+      },
+      {
+        "concept_name": "Look Wider and Think Further Ahead",
+        "content": "La mayoría de la gente está encerrada en el presente, dejando que el evento más inmediato influya de más en sus decisiones. \"Look wider and think further ahead.\""
+      },
+      {
+        "concept_name": "Attention, not Study, Bears Fruit",
+        "content": "\"It is not your studies that will bear fruit but the intensity of your attention.\" Si estás bloqueado, alejate y hacé otra cosa — el cerebro eventualmente te va a traer de vuelta."
+      },
+      {
+        "concept_name": "Suspend the Need to Judge",
+        "content": "Desarrollá el hábito de suspender la necesidad de juzgar todo lo que se cruza en tu camino. Considerá, aunque sea momentáneamente, puntos de vista opuestos al tuyo."
+      },
+      {
+        "concept_name": "Make Your Master Outshine All Others",
+        "content": "No opaques al maestro; hacé que el maestro brille por sobre todos los demás. Tomá crédito de los que están debajo tuyo; dale crédito a los que están arriba."
+      },
+      {
+        "concept_name": "Maintain Independence",
+        "content": "Es el tonto el que siempre se apura a tomar partido. No te comprometas con ningún bando o causa más que vos mismo — así te convertís en el amo de los demás."
+      },
+      {
+        "concept_name": "Weak Character Neutralizes Good Qualities",
+        "content": "El carácter débil neutraliza todas las demás buenas cualidades que una persona pueda tener. Desconfiá de cualquiera que te ofrezca algo a cambio de nada — no hay atajos hacia el poder."
+      },
+      {
+        "concept_name": "Don't React — See It as Chess",
+        "content": "Si alguien te hace algo desagradable, controlá tus emociones. No reacciones, no te enojes. Miralo como movimientos en un tablero de ajedrez."
+      },
+      {
+        "concept_name": "Create Value Through Scarcity",
+        "content": "Cuanto más te ven y te escuchan, más común parecés. Si ya estás establecido en un grupo, retirarte temporalmente te hace más comentado, incluso más admirado."
+      },
+      {
+        "concept_name": "Reassure Their Intellectual Superiority",
+        "content": "Nunca insultes sin querer el intelecto de una persona. Hacerlos sentir intelectualmente superiores desarma sus músculos de sospecha."
+      },
+      {
+        "concept_name": "Powerful People Say Less",
+        "content": "Tu silencio incomoda a los demás — los humanos son máquinas de interpretación y necesitan saber qué estás pensando. Las personas poderosas impresionan e intimidan diciendo menos."
+      },
+      {
+        "concept_name": "Remind Them of Their Own Generosity",
+        "content": "Si necesitás un favor, no les recuerdes lo que hiciste por ellos (la gratitud nos recuerda nuestra dependencia). En cambio, recordales las cosas buenas que ellos hicieron por vos — confirma su autoimagen: \"Sí, soy generoso\"."
+      },
+      {
+        "concept_name": "Promise the Moon, not Gradual Improvement",
+        "content": "Nunca prometas una mejora gradual a través del trabajo duro; prometé la luna, la gran y repentina transformación, la olla de oro."
+      },
+      {
+        "concept_name": "Seducers Are Never Self-Absorbed",
+        "content": "La mirada del seductor está dirigida hacia afuera, no hacia adentro. Meterte en la piel del otro, imaginar cómo es ser esa persona, te ayuda a saber qué la mueve."
+      },
+      {
+        "concept_name": "Approach People as Undiscovered Countries",
+        "content": "Empezá asumiendo que sos ignorante y que tenés sesgos naturales que te van a hacer juzgar mal a la gente. Cada persona que conocés es como un país por descubrir."
+      },
+      {
+        "concept_name": "Never Seem to Be Selling",
+        "content": "Dejá que el valor de entretenimiento y las buenas sensaciones tomen el centro de la escena, colando la venta por la puerta de atrás. En el momento en que la gente sabe que buscás algo de ella, se vuelve resistente."
+      },
+      {
+        "concept_name": "Argument Is the Most Anti-Seductive Language",
+        "content": "¿Cuántos enemigos silenciosos creamos al discutir? Hay una forma superior de lograr que la gente escuche y se deje persuadir: humor y un toque ligero."
+      },
+      {
+        "concept_name": "Demonstrating Beats Arguing",
+        "content": "El poder de demostrar es que tus oponentes no se ponen a la defensiva, y por lo tanto están más abiertos a la persuasión. Buscá que sientan tu significado física y literalmente, en vez de derramarles palabras encima."
+      },
+      {
+        "concept_name": "We Always Desire What We Don't Have",
+        "content": "Uno de los aspectos perversos de la naturaleza humana: siempre deseamos lo que no tenemos. Cuando realmente conseguimos algo, no se siente tan bien. La importancia del deseo está en perseguir algo siempre, fuera de nosotros mismos."
+      },
+      {
+        "concept_name": "Analyze Your Feelings, Never React in the Moment",
+        "content": "\"What I fear is not the enemy's strategy but our own mistakes.\" —Pericles. Pericles entrenó su mente para nunca reaccionar en el momento ni tomar decisiones bajo la influencia de una emoción fuerte."
+      },
+      {
+        "concept_name": "Beware of Emotional Infectors",
+        "content": "Los humanos son extremadamente susceptibles al estado de ánimo de con quién pasan el tiempo. La gente incurablemente infeliz suele presentarse como víctima, y contagia antes de que te des cuenta."
+      },
+      {
+        "concept_name": "Destroy Envy Before It Destroys You",
+        "content": "La envidia es quizás la emoción humana más fea. Desarrollá tu sentido de autoestima a partir de estándares internos y no de comparaciones incesantes."
+      },
+      {
+        "concept_name": "Compensate for the Pull of Emotion",
+        "content": "El único remedio es ser consciente de que el tirón de la emoción es inevitable, notarlo cuando está pasando, y compensarlo: cuando tenés éxito, sé extra cauto; cuando estás enojado, no tomes acción; cuando tenés miedo, sabé que vas a exagerar el peligro."
+      },
+      {
+        "concept_name": "Rationality Is Harmony, not Suppression",
+        "content": "\"Rationality is not about tamping down your emotions. It's about creating a beautiful harmony between the thinking process and the emotional animal parts of our nature.\""
+      },
+      {
+        "concept_name": "Purpose as a Force Multiplier",
+        "content": "Operar con un alto sentido de propósito es un multiplicador de fuerza."
+      },
+      {
+        "concept_name": "The Shortness of Life Gives Urgency",
+        "content": "Saber lo corta y precaria que es la vida te da un sentido de urgencia. Te hace apreciar todo lo que te rodea, y hace la vida más vívida e intensa al entender que cualquier día podría arrebatártela."
+      },
+      {
+        "concept_name": "Time Is Your Only Real Possession",
+        "content": "El tiempo que estás vivo es la única posesión real que tenés. Todo lo demás — tu familia, tu casa, tus autos, tu trabajo — te lo pueden quitar."
+      },
+      {
+        "concept_name": "See the World as if for the Last Time",
+        "content": "Intentá mirar el mundo como si lo estuvieras viendo por última vez — la gente a tu alrededor, los sonidos cotidianos — y esos detalles van a aparecer bajo una nueva luz, ya no dados por sentado."
+      },
+      {
+        "concept_name": "You Cannot Step Into the Same River Twice",
+        "content": "\"You cannot step into the same river twice; it is not the same river, and you are not the same person.\""
+      },
+      {
+        "concept_name": "Premeditation of Death Is Premeditation of Freedom",
+        "content": "\"Premeditation of death is premeditation of freedom... He who has learned how to die has unlearned how to be a slave. Knowing how to die frees us from all subjection and constraint.\""
+      }
+    ]
+  },
+  {
+    "book_title": "The 12 Week Year",
+    "author": "Brian P. Moran, Michael Lennington",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Annualized Thinking (el problema)",
+        "content": "\"An unspoken belief that there is plenty of time in the year to make things happen\" o que más adelante habrá \"a significant improvement in results\". Este pensamiento diluye la urgencia durante todo el año."
+      },
+      {
+        "concept_name": "El Año de 12 Semanas",
+        "content": "\"Twelve weeks is long enough to get things done, and yet is short enough to create and maintain a sense of urgency.\" En vez de pensar en años, tratá cada 12 semanas como un año completo, con su propio cierre y urgencia."
+      },
+      {
+        "concept_name": "Weekly Plan",
+        "content": "Traduce tu plan de 12 semanas en acción diaria y semanal. Empezá la semana con 15-20 minutos revisando la semana anterior y planificando la próxima; empezá cada día con 5 minutos revisando el plan semanal, el día anterior y planificando hoy."
+      },
+      {
+        "concept_name": "Lag Indicators vs. Lead Indicators",
+        "content": "Lag indicators: los resultados finales que buscás (ingresos, ganancia, peso). Lead indicators: las actividades que producen esos resultados (llamadas de venta hechas, contenido creado, horas de trabajo)."
+      },
+      {
+        "concept_name": "Strategic Block",
+        "content": "Bloque de trabajo profundo de 3 horas, preplanificado para eliminar distracciones y enfocarse en actividades estratégicas de alto valor para lograr resultados de ruptura."
+      },
+      {
+        "concept_name": "Buffer Block",
+        "content": "Bloque de 30-60 minutos para lidiar con todos los imprevistos que surgen durante el día, eliminando ineficiencia y ganando control sobre cada jornada."
+      },
+      {
+        "concept_name": "Breakout Block",
+        "content": "Bloque mínimo de 3 horas de tiempo libre, sin actividades ni pensamientos relacionados al trabajo, para recargar la mente y estimular el pensamiento innovador."
+      },
+      {
+        "concept_name": "Diseñar la Semana Ideal",
+        "content": "Programá tareas rutinarias el mismo día y a la misma hora cada semana, y organizá tus strategic blocks en los momentos del día en que rendís mejor."
+      },
+      {
+        "concept_name": "Las 7 Áreas de la Vida",
+        "content": "1) Definí qué significa el éxito en cada una de las 7 áreas: espiritual, pareja, familia, comunidad, físico, personal y negocio. 2) Puntuate del 1 al 10 en cada área. 3) Determiná si cada área te da energía o te la drena. 4) Identificá las peores puntuaciones y enfocate en las que más querés mejorar en esta etapa."
+      },
+      {
+        "concept_name": "Weekly Execution Score",
+        "content": "El porcentaje de tácticas completadas semanalmente. 85% se considera un puntaje excelente (superb)."
+      },
+      {
+        "concept_name": "Primeras Cuatro Semanas",
+        "content": "Se trata de comprometerse y engancharse plenamente con el sistema: instalar la rutina semanal de planificar, puntuar y participar en un WAM (Weekly Accountability Meeting), además de implementar time blocking y trackear métricas clave."
+      },
+      {
+        "concept_name": "Semanas Cinco a Ocho",
+        "content": "Las semanas del medio son críticas — es donde mucha gente pierde momentum y abandona el sistema. Hay que ver el progreso logrado y prepararse para el éxito; si no hay avance, identificar los problemas, determinar la causa raíz y comprometerse a resolverla."
+      },
+      {
+        "concept_name": "Últimas Cuatro Semanas",
+        "content": "Es la oportunidad de cerrar fuerte y lograr las metas. Si venís bien encaminado, hacé lo que sea necesario para rendir y alcanzar lo propuesto. Si no, hacé lo mejor posible, revisá y planteá mejores metas para adelante."
+      },
+      {
+        "concept_name": "La 13ª Semana",
+        "content": "\"An opportunity for you to review your results from the previous 12 weeks, and to launch you into the next 12 Week Year with fresh goals and a plan to reach them.\" Es una oportunidad extra para alcanzar metas, o para hacer una revisión post-acción, identificar lecciones aprendidas e implementar mejoras."
+      }
+    ]
+  },
+  {
+    "book_title": "The Diary of a CEO",
+    "author": "Steven Bartlett",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "The Four Pillars of Greatness",
+        "content": "Los cuatro pilares sobre los que se construye la grandeza: El Yo (Self), La Historia (Story), La Filosofía (Philosophy) y El Equipo (Team)."
+      },
+      {
+        "concept_name": "Pillar I: The Self",
+        "content": "\"The self is the only thing we have direct control over; to master it, which is no easy task, is to master your entire world.\""
+      },
+      {
+        "concept_name": "Pillar II: The Story",
+        "content": "\"Stories are the single most powerful weapon any leader can arm themselves with – they are the currency of humanity.\""
+      },
+      {
+        "concept_name": "Pillar III: The Philosophy",
+        "content": "\"If you know someone's philosophy or beliefs, you can accurately forecast how they'll behave in any situation.\""
+      },
+      {
+        "concept_name": "Law 1: Fill Your Five Buckets in the Right Order",
+        "content": "Enfocate en llenar tus propios baldes (conocimiento, habilidades, red, recursos, reputación), porque alguien con los baldes llenos puede torcer el mundo a su favor de cualquier forma que desee."
+      },
+      {
+        "concept_name": "Applied Knowledge Is Skill",
+        "content": "El conocimiento aplicado es habilidad, y cuanto más podés expandir y aplicar tu conocimiento, más valor generás en el mundo. Ese valor se te devuelve en forma de red, recursos y reputación crecientes."
+      },
+      {
+        "concept_name": "Knowledge Is Lifetime Riches",
+        "content": "\"Those who hoard gold have riches for a moment. Those who hoard knowledge and skills have riches for a lifetime. True prosperity is what you know and what you can do.\""
+      }
+    ]
+  },
+  {
+    "book_title": "The Road Less Stupid",
+    "author": "Keith Cunningham",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "El Negocio es un Deporte Intelectual",
+        "content": "Pensar es crítico para el éxito sostenible. No gana el que más corre, sino el que piensa mejor."
+      },
+      {
+        "concept_name": "Hacerse Rico es Evitar Estupideces",
+        "content": "La clave de hacerse rico (y mantenerse así) está en evitar hacer estupideces. No se trata de inventar lo imposible, sino de no caer en errores obvios."
+      },
+      {
+        "concept_name": "El Optimismo Excesivo es un Enemigo",
+        "content": "\"Optimism is the enemy of the rational investor.\" —Warren Buffett. Ser racional y escéptico protege más que el entusiasmo ciego."
+      },
+      {
+        "concept_name": "El Momento Más Riesgoso es Tener la Razón",
+        "content": "El momento más riesgoso es cuando creemos tener la razón — ahí solemos relajarnos y dejar de cuestionar nuestras suposiciones."
+      },
+      {
+        "concept_name": "Verificar Supuestos",
+        "content": "La mayoría de las malas ideas comparten algo: suposiciones no examinadas, disfrazadas de historias atractivas. Ejemplo: se asumió que los ordenadores acabarían con el papel, pero hoy usamos más que nunca."
+      },
+      {
+        "concept_name": "¿Qué no Estoy Viendo?",
+        "content": "Lo invisible es lo que más cuesta dinero — hay que buscar los puntos ciegos antes de decidir. \"Stupid in small things, stupid in big things.\""
+      },
+      {
+        "concept_name": "Consecuencias de Segundo Orden",
+        "content": "No basta con medir el beneficio inmediato: ¿cuál es el downside? ¿qué puede salir mal? ¿puedo vivir con las consecuencias negativas? Solo los profesionales se detienen en esto, y por eso pagan menos \"impuesto por estupidez\"."
+      },
+      {
+        "concept_name": "Los Atajos Falsos",
+        "content": "Muchas veces lo que creemos atajos son espejismos nacidos de la avaricia, la pereza o la impaciencia. Preguntate: ¿qué habilidades debo dominar realmente para llegar al éxito que quiero?"
+      },
+      {
+        "concept_name": "Los Cuatro Roles Esenciales de un Negocio",
+        "content": "Artista (Creador), Operador (Técnico), Owner (Empresario), Board (Inversor). Al inicio el fundador cumple los cuatro roles, pero al crecer la empresa hay que delegar."
+      },
+      {
+        "concept_name": "Crecimiento vs. Control",
+        "content": "A mayor deseo de crecimiento, menor será el control personal posible, y viceversa."
+      },
+      {
+        "concept_name": "Los Cuatro Sombreros y sus Preguntas",
+        "content": "Artista: ¿Qué debe crearse? Operador: ¿Qué debe hacerse hoy? Owner: ¿Qué necesita estructurarse, medirse, planearse o delegarse? Board: ¿Qué podría salir mal y cómo mitigar los riesgos?"
+      },
+      {
+        "concept_name": "La Responsabilidad es la Madre de la Grandeza",
+        "content": "Vivimos en un entorno donde la responsabilidad y la medición son temidas y evitadas. Los planes sin especificidad ni fechas son fantasías."
+      },
+      {
+        "concept_name": "Emociones + Codicia + Capital Fácil = Desastre",
+        "content": "A veces no es talento, sino simplemente \"haber surfeado una gran ola\". La verdadera riqueza se construye despacio; la velocidad y la codicia aumentan la probabilidad de catástrofe."
+      },
+      {
+        "concept_name": "Mejor Perder una Oportunidad que Perder Capital",
+        "content": "Buscar crecer por ambición o vanidad (ego), y no por estrategia, conduce a errores. Nunca comprar algo solo porque \"algún día podría necesitarse\"."
+      },
+      {
+        "concept_name": "El Éxito No Vuelve Invencible",
+        "content": "El éxito genera complacencia y ego, suficientes para crear desastres. La falta de flujo de caja es kryptonita: puede derribar hasta al mejor negocio."
+      },
+      {
+        "concept_name": "No Sigas al Mercado Hacia Abajo",
+        "content": "Cuando el mercado cae, hay que hacer recortes profundos y rápidos, no seguirlo. La deuda da la ilusión de riqueza, pero la verdadera riqueza son los activos, el flujo de caja y una deuda mínima."
+      },
+      {
+        "concept_name": "Sonar Como Coach, no Como Sheriff",
+        "content": "Siempre empezar con el cliente: sus necesidades, deseos y frustraciones. El error común es pensar como sheriff (control), cuando un líder debería sonar como coach (guía)."
+      },
+      {
+        "concept_name": "El Big 8: Qué y Cómo",
+        "content": "Qué: resultados medibles y obstáculos que impiden el progreso. Cómo: el plan, las tácticas y los procesos que pondrán la estrategia en marcha."
+      },
+      {
+        "concept_name": "Las Empresas Mueren Porque Crecen sin Evolucionar",
+        "content": "Las buenas ideas se arruinan cuando cambia el entorno. Los pequeños triunfan porque son flexibles y aprenden rápido. Es estúpido abandonar las ventajas de ser pequeño intentando imitar a los grandes."
+      },
+      {
+        "concept_name": "Las Preguntas Esenciales de Ventas",
+        "content": "¿Quién quiero que me compre? ¿Qué debe ocurrir para que me compre y vuelva? ¿Qué podría hacer que deje de comprarme? No confiar en vendedores con mentalidad \"one-size-fits-all\", pues destruyen valor."
+      },
+      {
+        "concept_name": "Cómo Haces Algo es Cómo Haces Todo",
+        "content": "La libertad financiera solo es posible con disciplina financiera. La estrategia es solo una idea hasta que se ejecuta consistentemente."
+      },
+      {
+        "concept_name": "El Progreso se Mide en Pérdidas Evitadas",
+        "content": "A veces el progreso se mide por pérdidas evitadas. Las pérdidas suceden cuando pasa lo inesperado, o cuando lo esperado no ocurre."
+      },
+      {
+        "concept_name": "El Trade-off de Todo Proyecto",
+        "content": "En todo proyecto hay tres variables: tiempo, costo y calidad. Solo se pueden optimizar dos; las empresas espectaculares destacan en una, mantienen la segunda y sacrifican la tercera."
+      },
+      {
+        "concept_name": "La Obsesión Correcta es el Cliente",
+        "content": "Los emprendedores suelen enamorarse de su producto, pero el mercado no se preocupa por tu pasión. La verdadera obsesión debe ser el cliente y sus resultados."
+      },
+      {
+        "concept_name": "El Valor Está en la Planificación, no en el Plan",
+        "content": "\"Todos tienen un plan hasta que reciben un golpe en la cara.\" El valor no está en el plan, sino en la planificación: entender dónde estás, definir el resultado deseado y prepararte para cambios."
+      },
+      {
+        "concept_name": "Somos Codiciosos, Impacientes y Perezosos",
+        "content": "La pregunta clave es: ¿qué puedo hacer hoy para mejorar mi situación? El éxito combina una adicción a aprender con la voluntad de \"agarrar la pala\" y hacer el trabajo. Los problemas diferidos siempre se agrandan."
+      },
+      {
+        "concept_name": "Medir Como un Profesional",
+        "content": "Serena Williams, Jordan Spieth y Warren Buffett comparten un rasgo: son obsesivos con la medición. \"Lo que se mide se hace. Lo que se mide se gestiona. Lo que se mide y reporta puede mejorar exponencialmente.\""
+      },
+      {
+        "concept_name": "Las Preguntas de Gestión del Riesgo",
+        "content": "No \"¿qué quiero lograr?\", sino: ¿qué riesgos enfrentamos realmente? ¿cuál es la probabilidad de que ocurran? ¿cuál sería el costo si se materializan? ¿cómo podemos mitigarlos?"
+      },
+      {
+        "concept_name": "Liderazgo con Coraje",
+        "content": "Ser líder requiere valentía para decir lo que debe decirse, pedir consejo, admitir errores, tomar decisiones difíciles y tener conversaciones incómodas. Escuchar para entender, no para responder."
+      },
+      {
+        "concept_name": "Pasión no es lo Mismo que Negocio",
+        "content": "Hacer lo que amás puede dar satisfacción o sentido, pero no garantiza éxito financiero. La clave está en pensar, planear, ejecutar consistentemente lo correcto y anticipar pérdidas."
+      },
+      {
+        "concept_name": "El Espejismo del Más",
+        "content": "El segundo chocolate nunca es tan placentero como el primero, y el décimo aún menos. La creencia de que \"más placer\" traerá \"más felicidad\" es errónea."
+      },
+      {
+        "concept_name": "Perspectiva Global",
+        "content": "Si el mundo fuera un pueblo de mil personas: 350 estarían malnutridos, 330 sin agua corriente, 250 serían analfabetos, el ingreso medio sería $3.30/día, y solo 10 ganarían más de $34,000 al año (el 1%)."
+      },
+      {
+        "concept_name": "La Verdadera Satisfacción",
+        "content": "No viene de la comparación con otros, sino del progreso personal y el avance hacia objetivos significativos."
+      }
+    ]
+  },
+  {
+    "book_title": "Range",
+    "author": "David Epstein",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "La Idea Central de Range",
+        "content": "En un mundo complejo y cambiante, los generalistas —personas con experiencias variadas y pensamiento flexible— suelen rendir mejor que los especialistas que se enfocan desde muy temprano."
+      },
+      {
+        "concept_name": "El Mito de Empezar Temprano",
+        "content": "La sociedad glorifica casos como Tiger Woods, que se especializó desde niño. Pero ese modelo funciona solo en entornos con reglas fijas (golf, ajedrez, música clásica), y se generalizó erróneamente a todo lo demás."
+      },
+      {
+        "concept_name": "El Caso Federer",
+        "content": "A diferencia de Tiger Woods, Roger Federer probó muchos deportes antes de elegir el tenis. La exploración amplia lo ayudó a desarrollar capacidades más completas: explorar primero, especializarse después, funciona mejor de lo que se cree."
+      },
+      {
+        "concept_name": "Entornos Kind vs. Wicked",
+        "content": "Kind (amables): patrones repetitivos, reglas claras, feedback inmediato (golf, ajedrez, música clásica) — ahí la práctica deliberada temprana funciona. Wicked (perversos): pocas reglas claras, patrones cambiantes, retroalimentación incompleta o tardía (negocios, ciencia, relaciones, tecnología) — ahí los generalistas tienen ventaja."
+      },
+      {
+        "concept_name": "Qué Implica Tener Range",
+        "content": "Conectar ideas de distintas áreas, aprender habilidades variadas, ser flexible y creativo, y cambiar de rumbo cuando es necesario. En entornos complejos, la amplitud gana a la profundidad."
+      },
+      {
+        "concept_name": "No Necesitás una Ventaja Temprana",
+        "content": "\"No necesitas una ventaja temprana; necesitas una mente flexible.\""
+      },
+      {
+        "concept_name": "Los Límites de la 'Fórmula Experta'",
+        "content": "La investigación de K. Anders Ericsson y la regla de las 10.000 horas de Malcolm Gladwell se hizo casi exclusivamente en entornos super predecibles (violín, ajedrez, golf), y luego se generalizó erróneamente a todo lo demás. La mayoría de las profesiones no funcionan como tocar violín."
+      },
+      {
+        "concept_name": "Especialistas que se Estancan",
+        "content": "Las personas que se enfocan temprano suelen depender de rutinas rígidas, aprender \"trucos\" propios de su nicho, fallar cuando el entorno cambia, y tener dificultad para innovar."
+      },
+      {
+        "concept_name": "Generalistas que Superan a los Especialistas",
+        "content": "Las personas con experiencia amplia ven patrones que los especialistas no detectan, conectan ideas de diferentes áreas, son mejores líderes en entornos complejos, y se adaptan más rápido a cambios tecnológicos."
+      },
+      {
+        "concept_name": "El Efecto Flynn",
+        "content": "James Flynn mostró que la inteligencia medida creció globalmente no porque seamos más \"listos\", sino porque el mundo moderno pide pensamiento abstracto y relacional. Las habilidades realmente importantes hoy no vienen de entrenar una sola cosa, sino de explorar muchas áreas y relacionarlas."
+      },
+      {
+        "concept_name": "La Trampa del Head Start",
+        "content": "Empezar temprano da ventajas solo al principio; esos beneficios se diluyen y pueden revertirse con el tiempo. La especialización temprana puede limitar la creatividad futura, mientras que la diversidad de experiencias crea más resiliencia y capacidad de innovación."
+      },
+      {
+        "concept_name": "No Gana el que Arranca Primero",
+        "content": "\"Las carreras humanas no son 100 metros llanos: no gana el que arranca primero, sino el que se adapta mejor.\" Los caminos no lineales no son fallas, y cambiar de área no es perder el tiempo — la exploración es una inversión en creatividad."
+      }
+    ]
+  },
+  {
+    "book_title": "Hackea tu Cerebro",
+    "author": "Nicolás Fernández Miranda",
+    "category": "Productividad",
+    "concepts": [
+      {
+        "concept_name": "Aprender a Aprender",
+        "content": "\"Es literalmente imposible estar al día con todo el conocimiento generado en el mundo; tener la habilidad de incorporar nueva información nos va a dar una ventaja competitiva.\" El aprendizaje pasivo (mientras dormís o estás inconsciente) es un mito."
+      },
+      {
+        "concept_name": "Los Tres Pilares del Aprendizaje",
+        "content": "Para aprender cualquier habilidad se necesitan tres pilares: Concentración, Memoria y Comunicación."
+      },
+      {
+        "concept_name": "Potenciación a Largo Plazo (LTP)",
+        "content": "Al aprender se produce una conexión sináptica entre neuronas. Cuando repasamos o practicamos (ej. un drive en tenis), esa conexión se fortalece — la repetición física y mental consolida el aprendizaje."
+      },
+      {
+        "concept_name": "Neuroplasticidad y Ejercicio",
+        "content": "Aunque perdemos plasticidad con la edad, podemos frenar el deterioro. El ejercicio físico produce neurotrofinas que fomentan la creación de nuevas neuronas."
+      },
+      {
+        "concept_name": "El Mito de las 10.000 Horas",
+        "content": "Según Josh Kaufman, 10.000 horas son para ser un experto mundial, pero para aprender una habilidad funcional solo se necesitan 20 horas."
+      },
+      {
+        "concept_name": "Concentración = Decidir qué NO Hacer",
+        "content": "La concentración se define como decidir qué cosas NO vas a hacer. Para concentrarse, necesitamos equilibrio en el nivel de excitación: muy bajo es aburrimiento/sueño, muy alto es ansiedad/abrumación."
+      },
+      {
+        "concept_name": "Power Nap (Siesta de Café)",
+        "content": "Tomar un café (sin azúcar) e inmediatamente dormir 20 minutos. La cafeína hace efecto justo al despertar, combinando descanso + energía."
+      },
+      {
+        "concept_name": "El Entorno de Trabajo",
+        "content": "Buena iluminación ayuda a la concentración. Dato curioso: un escritorio desordenado puede favorecer tareas creativas (estudio Univ. Minnesota), pero el orden ayuda a la claridad mental."
+      },
+      {
+        "concept_name": "Ayuno de Dopamina",
+        "content": "Abstenerse temporalmente de actividades placenteras inmediatas (redes, azúcar) para \"resetear\" el sistema de recompensa y recuperar la motivación por tareas difíciles."
+      },
+      {
+        "concept_name": "Teoría de la Restauración de la Atención",
+        "content": "Pasear por la naturaleza recupera la capacidad cognitiva."
+      },
+      {
+        "concept_name": "Involúcrame y lo Aprendo",
+        "content": "\"Dime y lo olvido, enséñame y lo recuerdo, involúcrame y lo aprendo.\""
+      },
+      {
+        "concept_name": "Tipos de Memoria",
+        "content": "Sensorial (dura segundos, basada en sentidos). Corto plazo/de trabajo (15-30 segundos, capacidad limitada a ~7 elementos). Largo plazo: explícita (declarativa: episódica y semántica) e implícita (habilidades motoras, como andar en bici)."
+      },
+      {
+        "concept_name": "El Cerebro Prefiere lo Inusual",
+        "content": "Para pasar información a largo plazo, el cerebro prefiere lo inusual, absurdo o emocional. Ejemplo: imaginar al profesor con traje de Ironman hace que prestes atención (asociación visual)."
+      },
+      {
+        "concept_name": "Palacio de la Memoria",
+        "content": "1) Identificar elementos clave. 2) Crear una trama (historia). 3) Añadir detalles vívidos y emociones. 4) Repasar/actuar la historia mentalmente."
+      },
+      {
+        "concept_name": "Repetición Espaciada",
+        "content": "La regla de oro para no olvidar."
+      },
+      {
+        "concept_name": "Procesamiento Profundo",
+        "content": "Analizar el significado semántico de lo que estudiás, no solo repetir como loro."
+      },
+      {
+        "concept_name": "Tu Futuro Depende de tus Sueños",
+        "content": "\"Tu futuro depende de tus sueños, así que vete a dormir.\" Dormir mal baja el estado de alerta y el rendimiento cognitivo, y nos acostumbramos peligrosamente a ese bajo rendimiento."
+      },
+      {
+        "concept_name": "Sun Gazing y Ritmo Circadiano",
+        "content": "Ver luz solar natural al amanecer o atardecer ayuda a recalibrar el reloj biológico."
+      },
+      {
+        "concept_name": "NEAT (Non-Exercise Activity Thermogenesis)",
+        "content": "Mantenerse activo fuera del gimnasio: caminar mientras hablás por teléfono, hacer estiramientos ligeros cada hora (2-3 minutos) para cuidar las cervicales."
+      },
+      {
+        "concept_name": "Evitar el Upptalk",
+        "content": "Subir el tono de voz al final de las oraciones denota inseguridad y búsqueda de validación."
+      },
+      {
+        "concept_name": "Cansado vs. Agotado",
+        "content": "\"Es mejor estar cansado y descansar, que estar agotado y rendirse.\""
+      },
+      {
+        "concept_name": "Definición de Inteligencia",
+        "content": "\"La inteligencia es la capacidad de procesar información, aplicar el conocimiento adquirido para resolver problemas o tomar decisiones efectivas.\" —David Wechsler"
+      }
+    ]
+  },
+  {
+    "book_title": "Padre Rico, Padre Pobre",
+    "author": "Robert Kiyosaki",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "Los Ricos no Trabajan por Dinero",
+        "content": "La mayoría de trabajadores intercambian su tiempo por dinero. Los ricos buscan la manera de hacer que el dinero trabaje para ellos. Intercambiar tiempo por dinero no es rentable ni escalable a la larga."
+      },
+      {
+        "concept_name": "Activo vs. Pasivo",
+        "content": "Un activo es un título o contrato que genera ingresos para su propietario. Un pasivo genera gastos. La riqueza viene cuando los activos generan suficiente dinero como para cubrir los gastos de inversión, el día a día del inversor y dejar un excedente."
+      },
+      {
+        "concept_name": "Tu Casa no es un Activo",
+        "content": "Según Kiyosaki, la residencia propia no es un activo sino un pasivo: no genera ingresos, al contrario, es un gasto continuo (luz, agua, gas, reparaciones)."
+      },
+      {
+        "concept_name": "La Carrera de la Rata",
+        "content": "Los pobres viven el día a día sin activos ni pasivos. La clase media adquiere pasivos pensando que son activos (casa, auto). Los ricos construyen patrimonio con activos que generan más ingresos. La \"rat race\" es la clase media atrapada corriendo cada vez más rápido sin poder salir de la rueda."
+      },
+      {
+        "concept_name": "Cómo Escapar de la Rat Race",
+        "content": "La clave es cambiar de mentalidad: usar los ingresos actuales para adquirir activos que generen aún más ingresos, en vez de gastarlos en pasivos."
+      },
+      {
+        "concept_name": "Invertir Mientras Trabajás en Relación de Dependencia",
+        "content": "Hay que empezar a invertir y adquirir activos mientras se trabaja por cuenta ajena, así se consiguen los primeros ingresos pasivos que van creciendo con el tiempo. El propio Kiyosaki logró en tres años que sus ingresos inmobiliarios superaran su salario, y ahí dejó su trabajo."
+      },
+      {
+        "concept_name": "El Orden de los Impuestos",
+        "content": "Un empleado paga impuesto sobre la renta apenas cobra su sueldo. Los ricos invierten primero (a través de sus propias empresas, que pueden deducir gastos que una persona física no puede) y pagan impuestos después, optimizando su fiscalidad de forma legal."
+      },
+      {
+        "concept_name": "Pagate a Vos Mismo Primero",
+        "content": "Mediante la constitución de una empresa, podés empezar pagándote a vos mismo primero, teniendo así más capital disponible para adquirir activos."
+      },
+      {
+        "concept_name": "Las Buenas Oportunidades se Generan",
+        "content": "\"Las buenas oportunidades no caen del cielo. Las buenas oportunidades se generan.\" Los ricos inventan dinero identificando lo que otros no ven."
+      },
+      {
+        "concept_name": "Las 4 Habilidades para Generar Oportunidades",
+        "content": "1) Identificar una oportunidad que nadie más vio. 2) Saber obtener financiación (apalancamiento). 3) Saber hacer trabajar juntas a personas inteligentes, delegando la gestión. 4) Saber aceptar el riesgo inherente a cada inversión — la capacidad de reponerse del fracaso es lo que garantiza el éxito, no la voluntad de tener éxito inmediato."
+      },
+      {
+        "concept_name": "Trabajá para Aprender, no por Dinero",
+        "content": "Lo importante no es tener un trabajo fijo, sino buscar trabajos donde se pueda aprender, aunque no estén bien remunerados. Hay que adquirir información variada para después aplicarla en inversiones y negocios."
+      },
+      {
+        "concept_name": "Las 4 Materias Clave a Dominar",
+        "content": "Contabilidad (para leer informes anuales de empresas), Estrategia de Inversión (se afina con el tiempo, no se aprende académicamente), Las Leyes del Mercado (oferta y demanda), y Derecho (conocer tus derechos y obligaciones)."
+      },
+      {
+        "concept_name": "Obstáculo 1: El Miedo",
+        "content": "La mayoría de la clase media actúa solo en función de lo que considera seguro, y por eso se estanca en un empleo sin poder prosperar financieramente. Sin arriesgarse ni pensar en grande, es difícil llegar a algún lado."
+      },
+      {
+        "concept_name": "Obstáculo 2: El Cinismo y la Envidia",
+        "content": "Muchas personas, por miedo, no intentan triunfar pero sí se atreven a criticar a quienes lo están logrando. Es importante no escuchar críticas poco objetivas."
+      },
+      {
+        "concept_name": "Obstáculo 3: La Pereza",
+        "content": "Hay que tomar las riendas de la propia vida siendo proactivo y perseverante, sin bajar los brazos a la primera dificultad."
+      },
+      {
+        "concept_name": "Obstáculo 4: Las Malas Costumbres",
+        "content": "Es importante cortar los gastos innecesarios y convertirlos primero en ahorro y luego en inversiones."
+      },
+      {
+        "concept_name": "Obstáculo 5: La Arrogancia",
+        "content": "No caer en pensar que ya se sabe todo sobre el dinero. Siempre hay que escuchar a otros y nunca dejar de formarse."
+      },
+      {
+        "concept_name": "Lo Más Importante es Pasar a la Acción",
+        "content": "No sirve de nada saberse toda la teoría sobre finanzas personales y libertad financiera si no se pone en práctica."
+      }
+    ]
+  },
+  {
+    "book_title": "The Psychology of Money",
+    "author": "Morgan Housel",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "El Comportamiento Importa Más que el Conocimiento",
+        "content": "\"Financial success is not a hard science. It's a soft skill, where how you behave is more important than what you know.\" Un genio que pierde el control de sus emociones puede ser un desastre financiero."
+      },
+      {
+        "concept_name": "Nadie Está Loco",
+        "content": "\"Some lessons have to be experienced before they can be understood.\" Nadie está loco: todos tomamos decisiones en base a nuestras propias experiencias únicas, que tienen sentido para nosotros en ese momento."
+      },
+      {
+        "concept_name": "Por Qué los Pobres Juegan a la Lotería",
+        "content": "\"We are paying for a dream, and you may not understand that because you are already living a dream.\""
+      },
+      {
+        "concept_name": "Nada es Tan Bueno ni Tan Malo Como Parece",
+        "content": "\"Nothing is as good or as bad as it seems.\" Todo lo que vale la pena perseguir tiene menos de 100% de probabilidad de éxito, y el riesgo es simplemente terminar del lado desafortunado de esa ecuación."
+      },
+      {
+        "concept_name": "No Todo Éxito es Trabajo Duro, ni Toda Pobreza es Pereza",
+        "content": "Enfocate menos en individuos y casos específicos, y más en patrones amplios."
+      },
+      {
+        "concept_name": "No Arriesgues lo que Tenés por lo que no Necesitás",
+        "content": "\"There is no reason to risk what you have and need for what you don't have and don't need.\""
+      },
+      {
+        "concept_name": "La Felicidad es Resultados Menos Expectativas",
+        "content": "Querer superar a tus pares puede ser el combustible del trabajo duro, pero la vida no tiene gracia sin un sentido de \"suficiente\". Aceptar que quizás ya tenés suficiente, aunque sea menos que quienes te rodean."
+      },
+      {
+        "concept_name": "Salir del Casino a Tiempo",
+        "content": "\"The only way to win in a Las Vegas casino is to exit as soon as you enter.\" Reputación, libertad, independencia, familia, amigos, ser amado y la felicidad son invaluables — no los arriesgues por más."
+      },
+      {
+        "concept_name": "Cállate y Esperá",
+        "content": "El libro más importante sobre inversión debería llamarse \"Shut Up And Wait\" — una sola página con un gráfico de largo plazo del crecimiento económico."
+      },
+      {
+        "concept_name": "Enriquecerse vs. Mantenerse Rico",
+        "content": "\"More than I want big returns, I want to be financially unbreakable.\" Lo más importante de todo plan es planear que el plan no salga según lo planeado."
+      },
+      {
+        "concept_name": "El Genio de la Inversión Hace lo Promedio",
+        "content": "Una buena definición de genio de la inversión es quien puede hacer lo promedio cuando todos a su alrededor están enloqueciendo."
+      },
+      {
+        "concept_name": "Cuánto Ganás Cuando Tenés Razón",
+        "content": "\"It's not whether you're right or wrong that's important, but how much money you make when you're right and how much you lose when you're wrong.\" —George Soros. Podés estar equivocado la mitad de las veces y aun así hacer fortuna."
+      },
+      {
+        "concept_name": "La Libertad es el Combustible Universal de la Felicidad",
+        "content": "Si hay un denominador común en la felicidad, es que la gente quiere controlar su propia vida."
+      },
+      {
+        "concept_name": "La Paradoja del Hombre en el Auto",
+        "content": "Lo que querés es respeto y admiración de los demás, y creés que las cosas caras te lo van a dar. Casi nunca funciona así — especialmente con la gente que realmente querés que te respete y admire."
+      },
+      {
+        "concept_name": "La Humildad Trae Más Respeto que el Lujo",
+        "content": "\"Humility, kindness, and empathy will bring you more respect than horsepower ever will.\""
+      },
+      {
+        "concept_name": "La Riqueza es lo que no Ves",
+        "content": "La riqueza está oculta: es el ingreso que no gastaste. La riqueza es una opción todavía no ejercida de comprar algo más adelante."
+      },
+      {
+        "concept_name": "Ahorrar Depende de lo que Deseás",
+        "content": "El ahorro se crea gastando menos, y podés gastar menos si deseás menos. La flexibilidad y el control sobre tu tiempo es un retorno invisible de la riqueza."
+      },
+      {
+        "concept_name": "Encontrá el Precio y Pagalo",
+        "content": "Si ves la tarifa de entrada como una multa, nunca vas a disfrutar la magia. Encontrá el precio (la volatilidad, la incertidumbre), aceptalo como el costo de jugar, y pagalo con gusto."
+      },
+      {
+        "concept_name": "Identificá a qué Juego Estás Jugando",
+        "content": "Lo principal que se puede recomendar es esforzarse por identificar a qué juego estás jugando, porque la gente que juega juegos distintos puede llevarte a tomar decisiones equivocadas si copiás sus movimientos."
+      },
+      {
+        "concept_name": "El Pesimismo es Seductor",
+        "content": "El pesimismo reduce las expectativas, angostando la brecha entre los resultados posibles y los que te hacen sentir bien. Esperar que las cosas salgan mal es la mejor forma de sorprenderte gratamente cuando no pasa."
+      },
+      {
+        "concept_name": "Las Historias son el Combustible de la Economía",
+        "content": "Las historias son, por lejos, la fuerza más poderosa de la economía — el combustible que hace funcionar las partes tangibles de la economía, o el freno que retiene nuestras capacidades."
+      },
+      {
+        "concept_name": "Menos Ego, Más Riqueza",
+        "content": "Ahorrar dinero es la brecha entre tu ego y tu ingreso, y la riqueza es lo que no ves. La riqueza se crea suprimiendo lo que podrías comprar hoy para tener más opciones en el futuro."
+      },
+      {
+        "concept_name": "Buscaba Independencia, no Riqueza",
+        "content": "\"I did not intend to get rich. I just wanted to get independent.\""
+      },
+      {
+        "concept_name": "La Primera Regla del Interés Compuesto",
+        "content": "\"The first rule of compounding is to never interrupt it unnecessarily.\""
+      }
+    ]
+  },
+  {
+    "book_title": "University of Berkshire Hathaway",
+    "author": "Daniel Pecaut, Corey Wrenn",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "Precio vs. Valor",
+        "content": "Graham reduce el arte de invertir a dos variables simples: valor es lo que un negocio realmente vale; precio es lo que hay que pagar para conseguirlo."
+      },
+      {
+        "concept_name": "Vagamente Correcto, no Precisamente Equivocado",
+        "content": "\"I would rather be vaguely right than precisely wrong.\" —Buffett"
+      },
+      {
+        "concept_name": "Mejor Empresa Maravillosa a Precio Justo",
+        "content": "\"It is far better to buy a wonderful company at a fair price than a fair company at a wonderful price.\" —Buffett"
+      },
+      {
+        "concept_name": "Los Retornos de la Empresa son tus Retornos",
+        "content": "Si una empresa gana retornos muy altos año tras año, en última instancia esos serán también los retornos del accionista."
+      },
+      {
+        "concept_name": "Da la Bienvenida a los Precios que Caen",
+        "content": "Si vas a ser un comprador de comida de por vida, das la bienvenida a los precios que bajan y lamentás los que suben. Lo mismo debería pasar con las inversiones."
+      },
+      {
+        "concept_name": "Solo Necesitás un Buen Jugador",
+        "content": "\"You only need one good player to make a difference.\" No hace falta seguir docenas de empresas — ocho o diez a lo largo de una vida, o incluso una sola, alcanzan para el retorno."
+      },
+      {
+        "concept_name": "Vamos Donde las Probabilidades son Buenas",
+        "content": "\"We go where the probabilities are good.\" —Buffett. Lo que tiene utilidad para medir precio y valor es el juicio; lo que se necesita no es información rápida, sino buena información."
+      },
+      {
+        "concept_name": "Desconfiá de las Proyecciones",
+        "content": "\"Don't ask the barber if you need a haircut.\" Y mantené las cosas simples: \"I'd rather multiply by three than by pi.\" —Buffett"
+      },
+      {
+        "concept_name": "El Estanque Importa Más que Cómo Nadás",
+        "content": "\"The pond you choose is far more important than how well you swim.\""
+      },
+      {
+        "concept_name": "Aprender de los Errores Ajenos y Propios",
+        "content": "Munger insiste en que es esencial aprender tanto de los errores de otros como de los propios. Citó a Patton: \"It's an honor to die for your country. Make sure the other guys get the honor.\""
+      },
+      {
+        "concept_name": "Podés Observar Mucho con Solo Mirar",
+        "content": "\"You can observe a lot just by looking.\""
+      },
+      {
+        "concept_name": "Encontrá un Negocio que Cualquier Tonto Podría Manejar",
+        "content": "\"Find a business any idiot could run because eventually one will.\""
+      },
+      {
+        "concept_name": "Después de lo Suficiente, lo que Importa es la Salud y el Amor",
+        "content": "Después de tener suficiente para el día a día, todo lo que importa es tu salud y las personas que amás."
+      },
+      {
+        "concept_name": "El Ahorro en la Adolescencia Vale 20 Veces Más",
+        "content": "Es mucho más fácil ahorrar en la adolescencia, cuando tus padres cubren tus gastos: cada dólar ahorrado entonces vale $20. El conocimiento sobre negocios tiene un efecto compuesto similar."
+      },
+      {
+        "concept_name": "Un Cuerpo y una Mente para Toda la Vida",
+        "content": "Recibimos un cuerpo y una mente para toda la vida. No podés repararlos a los 60 — hay que mantenerlos."
+      },
+      {
+        "concept_name": "Una Acción es Parte de un Negocio",
+        "content": "La piedra Rosetta de la inversión es recordar que una acción es propiedad parcial de un negocio. Ese principio es la base de la inversión racional."
+      },
+      {
+        "concept_name": "Solo Necesitás una o Dos Buenas Ideas por Año",
+        "content": "Mientras grandes departamentos de investigación rastrean las 500 empresas del S&P 500, Buffett dijo que solo necesita una o dos buenas ideas al año."
+      },
+      {
+        "concept_name": "El Dinero no Reemplaza la Amistad",
+        "content": "\"Money is no replacement for friendship and happiness.\""
+      },
+      {
+        "concept_name": "Estrategias Contra la Inflación",
+        "content": "Primera línea de defensa: aumentar tu poder de generar ingresos (ser el mejor en tu oficio). Segunda estrategia: poseer negocios que puedan trasladar precios ante la inflación y tengan bajo gasto de capital para mantenerse."
+      },
+      {
+        "concept_name": "Evitá las Necesidades Tontas",
+        "content": "Munger sugirió evitar tener \"muchas necesidades tontas en la vida\"."
+      },
+      {
+        "concept_name": "El Temperamento Importa Más que la Inteligencia",
+        "content": "Aunque la inteligencia ayuda, Buffett y Munger sostienen que tener el temperamento adecuado es mucho más crítico para invertir."
+      },
+      {
+        "concept_name": "Lo que Aprendemos de la Historia",
+        "content": "\"What we learn from history is that people do not learn from history.\""
+      },
+      {
+        "concept_name": "Evitá lo Estúpido",
+        "content": "Munger: es crítico \"evitar lo estúpido\" — como ir al hipódromo, arriesgar la salud, experimentar con drogas o endeudarse. Desarrollá buen carácter y buenos hábitos mentales."
+      },
+      {
+        "concept_name": "Costo de Oportunidad: Compará contra tu Mejor Idea",
+        "content": "\"To measure opportunity cost, take your best available opportunity versus all other options.\" Concentrate en tu mejor idea o dos."
+      },
+      {
+        "concept_name": "Comprá Cuando Otros Están Paralizados",
+        "content": "La clave es comprar cuando otros están paralizados. Idealmente Buffett compra negocios a 40 centavos por dólar, pero paga cerca de un dólar por un negocio realmente excelente."
+      },
+      {
+        "concept_name": "¿Qué Poseés y Por Qué lo Poseés?",
+        "content": "\"What do you own, and why do you own it?\" Si no te interesa lo suficiente como para poseer algo, buscá otra cosa que hacer."
+      },
+      {
+        "concept_name": "Pierde Menos en tus Peores Ideas",
+        "content": "Sus mejores ideas no fueron mejores que las de otros — pero perdió menos en sus peores ideas."
+      },
+      {
+        "concept_name": "Cómo Enseñaría Buffett Negocios",
+        "content": "Si Buffett enseñara en una escuela de negocios, lo haría increíblemente simple: 1) Cómo valorar un negocio, y 2) Cómo pensar sobre las fluctuaciones del mercado — el mercado está para servirte, no para instruirte."
+      },
+      {
+        "concept_name": "Comprar Acciones es como Comprar una Granja",
+        "content": "Si compraras una granja, mirarías su producción a lo largo del tiempo versus el precio de compra — no la comprarías y venderías por los vaivenes de corto plazo del precio agrícola."
+      },
+      {
+        "concept_name": "No Diversificación es la Clave",
+        "content": "Munger sostiene que la sabiduría convencional sobre diversificación está al revés — la no diversificación (concentrarse en pocas grandes ideas) es la clave."
+      },
+      {
+        "concept_name": "Evitar ser Manipulado por Prestamistas y Vendedores",
+        "content": "Munger recomendó fuertemente el libro Influence de Robert Cialdini para aprender a no ser manipulado por prestamistas y vendedores."
+      },
+      {
+        "concept_name": "Las Tres Categorías de Inversión",
+        "content": "Categoría 1: inversiones denominadas en una moneda (una apuesta sobre cómo se comportará el gobierno). Categoría 2: inversiones que no producen nada pero esperás vender más caro (ej. oro — \"solo funciona si todo se va al infierno\"). Categoría 3: inversiones en activos que producen algo — una apuesta sobre lo que ese activo producirá con el tiempo."
+      },
+      {
+        "concept_name": "Comprá el Índice si no Sos Experto",
+        "content": "Buffett: el inversor promedio le iría bien simplemente comprando un fondo indexado a lo largo del tiempo. Munger, en cambio, prefiere poseer Berkshire antes que un índice."
+      },
+      {
+        "concept_name": "Dormite Cada Día Más Inteligente",
+        "content": "Munger: estamos acá para irnos a dormir cada día más inteligentes que cuando nos despertamos. Buffett vivió en la biblioteca pública de Omaha durante cuatro años."
+      },
+      {
+        "concept_name": "Desarrollate a Vos Mismo",
+        "content": "El gran punto de Buffett: desarrollate a vos mismo, encontrá tu pasión y mejorá tus habilidades."
+      },
+      {
+        "concept_name": "Si Pensás en Negocios y Comprás Barato, Ganás Dinero",
+        "content": "\"If you think about business and buy businesses for less than they're worth, you're going to make money.\""
+      },
+      {
+        "concept_name": "Insatisfacción Permanente con lo que Ya Sabés",
+        "content": "\"I think one thing that we have done that's worked best is that we were always dissatisfied with what we already knew, and we wanted to know more. We kept learning, and that's what made it work.\""
+      },
+      {
+        "concept_name": "Pragmatismo: Repetí lo que Funciona",
+        "content": "\"Pragmatism! Do what suits your temperament. Do what works better with experience. Do what works and keep doing it. That's the fundamental algorithm of life—REPEAT WHAT WORKS.\" —Munger"
+      },
+      {
+        "concept_name": "Mirá lo que Significan los Números, no Solo los Números",
+        "content": "\"Look not at what the numbers are but what the numbers mean.\""
+      },
+      {
+        "concept_name": "Si la Gente no se Equivocara Tanto",
+        "content": "\"Warren, if people weren't so often wrong, we wouldn't be so rich.\" —Munger"
+      }
+    ]
+  },
+  {
+    "book_title": "Your Money or Your Life",
+    "author": "Vicki Robin, Joe Dominguez",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "El Dinero es Libertad",
+        "content": "\"Money in the bank means the freedom to leave your job if the boss is intolerable or the benefits have just been yanked.\""
+      },
+      {
+        "concept_name": "Ya no Vivimos la Vida, la Consumimos",
+        "content": "\"If more is better, then what I have is not enough.\" We no longer live life. We consume it."
+      },
+      {
+        "concept_name": "El Dinero es Energía Vital",
+        "content": "El dinero es algo que elegimos cambiar por nuestra energía vital — el tiempo precioso de vida disponible. Cuando vamos a trabajar, estamos cambiando nuestra energía vital por dinero."
+      },
+      {
+        "concept_name": "Rico es Relativo",
+        "content": "\"Men do not desire to be rich, only to be richer than other men.\" En cuanto \"rico\" se vuelve alcanzable para nosotros, deja de ser rico."
+      },
+      {
+        "concept_name": "Trackear Cada Centavo",
+        "content": "La metodología: llevar registro de cada centavo que entra o sale de tu vida. Es la mejor forma de volverte consciente de cómo el dinero realmente entra y sale, en vez de cómo creés que lo hace."
+      },
+      {
+        "concept_name": "El Deseo, no las Calorías",
+        "content": "\"The cause of fat is not really the calories in the food, it's the desires in our mind.\" No se trata de culpa, sino de identificar qué necesitás vs. qué querés, y qué representa \"suficiente\" para vos."
+      },
+      {
+        "concept_name": "Las Preguntas de Fulfillment",
+        "content": "¿Qué querías ser de grande? ¿Qué siempre quisiste hacer y no hiciste? ¿De qué estás realmente orgulloso? ¿Cómo pasarías el año si supieras que morís en uno? ¿Qué te da más fulfillment y cómo se relaciona con el dinero? ¿Qué harías con tu tiempo si no tuvieras que trabajar?"
+      },
+      {
+        "concept_name": "El Significado Viene de Adentro",
+        "content": "\"Why are you doing what you're doing?\" — tu motivación. El significado que le damos a una acción viene de nosotros mismos, no de la acción en sí."
+      },
+      {
+        "concept_name": "¿Está Alineado con tus Valores?",
+        "content": "La pregunta clave ante cualquier gasto de energía vital: ¿este gasto está alineado con mis valores y mi propósito de vida?"
+      },
+      {
+        "concept_name": "Quien Sabe que Tiene Suficiente es Rico",
+        "content": "\"He who knows he has enough is rich.\""
+      },
+      {
+        "concept_name": "Un Día Más Cerca de la Libertad",
+        "content": "El trabajo deja de ser \"otro día, otro dólar\" y pasa a ser un día más cerca de la libertad de los miedos financieros y los fracasos fiscales."
+      },
+      {
+        "concept_name": "Dejá de Tratar de Impresionar a Otros",
+        "content": "Una forma segura de ahorrar dinero: dejar de tratar de impresionar a otras personas. Los demás probablemente están tan ocupados tratando de impresionarte a vos, que en el mejor de los casos ni van a notar tu esfuerzo."
+      },
+      {
+        "concept_name": "Antes de Contratar un Experto",
+        "content": "\"¿Puedo hacer esto yo mismo? ¿Qué me tomaría aprenderlo? ¿Sería una habilidad útil de saber?\""
+      },
+      {
+        "concept_name": "El Checklist para Gastar Menos",
+        "content": "No ir de compras. Vivir dentro de tus posibilidades. Cuidar lo que ya tenés. Usarlo hasta gastarlo. Hacerlo vos mismo. Anticipar tus necesidades. Investigar valor, calidad y durabilidad. Comprarlo más barato. Satisfacer tus necesidades de otra forma."
+      },
+      {
+        "concept_name": "Trabajo = Lo que no Querés Hacer",
+        "content": "El trabajo se define como algo que la gente no quiere hacer, y el dinero como la recompensa que compensa lo desagradable del trabajo. La idea de que todos deben tener un empleo nació recién con la Revolución Industrial."
+      },
+      {
+        "concept_name": "Romper el Vínculo entre Trabajo y Dinero",
+        "content": "\"My job is not the main event of my life.\" Romper el vínculo entre trabajo y dinero te devuelve tu vida."
+      },
+      {
+        "concept_name": "Valorá tu Energía Vital y Aumentá tu Ingreso",
+        "content": "Ya que el único propósito intrínseco del empleo pago es cobrar, tiene sentido revisar si estás cambiando tu preciosa energía vital por lo que realmente vale. Esto se hace por autorrespeto y aprecio por la vida, no por codicia."
+      },
+      {
+        "concept_name": "Ahorro vs. Capital",
+        "content": "Los ahorros son fondos que apartás y no gastás, generalmente para algo puntual. El capital, en cambio, es dinero que hace más dinero — que sigue trabajando para vos y produce ingreso, tal como lo hace tu trabajo."
+      },
+      {
+        "concept_name": "Ganar Ahora para no Tener que Ganar Después",
+        "content": "El objetivo del \"crossover point\": hacer dinero ahora para no tener que hacer dinero después — el punto en que tu capital genera suficiente ingreso pasivo como para cubrir tus gastos."
+      }
+    ]
+  },
+  {
+    "book_title": "Pensar Rápido, Pensar Despacio",
+    "author": "Daniel Kahneman",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "Somos Irracionales por Naturaleza",
+        "content": "Somos irracionales y tomamos decisiones en pocos segundos, lo que muchas veces nos conduce a errores. Las mejores oportunidades de inversión las aprovechan quienes logran mantener la calma y pensar con lógica, en vez de dejarse llevar por sus emociones."
+      },
+      {
+        "concept_name": "Sistema 1: Pensamiento Rápido",
+        "content": "Automático, emocional, no requiere esfuerzo mental, saca conclusiones de forma automática. Es el responsable de crear sensaciones, intuiciones e intenciones erróneas."
+      },
+      {
+        "concept_name": "Sistema 2: Pensamiento Lento",
+        "content": "Reflexivo y racional, responsable de las actividades mentales que exigen más esfuerzo. Suele estar en modo de mínimo esfuerzo y solo se activa ante tareas que lo requieren."
+      },
+      {
+        "concept_name": "Creemos que el Sistema 2 Domina, pero no es Así",
+        "content": "Nos gusta sentir que somos racionales, por eso solemos pensar que el sistema 2 prevalece sobre el 1. Pero en la práctica, el sistema 1 domina la mayoría de nuestras decisiones."
+      },
+      {
+        "concept_name": "Sesgos Cognitivos",
+        "content": "Fenómeno psicológico que altera la información que captamos a través de nuestros sentidos y hace que distorsionemos la realidad."
+      },
+      {
+        "concept_name": "Efecto Halo",
+        "content": "Generalización errónea: tendemos a que nos guste o disguste todo de una persona u objeto en base a una sola cualidad. En inversiones, nos lleva a juzgar un fondo o acción sin conocerlo a fondo. Solución: estudiar en profundidad cualquier inversión antes de comprometer el dinero."
+      },
+      {
+        "concept_name": "Heurística de la Probabilidad",
+        "content": "Damos más valor a la información familiar o con carga emocional (experiencias personales, opinión de gente cercana) que a datos objetivos. Provoca comprar caro con noticias positivas y vender barato en pánico (ej. la burbuja cripto de 2017-2018). Solución: invertir con puntos de entrada y salida definidos de antemano."
+      },
+      {
+        "concept_name": "Sesgo Retrospectivo",
+        "content": "Después de que un evento ya ocurrió, creemos que \"ya lo sabíamos\". Está muy presente en las predicciones de analistas financieros, generando falsa confianza en expertos que \"acertaron\" en el pasado. Es imposible predecir el futuro de las bolsas — hay que invertir en base a la evolución pasada y la situación actual, no en elucubraciones."
+      },
+      {
+        "concept_name": "Efecto Anclaje",
+        "content": "Nos aferramos a un dato conocido como referencia, aunque no tenga lógica (ej. el precio de compra de una acción). Solución: entender el valor intrínseco del negocio (como hacen los value investors) y entender que toda inversión tiene un costo de oportunidad."
+      },
+      {
+        "concept_name": "Efecto Arrastre (Efecto Rebaño)",
+        "content": "Nos dejamos llevar por la opinión de la mayoría, invirtiendo en lo que está de moda sin analizar si es realmente rentable. \"Ser temeroso cuando los otros sean codiciosos, y codicioso cuando los demás son miedosos.\" —Warren Buffett"
+      },
+      {
+        "concept_name": "Sesgo de Confirmación",
+        "content": "Buscamos siempre información que confirme nuestras creencias y rechazamos lo que las contradice, porque no nos gusta reconocer que nos equivocamos. Solución: ser curioso, tener mente abierta, y buscar activamente información que contradiga las propias creencias."
+      },
+      {
+        "concept_name": "Exceso de Confianza",
+        "content": "Después de aciertos pasados, dejamos de basarnos en datos objetivos y empezamos a confiar en la propia opinión e intuición (\"la suerte del principiante\"). Solución: ser humilde, admitir que no se sabe todo, y creer en la educación continua."
+      },
+      {
+        "concept_name": "Aversión a la Pérdida",
+        "content": "El dolor de perder es dos veces mayor que la alegría de ganar — para compensar emocionalmente una pérdida de 100€ haría falta una ganancia de 200€. El miedo a la pérdida hace que arriesguemos más para evitarla que para conseguir una ganancia equivalente, llevando a vender ante la mínima señal de alarma sin evaluar si el riesgo es real."
+      },
+      {
+        "concept_name": "Invertir a Largo Plazo Reduce el Ruido",
+        "content": "A corto plazo hay mucha más volatilidad y ruido de mercado que a largo plazo, donde la tendencia suele tener una dirección mucho más clara y consistente. Por eso conviene invertir con estrategia clara y horizonte largo."
+      }
+    ]
+  },
+  {
+    "book_title": "Same As Ever",
+    "author": "Morgan Housel",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "Invertí en Preparación, no en Predicción",
+        "content": "\"Invest in preparedness, not in prediction.\" Es imposible planear para lo que no podés imaginar — cuanto más creés haber pensado en todo, más te va a sorprender lo que no consideraste."
+      },
+      {
+        "concept_name": "El Mundo Corre por Envidia, no Codicia",
+        "content": "Charlie Munger: el mundo no es impulsado por la codicia, sino por la envidia. Las redes sociales agregan un elemento nuevo: todos pueden ver los estilos de vida (a menudo inflados y falsos) de los demás."
+      },
+      {
+        "concept_name": "Las Mentes Únicas Vienen en Paquete Completo",
+        "content": "La gente que piensa de formas únicas que te gustan, también piensa de formas únicas que no te van a gustar. Lo que admirás de una mente inusual no se puede separar de lo que no querrías para vos mismo."
+      },
+      {
+        "concept_name": "La Gente Quiere Certeza, no Precisión",
+        "content": "\"The fundamental cause of the trouble is that in the modern world the stupid are cocksure while the intelligent are full of doubt.\" —Bertrand Russell. Lo mejor que se puede hacer es tomar decisiones donde las probabilidades estén a tu favor, sabiendo que podés ser inteligente y estar equivocado, o tonto y tener razón."
+      },
+      {
+        "concept_name": "El Mundo se Rompe Cada Diez Años",
+        "content": "Las malas noticias reciben más atención que las buenas porque el pesimismo es seductor y se siente más urgente. Al expandir la atención globalmente, la probabilidad de que algo terrible pase en cualquier momento dado es del 100%. El mundo se rompe, en promedio, una vez cada diez años."
+      },
+      {
+        "concept_name": "Gana la Mejor Historia",
+        "content": "Las historias siempre son más poderosas y persuasivas que las estadísticas frías. Donde hay productos, empresas, carreras, política, conocimiento o cultura, gana la mejor historia — no es lo que decís, sino cómo lo decís y cómo lo presentás."
+      },
+      {
+        "concept_name": "La Calma Siembra la Semilla del Caos",
+        "content": "Cuando una economía es estable, la gente se pone optimista. Cuando se pone optimista, se endeuda. Cuando se endeuda, la economía se vuelve inestable. La falta de recesiones siembra la semilla de la próxima recesión."
+      },
+      {
+        "concept_name": "Demasiado, Muy Pronto, Muy Rápido",
+        "content": "Una buena idea con esteroides rápidamente se convierte en una mala idea. \"You can't make a baby in one month by getting nine women pregnant.\" —Warren Buffett. El crecimiento forzado, acelerado o artificial tiende a salir mal."
+      },
+      {
+        "concept_name": "Paciencia y Escasez",
+        "content": "La mayoría de las grandes cosas de la vida —del amor a la carrera a la inversión— ganan su valor de dos cosas: paciencia para dejar que algo crezca, y escasez para admirar en qué se convirtió."
+      },
+      {
+        "concept_name": "El Estrés Enfoca la Atención",
+        "content": "El estrés enfoca la atención de formas que los buenos tiempos no pueden — mata la procrastinación y la indecisión. Los militares son motores de innovación porque a veces enfrentan problemas tan urgentes que el dinero y el personal dejan de ser obstáculos."
+      },
+      {
+        "concept_name": "La Vida Sin Estrés Suena Bien Hasta que Frena tu Progreso",
+        "content": "Una vida despreocupada y sin estrés suena maravillosa solo hasta que reconocés la motivación y el progreso que impide. Lo que le da sentido a la vida es el propósito, una meta, la batalla — aunque no la ganes."
+      },
+      {
+        "concept_name": "Los Optimistas Racionales",
+        "content": "El mejor plan financiero es ahorrar como pesimista e invertir como optimista. El punto óptimo son los \"optimistas racionales\": los que reconocen que la historia es una cadena constante de problemas, decepciones y contratiempos, pero de todas formas avanzan."
+      },
+      {
+        "concept_name": "Desperdiciar Tiempo Puede Ser Genial",
+        "content": "Mucha gente busca vidas eficientes donde ninguna hora se desperdicia, pero una habilidad subestimada es que perder el tiempo puede ser algo excelente. Un estudio de Stanford mostró que caminar aumenta la creatividad en un 60%."
+      },
+      {
+        "concept_name": "Se Supone que Sea Difícil",
+        "content": "Todo lo que vale la pena perseguir viene con algo de dolor. El truco no es evitar que duela, sino no importarle que duela — soportar el dolor cuando es necesario en vez de asumir que existe un atajo."
+      },
+      {
+        "concept_name": "Merecete lo que Querés",
+        "content": "Munger: \"The safest way to try to get what you want is to try to deserve what you want. It's the golden rule. You want to deliver to the world what you would buy if you were on the other end.\""
+      },
+      {
+        "concept_name": "Las Ventajas Competitivas Mueren",
+        "content": "Casi ninguna ventaja competitiva dura para siempre. Entre las razones: tener razón genera la confianza de creer que no podés estar equivocado, se trabaja duro justamente para no tener que trabajar tan duro después, y parte del éxito se debe a estar en el lugar correcto en el momento correcto."
+      },
+      {
+        "concept_name": "El Pasto se Ve Más Verde con Mentiras de por Medio",
+        "content": "Casi todo se ve mejor desde afuera. Todos están lidiando con problemas que no publicitan, al menos hasta que los conocés bien."
+      },
+      {
+        "concept_name": "Los Incentivos son la Fuerza Más Poderosa",
+        "content": "Cuando los incentivos son una locura, el comportamiento es una locura. La gente puede ser llevada a justificar y defender casi cualquier cosa. \"It is easier to recognize other people's mistakes than our own.\""
+      },
+      {
+        "concept_name": "Nada Persuade Como la Experiencia Propia",
+        "content": "Decir \"voy a ser codicioso cuando otros tengan miedo\" es más fácil decirlo que hacerlo, porque la gente subestima cuánto pueden cambiar sus propias opiniones y metas cuando el mercado se rompe de verdad."
+      },
+      {
+        "concept_name": "El Largo Plazo es una Colección de Cortos Plazos",
+        "content": "Decir \"estoy en esto a largo plazo\" es fácil de decir pero difícil de cumplir. El largo plazo es simplemente una colección de cortos plazos que hay que aguantar."
+      },
+      {
+        "concept_name": "Información Permanente vs. Expirable",
+        "content": "La información permanente es más difícil de notar porque está enterrada en libros, no en titulares. Pero su beneficio es enorme: nunca expira, se acumula, y se compone aprovechando lo que ya aprendiste."
+      },
+      {
+        "concept_name": "No Hay Puntos por Dificultad",
+        "content": "Identificá los principios centrales (generalmente entre tres y doce) que gobiernan un campo — todo lo demás son combinaciones de esos principios. En finanzas, gastar menos de lo que ganás, ahorrar la diferencia y ser paciente es el 90% de lo que hace falta saber."
+      },
+      {
+        "concept_name": "Las Heridas Sanan, las Cicatrices Quedan",
+        "content": "\"What have you experienced that I haven't that makes you believe what you do?\" La gente que tuvo experiencias distintas a las tuyas piensa distinto — tiene otras metas, valores y perspectivas. La mayoría de los debates no son desacuerdos reales, son personas con experiencias distintas hablando una encima de la otra."
+      }
+    ]
+  },
+  {
+    "book_title": "El nuevo vivir del Trading",
+    "author": "Alexander Elder",
+    "category": "Finanzas",
+    "concepts": [
+      {
+        "concept_name": "El Trading como Actividad Intelectual",
+        "content": "\"Sólo puede tener éxito en el trading si lo trata como una actividad intelectual seria. El trading emocional es letal. Para asegurarse el éxito, practique una gestión del capital defensiva.\""
+      },
+      {
+        "concept_name": "Los Tres Pilares del Éxito",
+        "content": "Los tres pilares del éxito en el trading son la psicología, el análisis de los mercados y la gestión del riesgo."
+      },
+      {
+        "concept_name": "Órdenes Limitadas vs de Mercado",
+        "content": "\"El trader promedio gasta tres veces más en deslizamiento que en comisiones. Yo casi siempre uso órdenes limitadas y recurro a las órdenes de mercado sólo para establecer stops. Entre despacio, pero salga rápido.\""
+      },
+      {
+        "concept_name": "Tratar las Pérdidas como un Bebedor Social",
+        "content": "Los traders exitosos tratan las pérdidas igual que los bebedores sociales tratan el alcohol: toman un poco y paran. Si tienen unas cuantas pérdidas seguidas, es señal de que algo no funciona y es momento de tomar un descanso."
+      },
+      {
+        "concept_name": "El Perdedor y el Alcohólico",
+        "content": "\"La mayoría de perdedores oculta sus pérdidas a sí mismos y a los demás. El perdedor es como el alcohólico que no quiere saber cuánto licor ha bebido.\""
+      },
+      {
+        "concept_name": "El Marinero y el Océano",
+        "content": "El marinero no puede controlar el océano, pero puede controlarse a sí mismo, estudiar las corrientes, aprender técnicas y saber cuándo quedarse en puerto. Un trader exitoso hace exactamente lo mismo usando su inteligencia."
+      },
+      {
+        "concept_name": "Cuándo Entrar y Salir",
+        "content": "\"Un trader astuto procura entrar en el mercado durante los períodos tranquilos y retirar beneficios durante los períodos de desenfreno.\""
+      },
+      {
+        "concept_name": "Nunca Vayas Contra la Tendencia",
+        "content": "\"Nunca vaya contra una tendencia. Si una tendencia es ascendente, limítese a comprar o a mantenerse al margen.\""
+      },
+      {
+        "concept_name": "Sigue tu Propio Sistema por Escrito",
+        "content": "Bajo estrés, la naturaleza humana lleva a imitar a los demás e ignorar señales objetivas. Por eso hay que dejar por escrito y seguir estrictamente el sistema de inversión y las reglas de gestión del capital."
+      },
+      {
+        "concept_name": "No Cambies el Plan con Posiciones Abiertas",
+        "content": "\"No podrá cambiar de plan mientras tenga una posición abierta.\""
+      },
+      {
+        "concept_name": "Avidez y Temor",
+        "content": "Los precios suben y bajan no por los números en sí, sino por las variaciones en la intensidad de la avidez y el temor entre compradores y vendedores."
+      },
+      {
+        "concept_name": "Soporte y Resistencia vs Líneas Diagonales",
+        "content": "\"Las líneas de soporte y resistencia horizontales sí que tienen sentido, mientras que las líneas de tendencia en diagonal son subjetivas y abren la puerta al autoengaño.\""
+      },
+      {
+        "concept_name": "Precio y Volumen",
+        "content": "Los precios representan el consenso de valor, mientras que el volumen representa las emociones de los participantes en el mercado. Un volumen alto confirma las tendencias."
+      },
+      {
+        "concept_name": "Múltiples Horizontes Temporales",
+        "content": "La manera correcta de analizar todo mercado es revisar al menos dos horizontes temporales contiguos. Empezar siempre con el más largo para visión estratégica, y pasar al corto plazo para ajustes tácticos."
+      }
+    ]
+  }
+]

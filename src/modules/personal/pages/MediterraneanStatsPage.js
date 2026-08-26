@@ -159,6 +159,7 @@ const Container = styled.div`
   color: #e2e8f0; max-width: 1100px; margin: 0 auto;
   padding: 1.5rem 2rem; animation: ${fadeUp} 0.3s ease-out;
   @media (max-width: 768px) { padding: 1rem; }
+  @media (max-width: 350px) { padding: 0.75rem 0.5rem; }
 `;
 
 const NavBar = styled.div`margin-bottom: 1rem;`;
@@ -176,6 +177,7 @@ const MetricsGrid = styled.div`
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 1rem; margin-bottom: 1.5rem;
   @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
 `;
 const MetricCard = styled.div`
   background: ${p => `${p.$accent}0E`};

@@ -11,6 +11,7 @@ export const PersonalHubProvider = ({ children }) => {
   const [habits, setHabits] = useState([]);
   const [goals, setGoals] = useState([]);
   const [vocabulary, setVocabulary] = useState([]);
+  const [mentalModels, setMentalModels] = useState([]);
   const [fitness, setFitness] = useState({ prs: [], weekly_workouts: 0 });
   const [journals, setJournals] = useState([]);
   const [focusSessions, setFocusSessions] = useState([]);
@@ -21,7 +22,7 @@ export const PersonalHubProvider = ({ children }) => {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [featData, habitsData, goalsData, vocabData, fitnessData, journalsData, focusData] = await Promise.all([
+      const [featData, habitsData, goalsData, vocabData, fitnessData, journalsData, focusData, mentalModelsData] = await Promise.all([
         personalApiService.getFeatures(),
         personalApiService.getHabits(),
         personalApiService.getGoals(),
@@ -29,11 +30,13 @@ export const PersonalHubProvider = ({ children }) => {
         personalApiService.getFitness(),
         personalApiService.getJournals().catch(() => ({ journals: [] })), // Fallback si no existe
         personalApiService.getFocusSessions().catch(() => ({ sessions: [] })),
+        personalApiService.getMentalModels().catch(() => ({ models: [] })),
       ]);
       setFeatures(featData.features || { personal_hub: false, investment_hub: true });
       setHabits(habitsData.habits || []);
       setGoals(goalsData.goals || []);
       setVocabulary(vocabData.vocabulary || []);
+      setMentalModels(mentalModelsData.models || []);
       setFitness(fitnessData || { prs: [], weekly_workouts: 0 });
       setJournals(journalsData.journals || []);
       setFocusSessions(focusData.sessions || []);
@@ -149,6 +152,31 @@ export const PersonalHubProvider = ({ children }) => {
     setVocabulary(prev => prev.filter(w => w.id !== id));
   };
 
+  // ─── Mental Models ─────────────────────────────────────────────────────────
+
+  const createMentalModel = async (modelData) => {
+    const data = await personalApiService.createMentalModel(modelData);
+    setMentalModels(prev => [data.model, ...prev]);
+    return data.model;
+  };
+
+  const updateMentalModel = async (id, modelData) => {
+    const data = await personalApiService.updateMentalModel(id, modelData);
+    setMentalModels(prev => prev.map(m => m.id === id ? data.model : m));
+    return data.model;
+  };
+
+  const reviewMentalModel = async (id, quality) => {
+    const data = await personalApiService.reviewMentalModel(id, quality);
+    setMentalModels(prev => prev.map(m => m.id === id ? data.model : m));
+    return data.model;
+  };
+
+  const deleteMentalModel = async (id) => {
+    await personalApiService.deleteMentalModel(id);
+    setMentalModels(prev => prev.filter(m => m.id !== id));
+  };
+
   // ─── Fitness ───────────────────────────────────────────────────────────────
 
   const updateFitnessPr = async (exercise, record_value) => {
@@ -239,6 +267,11 @@ export const PersonalHubProvider = ({ children }) => {
         updateVocabulary,
         reviewVocabulary,
         deleteVocabulary,
+        mentalModels,
+        createMentalModel,
+        updateMentalModel,
+        reviewMentalModel,
+        deleteMentalModel,
         updateFitnessPr,
         logWorkout,
         createJournal,

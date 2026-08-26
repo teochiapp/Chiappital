@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useStrapiAuth } from '../hooks/useApiTrades';
 import { Lock, ArrowRight } from 'lucide-react';
 import Logo from '../components/common/Logo';
@@ -12,10 +12,12 @@ const LoginContainer = () => {
   const [nameError, setNameError] = useState('');
   const { familyLogin, error, user } = useStrapiAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/select-account';
 
-  // Si ya está logueado, redirigir a selección de cuenta
+  // Si ya está logueado, redirigir a selección de cuenta o a la ruta original
   if (user) {
-    return <Navigate to="/select-account" replace />;
+    return <Navigate to={from} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -34,7 +36,7 @@ const LoginContainer = () => {
     setIsSubmitting(false);
 
     if (result.success) {
-      navigate('/select-account');
+      navigate(from, { replace: true });
     }
   };
 

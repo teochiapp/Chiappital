@@ -233,6 +233,46 @@ const Diversification = ({ openTrades, loading, error }) => {
       }
     });
 
+    // --- EXCEPCIÓN: LÓGICA DE NEUTRALIZACIÓN QQQ/PSQ ---
+    const qqqPerc = companies['QQQ'] || 0;
+    const psqPerc = companies['PSQ'] || 0;
+
+    if (qqqPerc > 0 && psqPerc > 0) {
+      const hedgedAmount = Math.min(qqqPerc, psqPerc);
+      
+      companies['QQQ'] = Math.max(0, qqqPerc - psqPerc);
+      companies['PSQ'] = Math.max(0, psqPerc - qqqPerc);
+      
+      // Si la exposición neta es 0, ocultarlo
+      if (companies['QQQ'] <= 0.001) delete companies['QQQ'];
+      if (companies['PSQ'] <= 0.001) delete companies['PSQ'];
+      
+      // Ajustar países y sectores restando la parte neutralizada
+      const qqqTrade = openTrades.find(t => getTradeAttr(t, 'symbol') === 'QQQ');
+      const psqTrade = openTrades.find(t => getTradeAttr(t, 'symbol') === 'PSQ');
+      
+      if (qqqTrade) {
+        const qqqData = getSymbolData(qqqTrade);
+        if (countries[qqqData.countryName]) countries[qqqData.countryName] -= hedgedAmount;
+        if (sectors[qqqData.sectorName]) sectors[qqqData.sectorName] -= hedgedAmount;
+      }
+      
+      if (psqTrade) {
+        const psqData = getSymbolData(psqTrade);
+        if (countries[psqData.countryName]) countries[psqData.countryName] -= hedgedAmount;
+        if (sectors[psqData.sectorName]) sectors[psqData.sectorName] -= hedgedAmount;
+      }
+      
+      // Limpiar países o sectores si quedaron en 0
+      Object.keys(countries).forEach(k => { if (countries[k] <= 0.001) delete countries[k]; });
+      Object.keys(sectors).forEach(k => { if (sectors[k] <= 0.001) delete sectors[k]; });
+      
+      // Ajustar el totalPortfolio restando el capital neutralizado
+      const neutralizedCapital = hedgedAmount * 2;
+      totalPortfolio -= neutralizedCapital;
+    }
+    // ---------------------------------------------------
+
     // Convertir a arrays para gráficos
     const companiesArray = Object.entries(companies).map(([name, value], index) => ({
       name,

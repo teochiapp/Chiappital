@@ -48,6 +48,14 @@ const FormGrid = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin-bottom: 1rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const FormGroup = styled.div`
@@ -106,6 +114,11 @@ const ButtonGroup = styled.div`
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1.5rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    button { width: 100%; margin-top: 0; }
+  }
 `;
 
 const Button = styled.button`

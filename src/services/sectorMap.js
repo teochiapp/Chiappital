@@ -64,6 +64,6 @@ export const sectorOverrides = {
   SNA: 'Industrial', SPCE: 'Industrial', RKLB: 'Industrial', ASR: 'Industrial',
 
   // --- Criptomonedas (mineras / plays cripto) ---
-  BITF: 'Criptomonedas', HUT: 'Criptomonedas', RIOT: 'Criptomonedas',
+  HUT: 'Criptomonedas', RIOT: 'Criptomonedas',
   IREN: 'Criptomonedas', BMNR: 'Criptomonedas',
 };

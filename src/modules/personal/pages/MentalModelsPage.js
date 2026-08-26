@@ -1,32 +1,31 @@
 import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
-import { BookOpen, Plus, Search, Trash2, CheckCircle, HelpCircle, AlertCircle, RotateCcw, Globe, Edit2 } from 'lucide-react';
+import { BookOpen, Plus, Search, Trash2, CheckCircle, AlertCircle, RotateCcw, Brain, Edit2 } from 'lucide-react';
 import { getUTC3DateString } from '../../../utils/helpers';
 
 const p = {
-  primary: '#3b82f6',
-  primaryLight: '#60a5fa',
+  primary: '#8b5cf6', // Violeta para Mental Models
+  primaryLight: '#a78bfa',
   bgDark: '#0f172a',
   bgCard: '#1e293b',
   textMain: '#f8fafc',
   textMuted: '#94a3b8'
 };
 
-const LanguagesPage = () => {
-  const { vocabulary, createVocabulary, updateVocabulary, reviewVocabulary, deleteVocabulary, loading } = usePersonalHub();
+const MentalModelsPage = () => {
+  const { mentalModels, createMentalModel, updateMentalModel, reviewMentalModel, deleteMentalModel, loading } = usePersonalHub();
   const [activeTab, setActiveTab] = useState('review'); // 'review' | 'list'
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingWord, setEditingWord] = useState(null);
+  const [editingModel, setEditingModel] = useState(null);
 
   // Form states
-  const [newWord, setNewWord] = useState('');
-  const [newTranslation, setNewTranslation] = useState('');
-  const [newNotes, setNewNotes] = useState('');
-  const [editWordText, setEditWordText] = useState('');
-  const [editTranslation, setEditTranslation] = useState('');
-  const [editNotes, setEditNotes] = useState('');
+  const [conceptName, setConceptName] = useState('');
+  const [content, setContent] = useState('');
+  const [bookTitle, setBookTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [category, setCategory] = useState('');
 
   // Flashcard states
   const [isFlipped, setIsFlipped] = useState(false);
@@ -36,101 +35,135 @@ const LanguagesPage = () => {
 
   const todayStr = getUTC3DateString();
 
-  const dueVocab = useMemo(() => {
-    const due = vocabulary.filter(w => {
-      const nextRevStr = w.next_review ? String(w.next_review).split('T')[0] : todayStr;
+  const dueModels = useMemo(() => {
+    // 1. Filtrar las pendientes para hoy
+    const allDue = mentalModels.filter(m => {
+      const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
       return nextRevStr <= todayStr;
     });
 
-    // Mover las tarjetas marcadas como "Otra vez" al final de la cola
-    const normal = due.filter(w => !delayedIds.includes(w.id));
-    const delayed = due.filter(w => delayedIds.includes(w.id));
-    return [...normal, ...delayed];
-  }, [vocabulary, todayStr, delayedIds]);
-
-  const currentWord = dueVocab[currentReviewIndex];
-
-  const handleAddWord = async (e) => {
-    e.preventDefault();
-    if (!newWord.trim() || !newTranslation.trim()) return;
-    await createVocabulary({
-      word: newWord,
-      translation: newTranslation,
-      language: 'portugués',
-      notes: newNotes
+    // 2. Agrupar por libro
+    const byBook = {};
+    allDue.forEach(m => {
+      const b = m.book_title || 'Desconocido';
+      if (!byBook[b]) byBook[b] = [];
+      byBook[b].push(m);
     });
-    setNewWord('');
-    setNewTranslation('');
-    setNewNotes('');
+
+    // 3. Ordenar libros por cantidad de tarjetas pendientes (mayor a menor)
+    const sortedBooks = Object.entries(byBook)
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(entry => entry[0]);
+
+    // 4. Seleccionar máximo 2 libros
+    const selectedBooks = sortedBooks.slice(0, 2);
+
+    // 5. Armar la cola del día
+    let todayQueue = [];
+    selectedBooks.forEach(b => {
+      todayQueue = [...todayQueue, ...byBook[b]];
+    });
+
+    // 5.5 Limitar a ~30 tarjetas (Aprox. 20 minutos de estudio asumiendo 40s por tarjeta)
+    const MAX_CARDS = 30;
+    if (todayQueue.length > MAX_CARDS) {
+      // Tomamos una mezcla o simplemente los primeros 30.
+      // Como ya está ordenado por libro principal, priorizará llenar con los del primer libro.
+      todayQueue = todayQueue.slice(0, MAX_CARDS);
+    }
+
+    // 6. Aplicar la lógica de "Otra vez" (mandar al final de la cola)
+    const normal = todayQueue.filter(m => !delayedIds.includes(m.id));
+    const delayed = todayQueue.filter(m => delayedIds.includes(m.id));
+    return [...normal, ...delayed];
+  }, [mentalModels, todayStr, delayedIds]);
+
+  const currentModel = dueModels[currentReviewIndex];
+
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!conceptName.trim() || !content.trim() || !bookTitle.trim()) return;
+    await createMentalModel({
+      concept_name: conceptName,
+      content,
+      book_title: bookTitle,
+      author,
+      category
+    });
+    setConceptName('');
+    setContent('');
+    setBookTitle('');
+    setAuthor('');
+    setCategory('');
     setShowAddModal(false);
   };
 
-  const handleEditClick = (word) => {
-    setEditingWord(word);
-    setEditWordText(word.word);
-    setEditTranslation(word.translation);
-    setEditNotes(word.notes || '');
+  const handleEditClick = (model) => {
+    setEditingModel(model);
+    setConceptName(model.concept_name);
+    setContent(model.content);
+    setBookTitle(model.book_title);
+    setAuthor(model.author || '');
+    setCategory(model.category || '');
     setShowEditModal(true);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!editWordText.trim() || !editTranslation.trim()) return;
-    await updateVocabulary(editingWord.id, {
-      word: editWordText,
-      translation: editTranslation,
-      notes: editNotes
+    if (!conceptName.trim() || !content.trim() || !bookTitle.trim()) return;
+    await updateMentalModel(editingModel.id, {
+      concept_name: conceptName,
+      content,
+      book_title: bookTitle,
+      author,
+      category
     });
     setShowEditModal(false);
-    setEditingWord(null);
+    setEditingModel(null);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar esta palabra?')) {
-      await deleteVocabulary(id);
+    if (window.confirm('¿Eliminar este concepto?')) {
+      await deleteMentalModel(id);
     }
   };
 
   const handleReview = async (quality) => {
-    if (!currentWord || isProcessing) return;
+    if (!currentModel || isProcessing) return;
 
     setIsProcessing(true);
     setIsFlipped(false);
 
-    const wordId = currentWord.id;
-    const queueLength = dueVocab.length;
+    const modelId = currentModel.id;
+    const queueLength = dueModels.length;
 
     setTimeout(async () => {
-      if (quality === 0 || (quality === 1 && currentWord.repetition === 0)) {
-        // Mover al final: agregar a delayed y avanzar índice
+      if (quality === 0 || (quality === 1 && currentModel.repetition === 0)) {
+        // Mover al final
         setDelayedIds(prev => {
-          if (!prev.includes(wordId)) return [...prev, wordId];
+          if (!prev.includes(modelId)) return [...prev, modelId];
           return prev;
         });
-        // Siempre avanzar al siguiente: la tarjeta actual va al final,
-        // entonces el siguiente índice muestra la próxima tarjeta.
-        // Si era la última (o solo quedaba 1), volvemos al 0.
         setCurrentReviewIndex(prev => {
           if (queueLength <= 1) return 0;
-          // Si estamos en la última posición antes del reordenamiento, volver al inicio
           return (prev + 1) >= queueLength ? 0 : prev;
         });
       } else {
-        // quality 2 o 3: la tarjeta sale de la cola para hoy, avanzar índice
+        // La tarjeta sale de la cola hoy
         setCurrentReviewIndex(prev => {
-          const nextQueue = queueLength - 1; // la tarjeta va a salir
+          const nextQueue = queueLength - 1;
           if (nextQueue <= 0) return 0;
           return prev >= nextQueue ? 0 : prev;
         });
       }
-      await reviewVocabulary(wordId, quality);
+      await reviewMentalModel(modelId, quality);
       setIsProcessing(false);
     }, 300);
   };
 
-  const getIntervalLabel = (quality, word) => {
-    if (!word) return '';
-    let { repetition, interval_days, ease_factor } = word;
+  const getIntervalLabel = (quality, model) => {
+    if (!model) return '';
+    let { repetition, interval_days, ease_factor } = model;
     interval_days = interval_days || 0;
     ease_factor = ease_factor || 2.5;
 
@@ -153,55 +186,49 @@ const LanguagesPage = () => {
   };
 
   if (loading) {
-    return <Container><p>Cargando idiomas...</p></Container>;
+    return <Container><p>Cargando Mental Models...</p></Container>;
   }
 
   return (
     <Container>
       <TopSection>
         <PageTitle>
-          <Globe size={28} color={p.primaryLight} /> Idiomas
+          <Brain size={28} color={p.primaryLight} /> Mental Models
         </PageTitle>
-        <PageSubtitle>Domina nuevos vocabularios con repetición espaciada</PageSubtitle>
+        <PageSubtitle>Ideas, conceptos y modelos mentales extraídos de libros</PageSubtitle>
       </TopSection>
-
-      <StatusSection>
-        <LangBadge $active={true}>
-          <LangFlag>🇬🇧</LangFlag> Inglés (Fluido)
-        </LangBadge>
-        <LangBadge $active={true}>
-          <LangFlag>🇦🇷</LangFlag> Español (Nativo)
-        </LangBadge>
-        <LangBadge $active={true} $learning>
-          <LangFlag>🇧🇷</LangFlag> Portugués (Aprendiendo)
-        </LangBadge>
-      </StatusSection>
 
       <Tabs>
         <Tab $active={activeTab === 'review'} onClick={() => { setActiveTab('review'); setIsFlipped(false); }}>
-          Modo Repaso ({dueVocab.length})
+          Sesión de Estudio ({dueModels.length})
         </Tab>
         <Tab $active={activeTab === 'list'} onClick={() => setActiveTab('list')}>
-          Mi Vocabulario ({vocabulary.length})
+          Biblioteca ({mentalModels.length})
         </Tab>
       </Tabs>
 
       {activeTab === 'review' && (
         <ReviewContainer>
-          {dueVocab.length > 0 ? (
+          {dueModels.length > 0 ? (
             <FlashcardWrapper>
               <Flashcard $flipped={isFlipped} onClick={() => {
                 if (!isProcessing) setIsFlipped(true);
               }}>
                 <CardFront>
-                  <CardLabel>¿Qué significa?</CardLabel>
-                  <CardWord>{currentWord.word}</CardWord>
-                  <CardHint>Toca para ver la respuesta</CardHint>
+                  <CardLabel>Concepto</CardLabel>
+                  <CardWord>{currentModel.concept_name}</CardWord>
+                  <CardHint>Toca para ver el contenido</CardHint>
                 </CardFront>
                 <CardBack>
-                  <CardLabel>Traducción</CardLabel>
-                  <CardTranslation>{currentWord.translation}</CardTranslation>
-                  {currentWord.notes && <CardNotes>{currentWord.notes}</CardNotes>}
+                  <CardContentContainer>
+                    <CardTranslation>{currentModel.content}</CardTranslation>
+                    <BookReference>
+                      <BookOpen size={14} style={{ marginRight: '6px', opacity: 0.7 }} />
+                      <span>{currentModel.book_title}</span>
+                      {currentModel.author && <span> - {currentModel.author}</span>}
+                    </BookReference>
+                    {currentModel.category && <CategoryBadge>{currentModel.category}</CategoryBadge>}
+                  </CardContentContainer>
                 </CardBack>
               </Flashcard>
 
@@ -209,19 +236,19 @@ const LanguagesPage = () => {
                 <ActionButtons>
                   <EvalBtn $color="#ef4444" onClick={(e) => { e.stopPropagation(); handleReview(0); }}>
                     <RotateCcw size={18} />
-                    <span>Otra vez<br /><small>({getIntervalLabel(0, currentWord)})</small></span>
+                    <span>Otra vez<br /><small>({getIntervalLabel(0, currentModel)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#f59e0b" onClick={(e) => { e.stopPropagation(); handleReview(1); }}>
                     <AlertCircle size={18} />
-                    <span>Difícil<br /><small>({getIntervalLabel(1, currentWord)})</small></span>
+                    <span>Difícil<br /><small>({getIntervalLabel(1, currentModel)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#10b981" onClick={(e) => { e.stopPropagation(); handleReview(2); }}>
                     <CheckCircle size={18} />
-                    <span>Bien<br /><small>({getIntervalLabel(2, currentWord)})</small></span>
+                    <span>Bien<br /><small>({getIntervalLabel(2, currentModel)})</small></span>
                   </EvalBtn>
-                  <EvalBtn $color="#3b82f6" onClick={(e) => { e.stopPropagation(); handleReview(3); }}>
+                  <EvalBtn $color="#8b5cf6" onClick={(e) => { e.stopPropagation(); handleReview(3); }}>
                     <CheckCircle size={18} />
-                    <span>Fácil<br /><small>({getIntervalLabel(3, currentWord)})</small></span>
+                    <span>Fácil<br /><small>({getIntervalLabel(3, currentModel)})</small></span>
                   </EvalBtn>
                 </ActionButtons>
               )}
@@ -229,8 +256,8 @@ const LanguagesPage = () => {
           ) : (
             <AllDoneState>
               <CheckCircle size={48} color="#10b981" />
-              <h3>¡Todo al día!</h3>
-              <p>No tienes más palabras para repasar hoy.</p>
+              <h3>¡Sesión Completada!</h3>
+              <p>No tienes más conceptos pendientes de los libros seleccionados para hoy.</p>
             </AllDoneState>
           )}
         </ReviewContainer>
@@ -241,10 +268,18 @@ const LanguagesPage = () => {
           <ListHeader>
             <SearchBox>
               <Search size={16} />
-              <input type="text" placeholder="Buscar palabras..." disabled />
+              <input type="text" placeholder="Buscar conceptos..." disabled />
             </SearchBox>
-            <AddBtn onClick={() => setShowAddModal(true)}>
-              <Plus size={16} /> Nueva Palabra
+            <AddBtn onClick={() => {
+              setConceptName('');
+              setContent('');
+              setBookTitle('');
+              setAuthor('');
+              setCategory('');
+              setEditingModel(null);
+              setShowAddModal(true);
+            }}>
+              <Plus size={16} /> Nueva Tarjeta
             </AddBtn>
           </ListHeader>
 
@@ -252,29 +287,29 @@ const LanguagesPage = () => {
             <Table>
               <thead>
                 <tr>
-                  <th>Palabra</th>
-                  <th>Traducción</th>
+                  <th>Concepto</th>
+                  <th>Libro</th>
                   <th>Próximo Repaso</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {vocabulary.map(word => (
-                  <tr key={word.id}>
-                    <td><strong>{word.word}</strong></td>
-                    <td>{word.translation}</td>
-                    <td>{word.next_review ? String(word.next_review).split('T')[0].split('-').reverse().join('/') : ''}</td>
+                {mentalModels.map(model => (
+                  <tr key={model.id}>
+                    <td><strong>{model.concept_name}</strong></td>
+                    <td>{model.book_title}</td>
+                    <td>{model.next_review ? String(model.next_review).split('T')[0].split('-').reverse().join('/') : ''}</td>
                     <td>
                       <ActionButtonsRow>
-                        <EditBtn onClick={() => handleEditClick(word)}><Edit2 size={16} /></EditBtn>
-                        <DelBtn onClick={() => handleDelete(word.id)}><Trash2 size={16} /></DelBtn>
+                        <EditBtn onClick={() => handleEditClick(model)}><Edit2 size={16} /></EditBtn>
+                        <DelBtn onClick={() => handleDelete(model.id)}><Trash2 size={16} /></DelBtn>
                       </ActionButtonsRow>
                     </td>
                   </tr>
                 ))}
-                {vocabulary.length === 0 && (
+                {mentalModels.length === 0 && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>No hay vocabulario guardado.</td>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>No hay conceptos guardados.</td>
                   </tr>
                 )}
               </tbody>
@@ -283,52 +318,36 @@ const LanguagesPage = () => {
         </ListContainer>
       )}
 
-      {showAddModal && (
-        <ModalOverlay onClick={() => setShowAddModal(false)}>
+      {(showAddModal || showEditModal) && (
+        <ModalOverlay onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>
           <ModalContent onClick={e => e.stopPropagation()}>
-            <ModalTitle>Agregar Palabra</ModalTitle>
-            <form onSubmit={handleAddWord}>
+            <ModalTitle>{showEditModal ? 'Editar Concepto' : 'Nueva Tarjeta'}</ModalTitle>
+            <form onSubmit={showEditModal ? handleEditSubmit : handleAdd}>
               <FormGroup>
-                <label>Palabra (Portugués)</label>
-                <Input value={newWord} onChange={e => setNewWord(e.target.value)} required autoFocus />
+                <label>Concepto / Título *</label>
+                <Input value={conceptName} onChange={e => setConceptName(e.target.value)} required autoFocus placeholder="Ej. Circle of Competence" />
               </FormGroup>
               <FormGroup>
-                <label>Traducción (Español)</label>
-                <Input value={newTranslation} onChange={e => setNewTranslation(e.target.value)} required />
+                <label>Contenido (Cita, idea, frase) *</label>
+                <Input as="textarea" rows="4" value={content} onChange={e => setContent(e.target.value)} required placeholder="Know what you know and know what you don't know..." />
               </FormGroup>
+              <FormRow>
+                <FormGroup style={{ flex: 1 }}>
+                  <label>Libro *</label>
+                  <Input value={bookTitle} onChange={e => setBookTitle(e.target.value)} required placeholder="Ej. Poor Charlie's Almanack" />
+                </FormGroup>
+                <FormGroup style={{ flex: 1 }}>
+                  <label>Autor</label>
+                  <Input value={author} onChange={e => setAuthor(e.target.value)} placeholder="Ej. Charlie Munger" />
+                </FormGroup>
+              </FormRow>
               <FormGroup>
-                <label>Notas o Ejemplos (Opcional)</label>
-                <Input as="textarea" rows="2" value={newNotes} onChange={e => setNewNotes(e.target.value)} />
+                <label>Categoría Temática</label>
+                <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="Ej. Inversión" />
               </FormGroup>
               <ModalActions>
-                <CancelBtn type="button" onClick={() => setShowAddModal(false)}>Cancelar</CancelBtn>
+                <CancelBtn type="button" onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>Cancelar</CancelBtn>
                 <SaveBtn type="submit">Guardar</SaveBtn>
-              </ModalActions>
-            </form>
-          </ModalContent>
-        </ModalOverlay>
-      )}
-
-      {showEditModal && (
-        <ModalOverlay onClick={() => setShowEditModal(false)}>
-          <ModalContent onClick={e => e.stopPropagation()}>
-            <ModalTitle>Editar Palabra</ModalTitle>
-            <form onSubmit={handleEditSubmit}>
-              <FormGroup>
-                <label>Palabra (Portugués)</label>
-                <Input value={editWordText} onChange={e => setEditWordText(e.target.value)} required autoFocus />
-              </FormGroup>
-              <FormGroup>
-                <label>Traducción (Español)</label>
-                <Input value={editTranslation} onChange={e => setEditTranslation(e.target.value)} required />
-              </FormGroup>
-              <FormGroup>
-                <label>Notas o Ejemplos (Opcional)</label>
-                <Input as="textarea" rows="2" value={editNotes} onChange={e => setEditNotes(e.target.value)} />
-              </FormGroup>
-              <ModalActions>
-                <CancelBtn type="button" onClick={() => setShowEditModal(false)}>Cancelar</CancelBtn>
-                <SaveBtn type="submit">Guardar Cambios</SaveBtn>
               </ModalActions>
             </form>
           </ModalContent>
@@ -355,14 +374,6 @@ const Container = styled.div`
   @media (max-width: 768px) {
     padding: 1.25rem 1rem;
   }
-
-  @media (max-width: 480px) {
-    padding: 1rem 0.75rem;
-  }
-
-  @media (max-width: 350px) {
-    padding: 0.75rem 0.5rem;
-  }
 `;
 
 const TopSection = styled.div`
@@ -376,47 +387,10 @@ const PageTitle = styled.h1`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-
-  @media (max-width: 480px) {
-    font-size: 1.3rem;
-  }
-
-  @media (max-width: 350px) {
-    font-size: 1.1rem;
-  }
 `;
 
 const PageSubtitle = styled.p`
   color: ${p.textMuted};
-`;
-
-const StatusSection = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-`;
-
-const LangBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: ${props => props.$learning ? `${p.primary}20` : 'rgba(255,255,255,0.05)'};
-  border: 1px solid ${props => props.$learning ? p.primary : 'rgba(255,255,255,0.1)'};
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.85rem;
-  color: ${props => props.$learning ? p.primaryLight : '#fff'};
-
-  @media (max-width: 350px) {
-    font-size: 0.78rem;
-    padding: 0.3rem 0.5rem;
-  }
-`;
-
-const LangFlag = styled.span`
-  font-size: 1.2rem;
 `;
 
 const Tabs = styled.div`
@@ -468,7 +442,7 @@ const FlashcardWrapper = styled.div`
 
 const Flashcard = styled.div`
   width: 100%;
-  aspect-ratio: 4/3;
+  min-height: 350px;
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
@@ -489,19 +463,20 @@ const CardFace = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 2.5rem;
   text-align: center;
   background: ${p.bgCard};
   border: 1px solid rgba(255,255,255,0.05);
 `;
 
 const CardFront = styled(CardFace)`
-  /* Front is default */
 `;
 
 const CardBack = styled(CardFace)`
   transform: rotateY(180deg);
   background: linear-gradient(135deg, ${p.bgCard}, #1e293b);
+  align-items: flex-start;
+  text-align: left;
 `;
 
 const CardLabel = styled.span`
@@ -517,14 +492,6 @@ const CardWord = styled.h2`
   font-family: 'Unbounded', sans-serif;
   margin: 0;
   color: #fff;
-
-  @media (max-width: 480px) {
-    font-size: 1.6rem;
-  }
-
-  @media (max-width: 350px) {
-    font-size: 1.3rem;
-  }
 `;
 
 const CardHint = styled.p`
@@ -534,25 +501,40 @@ const CardHint = styled.p`
   color: ${p.textMuted};
 `;
 
-const CardTranslation = styled.h2`
-  font-size: 1.8rem;
-  font-family: 'Unbounded', sans-serif;
-  margin: 0 0 1rem 0;
-  color: ${p.primaryLight};
-
-  @media (max-width: 480px) {
-    font-size: 1.4rem;
-  }
-
-  @media (max-width: 350px) {
-    font-size: 1.2rem;
-  }
+const CardContentContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 `;
 
-const CardNotes = styled.p`
-  font-size: 1rem;
+const CardTranslation = styled.h2`
+  font-size: 1.3rem;
+  font-family: 'Unbounded', sans-serif;
+  margin: 0 0 2rem 0;
+  color: ${p.primaryLight};
+  line-height: 1.5;
+`;
+
+const BookReference = styled.div`
+  font-size: 0.95rem;
   color: #cbd5e1;
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+`;
+
+const CategoryBadge = styled.span`
+  display: inline-block;
+  background: rgba(139, 92, 246, 0.2);
+  color: ${p.primaryLight};
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  align-self: flex-start;
 `;
 
 const ActionButtons = styled.div`
@@ -563,9 +545,8 @@ const ActionButtons = styled.div`
   animation: ${fadeUp} 0.3s ease-out;
   width: 100%;
 
-  @media (max-width: 350px) {
+  @media (max-width: 480px) {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
   }
 `;
 
@@ -712,7 +693,7 @@ const EditBtn = styled.button`
   border-radius: 4px;
   
   &:hover {
-    background: rgba(96, 165, 250, 0.1);
+    background: rgba(167, 139, 250, 0.1);
   }
 `;
 
@@ -741,11 +722,6 @@ const ModalOverlay = styled.div`
   z-index: 1000;
   backdrop-filter: blur(4px);
   padding: 1rem;
-
-  @media (max-width: 480px) {
-    padding: 0;
-    align-items: flex-end;
-  }
 `;
 
 const ModalContent = styled.div`
@@ -753,18 +729,8 @@ const ModalContent = styled.div`
   padding: 2rem;
   border-radius: 16px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   border: 1px solid rgba(255,255,255,0.1);
-
-  @media (max-width: 480px) {
-    border-radius: 16px 16px 0 0;
-    padding: 1.5rem;
-    max-width: 100%;
-  }
-
-  @media (max-width: 350px) {
-    padding: 1.25rem 1rem;
-  }
 `;
 
 const ModalTitle = styled.h2`
@@ -782,6 +748,16 @@ const FormGroup = styled.div`
   }
 `;
 
+const FormRow = styled.div`
+  display: flex;
+  gap: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0;
+  }
+`;
+
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
@@ -791,6 +767,7 @@ const Input = styled.input`
   color: #fff;
   font-family: inherit;
   outline: none;
+  resize: vertical;
   
   &:focus {
     border-color: ${p.primary};
@@ -806,15 +783,13 @@ const ModalActions = styled.div`
 
 const CancelBtn = styled.button`
   background: transparent;
+  border: none;
   color: ${p.textMuted};
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
   cursor: pointer;
+  padding: 0.5rem 1rem;
   
   &:hover {
     color: #fff;
-    background: rgba(255,255,255,0.05);
   }
 `;
 
@@ -822,7 +797,7 @@ const SaveBtn = styled.button`
   background: ${p.primary};
   color: #fff;
   border: none;
-  padding: 0.5rem 1.2rem;
+  padding: 0.6rem 1.5rem;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
@@ -832,4 +807,4 @@ const SaveBtn = styled.button`
   }
 `;
 
-export default LanguagesPage;
+export default MentalModelsPage;

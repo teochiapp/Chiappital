@@ -60,7 +60,7 @@ router.get('/snapshot', async (req, res) => {
 // GET /api/market/sync-now (opcional, para forzar)
 router.post('/sync-now', async (req, res) => {
   // Disparamos asíncronamente
-  runSync().catch(e => console.error('Error in manual sync:', e));
+  runSync('force').catch(e => console.error('Error in manual sync:', e));
   res.json({ message: 'Sync started' });
 });
 
@@ -71,6 +71,20 @@ router.get('/logs', (req, res) => {
     logs: logger.getLogs(),
     metrics: logger.getMetrics()
   });
+});
+
+// POST /api/market/truncate-snapshot
+router.post('/truncate-snapshot', async (req, res) => {
+  try {
+    const db = getPool();
+    await db.query('TRUNCATE TABLE market_snapshot');
+    const logger = require('../utils/logger');
+    logger.info('System', 'market_snapshot table truncated manually.');
+    res.json({ message: 'Table truncated successfully' });
+  } catch (error) {
+    console.error('Error truncating table:', error);
+    res.status(500).json({ error: 'Error truncating table' });
+  }
 });
 
 module.exports = router;

@@ -348,6 +348,27 @@ async function initializeDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  // Modelos Mentales
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS mental_models (
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      user_id       INT NOT NULL,
+      concept_name  VARCHAR(255) NOT NULL,
+      content       TEXT NOT NULL,
+      book_title    VARCHAR(255) NOT NULL,
+      author        VARCHAR(255) DEFAULT NULL,
+      category      VARCHAR(100) DEFAULT NULL,
+      repetition    INT DEFAULT 0,
+      ease_factor   FLOAT DEFAULT 2.5,
+      interval_days INT DEFAULT 0,
+      next_review   DATE,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_user_mental_models (user_id, next_review)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   // Journals
   await db.execute(`
     CREATE TABLE IF NOT EXISTS journals (
@@ -710,7 +731,7 @@ async function initializeDatabase() {
   try {
     await db.execute(`
       ALTER TABLE market_snapshot 
-      ADD COLUMN market_regime VARCHAR(20) DEFAULT NULL AFTER sector_trend;
+      ADD COLUMN market_regime VARCHAR(20) DEFAULT NULL AFTER rs_updated_at;
     `);
     console.log('✅ Migración: Columna market_regime agregada a market_snapshot');
   } catch (error) {

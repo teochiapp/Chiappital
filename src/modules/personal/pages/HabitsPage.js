@@ -22,6 +22,14 @@ const WEEKDAYS = [
   { val: 0, label: 'D' },
 ];
 
+const parseHabitDays = (days) => {
+  let parsed = days;
+  while (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch(e) { break; }
+  }
+  return Array.isArray(parsed) ? parsed : [0,1,2,3,4,5,6];
+};
+
 const HabitsPage = () => {
   const { habits, loading, createHabit, updateHabit, deleteHabit, toggleHabit } = usePersonalHub();
   const [showForm, setShowForm] = useState(false);
@@ -47,7 +55,7 @@ const HabitsPage = () => {
 
   const toggleDay = (val) => {
     setFormData(prev => {
-      const arr = prev.days_of_week || [];
+      const arr = parseHabitDays(prev.days_of_week);
       if (arr.includes(val)) return { ...prev, days_of_week: arr.filter(d => d !== val) };
       return { ...prev, days_of_week: [...arr, val] };
     });
@@ -57,10 +65,7 @@ const HabitsPage = () => {
   const getStreak = (habit) => {
     let streak = 0;
     const d = new Date();
-    let days = habit.days_of_week || [0,1,2,3,4,5,6];
-    if (typeof days === 'string') {
-      try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
-    }
+    const days = parseHabitDays(habit.days_of_week);
     // Fecha de creación (solo la parte de fecha)
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     
@@ -90,10 +95,7 @@ const HabitsPage = () => {
   const getCompletionRate = (habit) => {
     let completed = 0;
     let scheduled = 0;
-    let days = habit.days_of_week || [0,1,2,3,4,5,6];
-    if (typeof days === 'string') {
-      try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
-    }
+    const days = parseHabitDays(habit.days_of_week);
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     for (let i = 0; i < 30; i++) {
       const d = new Date();
@@ -144,10 +146,7 @@ const HabitsPage = () => {
   const handleEdit = (habit) => {
     setEditingHabit(habit);
     
-    let parsedDays = habit.days_of_week;
-    if (typeof parsedDays === 'string') {
-      try { parsedDays = JSON.parse(parsedDays); } catch(e) { parsedDays = [0,1,2,3,4,5,6]; }
-    }
+    const parsedDays = parseHabitDays(habit.days_of_week);
 
     setFormData({ 
       name: habit.name, 
@@ -275,11 +274,7 @@ const HabitsPage = () => {
             });
 
             const getHabitDays = (h) => {
-              let days = h.days_of_week || [0,1,2,3,4,5,6];
-              if (typeof days === 'string') {
-                try { days = JSON.parse(days); } catch(e) { days = [0,1,2,3,4,5,6]; }
-              }
-              return days;
+              return parseHabitDays(h.days_of_week);
             };
 
             const habitsToday = filteredHabits.filter(h => getHabitDays(h).includes(selectedDayOfWeek));
@@ -360,10 +355,7 @@ const HabitsPage = () => {
                 const dayOfWeek = dDate.getDay();
                 // Solo incluir hábitos que ya existían en esa fecha
                 const scheduledHabits = habits.filter(h => {
-                  let hDays = h.days_of_week || [0,1,2,3,4,5,6];
-                  if (typeof hDays === 'string') {
-                    try { hDays = JSON.parse(hDays); } catch(e) { hDays = [0,1,2,3,4,5,6]; }
-                  }
+                  const hDays = parseHabitDays(h.days_of_week);
                   if (!hDays.includes(dayOfWeek)) return false;
                   if (h.created_at) {
                     const createdDate = h.created_at.split('T')[0];
@@ -632,6 +624,10 @@ const CalendarGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+
+  @media (max-width: 350px) {
+    gap: 2px;
+  }
 `;
 
 const WeekdayLabel = styled.div`
@@ -640,6 +636,10 @@ const WeekdayLabel = styled.div`
   color: #475569;
   font-weight: 600;
   padding: 0.25rem 0;
+
+  @media (max-width: 350px) {
+    font-size: 0.65rem;
+  }
 `;
 
 const CalDay = styled.div`
@@ -882,6 +882,11 @@ const DateNav = styled.div`
   background: #0f172a;
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: 12px;
+
+  @media (max-width: 350px) {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
 `;
 
 const DateNavBtn = styled.button`
@@ -917,6 +922,12 @@ const DateNavLabel = styled.div`
   justify-content: center;
   &:hover {
     background: rgba(255,255,255,0.05);
+  }
+
+  @media (max-width: 350px) {
+    font-size: 0.85rem;
+    min-width: 110px;
+    padding: 0.3rem 0.5rem;
   }
 `;
 

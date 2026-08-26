@@ -21,6 +21,7 @@ import LanguagesPage from './modules/personal/pages/LanguagesPage';
 import FitnessPage from './modules/personal/pages/FitnessPage';
 import JournalPage from './modules/personal/pages/JournalPage';
 import FocusSessionsPage from './modules/personal/pages/FocusSessionsPage';
+import MentalModelsPage from './modules/personal/pages/MentalModelsPage';
 import { PersonalHubProvider } from './context/PersonalHubContext';
 
 // Mediterranean Hub
@@ -150,6 +151,7 @@ function App() {
                                 <Route path="fitness" element={<FitnessPage />} />
                                 <Route path="journal" element={<JournalPage />} />
                                 <Route path="focus" element={<FocusSessionsPage />} />
+                                <Route path="mental-models" element={<MentalModelsPage />} />
 
                                 {/* ─── Subrutas de Recetario Mediterráneo ─── */}
                                 <Route path="mediterranean" element={<MediterraneanPage />} />

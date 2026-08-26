@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
   Flame, Target, CheckCircle2, Circle, TrendingUp, BookOpen,
-  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock
+  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock, Brain
 } from 'lucide-react';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { colors } from '../../../styles/colors';
@@ -258,6 +258,18 @@ const PersonalHub = () => {
           <ModuleIcon color="#10b981"><Clock size={28} /></ModuleIcon>
           <ModuleName>Focus Session</ModuleName>
           <ModuleDesc>Sesiones de enfoque con música</ModuleDesc>
+          <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
+        </ModuleCard>
+        <ModuleCard onClick={() => navigate('/personal/mental-models')}>
+          <ModuleIcon color="#8b5cf6"><Brain size={28} /></ModuleIcon>
+          <ModuleName>Mental Models</ModuleName>
+          <ModuleDesc>Ideas, conceptos y modelos de estudio</ModuleDesc>
+          <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
+        </ModuleCard>
+        <ModuleCard onClick={() => navigate('/personal/mediterranean')}>
+          <ModuleIcon color="#8FAF35"><Leaf size={28} /></ModuleIcon>
+          <ModuleName>Recetario Mediterráneo</ModuleName>
+          <ModuleDesc>Tus recetas, lista de compras y estadísticas</ModuleDesc>
           <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
         </ModuleCard>
       </ModuleGrid>

@@ -157,7 +157,7 @@ class SymbolSearchService {
       { symbol: 'BIDU', name: 'Baidu Inc.', sector: 'Software', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIIB', name: 'Biogen Inc.', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIOX', name: 'Bioceres Crop Solutions Corp.', sector: 'General', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BITF', name: 'Bitfarms Ltd.', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+
       { symbol: 'BK', name: 'The Bank Of New York Mellon Corp.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BKNG', name: 'Booking', sector: 'Consumo Discrecional', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
@@ -463,7 +463,7 @@ class SymbolSearchService {
       { symbol: 'BIDU', name: 'Baidu Inc.', sector: 'Software', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIIB', name: 'Biogen Inc.', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIOX', name: 'Bioceres Crop Solutions Corp.', sector: 'General', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BITF', name: 'Bitfarms Ltd.', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+
       { symbol: 'BK', name: 'The Bank Of New York Mellon Corp.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BKNG', name: 'Booking', sector: 'Consumo Discrecional', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
@@ -963,7 +963,7 @@ class SymbolSearchService {
       { symbol: 'BHP', name: 'Bhp Group Ltd', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIIB', name: 'Biogen Inc.', sector: 'Salud', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BIOX', name: 'Bioceres Crop Solutions Corp.', sector: 'General', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
-      { symbol: 'BITF', name: 'Bitfarms Ltd.', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+
       { symbol: 'BK', name: 'The Bank Of New York Mellon Corp.', sector: 'Financiero', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BKR', name: 'Baker Hughes Co', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'BMNR', name: 'BANCO COMAFI SA CEDEAR EACH 8 R', sector: 'Criptomonedas', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },

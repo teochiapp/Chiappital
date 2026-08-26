@@ -466,6 +466,11 @@ const EditorHeader = styled.div`
   @media (max-width: 480px) {
     padding: 0.75rem 1rem;
   }
+  
+  @media (max-width: 350px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const DateDisplay = styled.div`
@@ -699,6 +704,10 @@ const HistoryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const HistoryCard = styled.div`
@@ -779,6 +788,14 @@ const BookView = styled(motion.div)`
     width: 2px;
     background: rgba(255,255,255,0.05);
   }
+
+  @media (max-width: 480px) {
+    padding: 1.5rem;
+    border-radius: 8px 16px 16px 8px;
+  }
+  @media (max-width: 350px) {
+    padding: 1rem;
+  }
 `;
 
 const BookHeader = styled.div`
@@ -788,6 +805,12 @@ const BookHeader = styled.div`
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 `;
 
 const BackButton = styled.button`

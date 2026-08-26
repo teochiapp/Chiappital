@@ -41,10 +41,25 @@ const MediterraneanRecipesPage = () => {
 
   const filteredRecipes = useMemo(() => {
     return recipes.filter(r => {
+      // Helper para parsear JSON si viene como string de forma segura
+      const parseArray = (val) => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+          try { return JSON.parse(val); } catch(e) { return []; }
+        }
+        return [];
+      };
+      const rTags = parseArray(r.tags);
+      const rIngredients = parseArray(r.ingredients);
+      const rHealthTags = parseArray(r.health_tags);
+
       // Búsqueda
       const q = search.toLowerCase();
-      const matchesSearch = !q || (r.name && r.name.toLowerCase().includes(q)) ||
-        (r.tags && r.tags.some(t => t.toLowerCase().includes(q)));
+      const matchesSearch = !q || 
+        (r.name && r.name.toLowerCase().includes(q)) ||
+        rTags.some(t => typeof t === 'string' && t.toLowerCase().includes(q)) ||
+        rIngredients.some(i => i.name && i.name.toLowerCase().includes(q));
+        
       if (!matchesSearch) return false;
 
       // Categoría
@@ -60,7 +75,7 @@ const MediterraneanRecipesPage = () => {
         if (total > parseInt(filters.maxTime)) return false;
       }
       if (filters.healthTags.length > 0) {
-        const hasAllTags = filters.healthTags.every(t => (r.health_tags || []).includes(t));
+        const hasAllTags = filters.healthTags.every(t => rHealthTags.includes(t));
         if (!hasAllTags) return false;
       }
 

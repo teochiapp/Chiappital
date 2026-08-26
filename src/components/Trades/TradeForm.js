@@ -112,6 +112,11 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    button { width: 100%; margin-top: 0; }
+  }
 `;
 
 const Button = styled.button`

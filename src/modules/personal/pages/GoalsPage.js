@@ -374,6 +374,14 @@ const StatsRow = styled.div`
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 480px) {
+    gap: 0.75rem;
+  }
+  @media (max-width: 350px) {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
 `;
 
 const QuickStat = styled.div`
@@ -383,6 +391,15 @@ const QuickStat = styled.div`
   padding: 1rem 1.5rem;
   min-width: 130px;
   flex: 1;
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1rem;
+    min-width: 100px;
+  }
+  @media (max-width: 350px) {
+    padding: 0.6rem 0.75rem;
+    min-width: 80px;
+  }
 `;
 
 const TWYBanner = styled.div`
@@ -398,6 +415,12 @@ const TWYHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.2rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 `;
 
 const TWYTitle = styled.div`
@@ -446,6 +469,12 @@ const TWYProgressStats = styled.div`
   justify-content: space-between;
   font-size: 0.85rem;
   color: #94a3b8;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+  }
 `;
 
 const QStatNum = styled.div`
@@ -562,6 +591,7 @@ const ProgressFill = styled.div`
 const StatusRow = styled.div`
   display: flex;
   gap: 0.4rem;
+  flex-wrap: wrap;
 `;
 
 const StatusBtn = styled.button`

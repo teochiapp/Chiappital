@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading, error } = useStrapiAuth();
+  const location = useLocation();
 
   useEffect(() => {
     console.log('🛡️ ProtectedRoute - Estado actual:', { 
@@ -42,7 +43,7 @@ const ProtectedRoute = ({ children }) => {
   // Si no hay usuario autenticado, redirigir al Login
   if (!user) {
     console.log('🚫 ProtectedRoute - No hay usuario, redirigiendo a /login');
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   console.log('✅ ProtectedRoute - Usuario autenticado, mostrando contenido');

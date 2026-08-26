@@ -412,6 +412,168 @@ router.delete('/vocabulary/:id', async (req, res) => {
     res.status(500).json({ error: { message: 'Error interno del servidor.' } });
   }
 });
+
+// ─── Mental Models ───────────────────────────────────────────────────────────
+
+// GET /api/personal/mental-models
+router.get('/mental-models', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const [models] = await db.execute(
+      'SELECT * FROM mental_models WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json({ models });
+  } catch (error) {
+    console.error('Error obteniendo mental models:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// POST /api/personal/mental-models
+router.post('/mental-models', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { concept_name, content, book_title, author, category } = req.body;
+    
+    if (!concept_name || !content || !book_title) {
+      return res.status(400).json({ error: { message: 'concept_name, content, y book_title son requeridos.' } });
+    }
+
+    const today = getUTC3DateString();
+
+    const [result] = await db.execute(
+      'INSERT INTO mental_models (user_id, concept_name, content, book_title, author, category, next_review) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, concept_name, content, book_title, author || null, category || null, today]
+    );
+    const [rows] = await db.execute('SELECT * FROM mental_models WHERE id = ?', [result.insertId]);
+    res.status(201).json({ model: rows[0] });
+  } catch (error) {
+    console.error('Error creando mental model:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/mental-models/:id/review
+router.put('/mental-models/:id/review', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { quality } = req.body; // 0=Again, 1=Hard, 2=Good, 3=Easy
+    
+    const [rows] = await db.execute('SELECT * FROM mental_models WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    if (rows.length === 0) return res.status(404).json({ error: { message: 'Modelo no encontrado.' } });
+    
+    const model = rows[0];
+    let { repetition, ease_factor, interval_days } = model;
+
+    ease_factor = ease_factor || 2.5;
+    interval_days = interval_days || 0;
+
+    // Algoritmo SM-2
+    if (quality === 0) {
+      repetition = 0;
+      interval_days = 0;
+    } else if (quality === 1) {
+      if (repetition === 0) {
+        interval_days = 0;
+      } else {
+        interval_days = Math.max(1, Math.round(interval_days * 1.2));
+        repetition += 1;
+      }
+    } else if (quality === 2) {
+      if (repetition === 0) {
+        interval_days = 1;
+      } else if (repetition === 1) {
+        interval_days = 6;
+      } else {
+        interval_days = Math.round(interval_days * ease_factor);
+      }
+      repetition += 1;
+    } else if (quality === 3) {
+      if (repetition === 0) {
+        interval_days = 4;
+      } else if (repetition === 1) {
+        interval_days = Math.round(6 * ease_factor);
+      } else {
+        interval_days = Math.round(interval_days * ease_factor * 1.3);
+      }
+      repetition += 1;
+    }
+
+    ease_factor = ease_factor + (0.1 - (3 - quality) * (0.08 + (3 - quality) * 0.02));
+    if (ease_factor < 1.3) ease_factor = 1.3;
+
+    const nextReviewDate = new Date();
+    nextReviewDate.setDate(nextReviewDate.getDate() + interval_days);
+    const nextReviewStr = getUTC3DateString(nextReviewDate);
+
+    await db.execute(
+      `UPDATE mental_models SET 
+        repetition = ?, ease_factor = ?, interval_days = ?, next_review = ?
+       WHERE id = ?`,
+      [repetition, ease_factor, interval_days, nextReviewStr, req.params.id]
+    );
+
+    const [updatedRows] = await db.execute('SELECT * FROM mental_models WHERE id = ?', [req.params.id]);
+    res.json({ model: updatedRows[0] });
+  } catch (error) {
+    console.error('Error actualizando revisión de mental model:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/mental-models/:id
+router.put('/mental-models/:id', async (req, res) => {
+  try {
+    const { concept_name, content, book_title, author, category } = req.body;
+    const db = getPool();
+    const userId = req.user.id;
+
+    await db.execute(
+      `UPDATE mental_models SET 
+        concept_name = COALESCE(?, concept_name), 
+        content = COALESCE(?, content), 
+        book_title = COALESCE(?, book_title), 
+        author = COALESCE(?, author), 
+        category = COALESCE(?, category) 
+       WHERE id = ? AND user_id = ?`,
+      [
+        concept_name !== undefined ? concept_name : null, 
+        content !== undefined ? content : null, 
+        book_title !== undefined ? book_title : null, 
+        author !== undefined ? author : null, 
+        category !== undefined ? category : null, 
+        req.params.id, 
+        userId
+      ]
+    );
+
+    const [updatedRows] = await db.execute('SELECT * FROM mental_models WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    if (updatedRows.length === 0) {
+      return res.status(404).json({ error: { message: 'Modelo no encontrado.' } });
+    }
+    res.json({ model: updatedRows[0] });
+  } catch (error) {
+    console.error('Error actualizando mental model:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// DELETE /api/personal/mental-models/:id
+router.delete('/mental-models/:id', async (req, res) => {
+  try {
+    const db = getPool();
+    await db.execute('DELETE FROM mental_models WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando mental model:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
 // ─── Journals ──────────────────────────────────────────────────────────────────
 
 // GET /api/personal/journals

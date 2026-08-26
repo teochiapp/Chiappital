@@ -103,17 +103,17 @@ async function runSync(reason = 'manual') {
       }
 
       // Necesita actualizar precio?
-      if (!row.updated_at || (now.getTime() - new Date(row.updated_at).getTime()) > syncIntervalMs) {
+      if (reason === 'force' || !row.updated_at || (now.getTime() - new Date(row.updated_at).getTime()) > syncIntervalMs) {
         symbolsToUpdate.push(row.symbol);
       }
 
       // Necesita actualizar EMA / Setup? (cada 1 hora o si falta el setup)
-      if (!row.ema_updated_at || row.setup_state === null || (now.getTime() - new Date(row.ema_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
+      if (reason === 'force' || !row.ema_updated_at || row.setup_state === null || (now.getTime() - new Date(row.ema_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
         symbolsForEma.push(row.symbol);
       }
 
       // Necesita actualizar RSI/MACD/Drawdown/RS? (cada 1 hora o si alguno no se calculó)
-      if (!row.rsi_updated_at || row.macd_weekly === null || row.drawdown_52w === null || row.rs_value === null || (now.getTime() - new Date(row.rsi_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
+      if (reason === 'force' || !row.rsi_updated_at || row.macd_weekly === null || row.drawdown_52w === null || row.rs_value === null || (now.getTime() - new Date(row.rsi_updated_at).getTime()) > 1 * 60 * 60 * 1000) {
         symbolsForRsi.push({ symbol: row.symbol, index_symbol: row.index_symbol });
       }
     }
@@ -1570,8 +1570,29 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
   return { rsi, macd, drawdown52w, rs_value, rs_previous, rs_state };
 }
 
+async function resetDailyData() {
+  const db = getPool();
+  try {
+    logger.info('MarketSync', 'Midnight reset: clearing setups, EMAs, RSIs, and OP Scores...');
+    await db.execute(`
+      UPDATE market_snapshot 
+      SET ema_updated_at = NULL, 
+          rsi_updated_at = NULL, 
+          setup_state = NULL, 
+          op_score = NULL,
+          setup_verdict = NULL,
+          setup_factors = NULL,
+          op_score_conclusions = NULL
+    `);
+    logger.info('MarketSync', 'Midnight reset complete. Next sync will recalculate everything.');
+  } catch (error) {
+    logger.error('MarketSync', `Error in midnight reset: ${error.message}`);
+  }
+}
+
 module.exports = {
   runSync,
   calculateWeeklyIndicators,
-  calculateDailySetup
+  calculateDailySetup,
+  resetDailyData
 };

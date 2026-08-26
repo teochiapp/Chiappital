@@ -44,7 +44,12 @@ const MediterraneanAddRecipePage = () => {
     if (!editId) return;
     personalApiService.getMedRecipe(editId).then(res => {
       const r = res.recipe;
-      const parse = (val) => typeof val === 'string' ? JSON.parse(val) : (val || null);
+      const parse = (val) => {
+        if (typeof val === 'string') {
+          try { return JSON.parse(val); } catch(e) { return null; }
+        }
+        return val || null;
+      };
       setForm({
         name: r.name || '',
         origin_country: r.origin_country || '',
@@ -131,6 +136,9 @@ const MediterraneanAddRecipePage = () => {
         const newRecipe = await createRecipe(payload);
         navigate(`/personal/mediterranean/recipes/${newRecipe.id}`);
       }
+    } catch (err) {
+      console.error('Error al guardar receta:', err);
+      alert('Hubo un error al guardar la receta: ' + (err.message || 'Error desconocido'));
     } finally {
       setSaving(false);
     }

@@ -93,6 +93,22 @@ const DebugConsole = () => {
     }
   };
 
+  const handleTruncateDb = async () => {
+    if (window.confirm('¿Estás seguro de que quieres limpiar la tabla market_snapshot? Se recalculará todo desde cero en la próxima sincronización.')) {
+      try {
+        loggerService.info('Vaciando tabla market_snapshot...', 'SYSTEM');
+        const res = await fetch('http://localhost:3001/api/market/truncate-snapshot', { method: 'POST' });
+        if (res.ok) {
+          loggerService.success('Tabla market_snapshot vaciada correctamente.', 'SYSTEM');
+        } else {
+          loggerService.error(`Error al vaciar BD: ${res.status}`, 'SYSTEM');
+        }
+      } catch (e) {
+        loggerService.error(`Error de conexión al vaciar BD: ${e.message}`, 'SYSTEM');
+      }
+    }
+  };
+
   const filteredLogs = logs.filter(log => {
     const levelMatch = filterLevel === 'ALL' || log.level === filterLevel;
     const categoryMatch = filterCategory === 'ALL' || log.category === filterCategory;
@@ -203,6 +219,10 @@ const DebugConsole = () => {
               <ActionButton onClick={handleForceSync} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
                 <Zap size={14} />
                 Forzar Sync
+              </ActionButton>
+              <ActionButton onClick={handleTruncateDb} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+                <Trash2 size={14} />
+                Limpiar BD
               </ActionButton>
               <ActionButton onClick={handleCopyReport}>
                 <Copy size={14} />

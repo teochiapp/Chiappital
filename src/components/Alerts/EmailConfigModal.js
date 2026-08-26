@@ -404,6 +404,10 @@ const ToggleSwitch = styled.div`
 
 const CheckboxGrid = styled.div`
   display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const CheckOption = styled.div`
@@ -429,6 +433,11 @@ const PreviewBody = styled.div`
 
 const ActionButtons = styled.div`
   display: flex; gap: 1rem; margin-top: auto;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 `;
 
 const SaveBtn = styled.button`

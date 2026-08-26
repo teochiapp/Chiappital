@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
 
 const PersonalHeader = () => {
@@ -52,6 +52,13 @@ const PersonalHeader = () => {
           Idiomas
         </NavItem>
         <NavItem
+          $active={location.pathname === '/personal/mental-models'}
+          onClick={() => navigate('/personal/mental-models')}
+        >
+          <Brain size={18} />
+          Mental Models
+        </NavItem>
+        <NavItem
           $active={location.pathname.startsWith('/personal/mediterranean')}
           $med
           onClick={() => navigate('/personal/mediterranean')}
@@ -98,6 +105,11 @@ const HeaderContainer = styled.header`
     align-items: stretch;
     padding: 0.5rem 0.75rem;
     gap: 0.4rem;
+  }
+
+  @media (max-width: 350px) {
+    padding: 0.4rem 0.5rem;
+    gap: 0.3rem;
   }
 `;
 

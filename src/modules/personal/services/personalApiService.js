@@ -49,10 +49,17 @@ const personalApiService = {
 
   // Vocabulary
   getVocabulary: () => request('GET', '/vocabulary'),
-  createVocabulary: (wordData) => request('POST', '/vocabulary', wordData),
-  updateVocabulary: (id, wordData) => request('PUT', `/vocabulary/${id}`, wordData),
+  createVocabulary: (data) => request('POST', '/vocabulary', data),
+  updateVocabulary: (id, data) => request('PUT', `/vocabulary/${id}`, data),
   reviewVocabulary: (id, quality) => request('PUT', `/vocabulary/${id}/review`, { quality }),
   deleteVocabulary: (id) => request('DELETE', `/vocabulary/${id}`),
+
+  // Mental Models
+  getMentalModels: () => request('GET', '/mental-models'),
+  createMentalModel: (data) => request('POST', '/mental-models', data),
+  updateMentalModel: (id, data) => request('PUT', `/mental-models/${id}`, data),
+  reviewMentalModel: (id, quality) => request('PUT', `/mental-models/${id}/review`, { quality }),
+  deleteMentalModel: (id) => request('DELETE', `/mental-models/${id}`),
 
   // Fitness
   getFitness: () => request('GET', '/fitness'),
