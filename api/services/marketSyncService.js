@@ -638,6 +638,7 @@ async function runSync(reason = 'manual') {
         ema21Distance: finalFactors.priceAboveEma21Pct,
         ema21DistanceAtr: finalFactors.distToEma21Atr,
         ema21AboveSma30Pct: finalFactors.ema21AboveSma30Pct,
+        ema200SlopeDir: finalFactors.ema200SlopeDir,
         macd: finalFactors.macd,
         macdWeekly: rsiData !== undefined && rsiData.macd_weekly !== undefined ? rsiData.macd_weekly : dbRow.macd_weekly,
         macdSignal: rsiData !== undefined && rsiData.macd_signal !== undefined ? rsiData.macd_signal : dbRow.macd_signal,
@@ -1040,6 +1041,45 @@ async function calculateDailySetup(symbol) {
   const sma30Rate10 = sma30Slope10Pct / 10;
   const sma30Trend = sma30Rate5 > sma30Rate10 ? 'ACCELERATING' : (sma30Rate5 < sma30Rate10 ? 'DECELERATING' : 'CONSTANT');
 
+  // EMA200 se mueve mucho más lento que EMA21/SMA30 — usamos ventanas más largas
+  // (10/20/40 ruedas en vez de 5/10/20) para que la pendiente sea una señal real 
+  // y no ruido de corto plazo. Umbral también reducido (0.05% vs 0.20%) porque 
+  // el % de cambio esperado en una media de 200 días es mucho menor.
+  const EMA200_SLOPE_THRESHOLD_PCT = 0.05;
+
+  const prev10Ema200 = L >= 10 ? ema200Array[L - 10] : null;
+  const prev20Ema200 = L >= 20 ? ema200Array[L - 20] : null;
+  const prev40Ema200 = L >= 40 ? ema200Array[L - 40] : null;
+
+  const getDir200 = (pct) => pct >= EMA200_SLOPE_THRESHOLD_PCT ? 'UP' 
+    : (pct <= -EMA200_SLOPE_THRESHOLD_PCT ? 'DOWN' : 'FLAT');
+
+  let ema200SlopeDir = null;
+  let ema200Slope20Pct = null;
+  let ema200Slope40Pct = null;
+
+  if (currentEma200 && prev20Ema200) {
+    ema200Slope20Pct = ((currentEma200 / prev20Ema200) - 1) * 100;
+  }
+  if (currentEma200 && prev40Ema200) {
+    ema200Slope40Pct = ((currentEma200 / prev40Ema200) - 1) * 100;
+  }
+
+  // Exigimos que AMBAS ventanas (20 y 40 ruedas) coincidan en la dirección para 
+  // declarar DOWN — evita marcar como "descendente" una media que tuvo una caída 
+  // corta hace 3-4 semanas pero ya está girando. Si difieren, es zona de transición 
+  // y la tratamos como FLAT (no penalizar en zona ambigua).
+  if (closes.length >= 240 && ema200Slope20Pct !== null && ema200Slope40Pct !== null) {
+    const dir20 = getDir200(ema200Slope20Pct);
+    const dir40 = getDir200(ema200Slope40Pct);
+    if (dir20 === 'DOWN' && dir40 === 'DOWN') {
+      ema200SlopeDir = 'DOWN';
+    } else if (dir20 === 'UP' && dir40 === 'UP') {
+      ema200SlopeDir = 'UP';
+    } else {
+      ema200SlopeDir = 'FLAT';
+    }
+  }
   let factors = {
     trend: 'neutral',
     ema21: {
@@ -1061,6 +1101,7 @@ async function calculateDailySetup(symbol) {
       trend: sma30Trend
     },
     ema21AboveSma30Pct: ema21AboveSma30Pct !== null ? parseFloat(ema21AboveSma30Pct.toFixed(2)) : null,
+    ema200SlopeDir: ema200SlopeDir,
     priceAboveEma21Pct: ema21Distance !== null ? parseFloat(ema21Distance.toFixed(2)) : null,
     atr14: currentAtr ? parseFloat(currentAtr.toFixed(4)) : null,
     distToEma21Atr: currentAtr && currentEma21 ? parseFloat((Math.abs(currentPrice - currentEma21) / currentAtr).toFixed(2)) : null,

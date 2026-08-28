@@ -900,6 +900,26 @@ class SymbolSearchService {
       { symbol: 'BG', name: 'Bunge Limited', sector: 'Materiales', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'HSY', name: 'The Hershey Company', sector: 'Consumo Básico', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
 
+      { symbol: 'KLAC', name: 'KLA Corporation', sector: 'Semiconductores', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'SKHY', name: 'SK Hynix', sector: 'Semiconductores', region: 'KR', currency: 'USD', type: 'Equity' },
+      { symbol: 'DELL', name: 'Dell Technologies', sector: 'Software', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'WDC', name: 'Western Digital', sector: 'Software', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'GEV', name: 'GE Vernova', sector: 'Utilities', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'TLN', name: 'Talen Energy', sector: 'Utilities', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'MS', name: 'Morgan Stanley', sector: 'Financiero', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'IBKR', name: 'Interactive Brokers', sector: 'Financiero', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'WELL', name: 'Welltower', sector: 'Real Estate', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'PLD', name: 'Prologis', sector: 'Real Estate', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'LIN', name: 'Linde plc', sector: 'Industrial', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'SHW', name: 'Sherwin-Williams', sector: 'Materiales', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'NTRA', name: 'Natera', sector: 'Salud', region: 'US', currency: 'USD', type: 'Equity' },
+      
+      { symbol: 'BBCA', name: 'JPMorgan BetaBuilders Canada ETF', sector: 'ETF', region: 'CA', currency: 'USD', type: 'ETF' },
+      { symbol: 'BBAX', name: 'JPMorgan BetaBuilders Developed Asia Pacific-ex Japan ETF', sector: 'ETF', region: 'EU', currency: 'USD', type: 'ETF' },
+      { symbol: 'GSG', name: 'iShares S&P GSCI Commodity-Indexed Trust', sector: 'ETF', region: 'US', currency: 'USD', type: 'ETF' },
+      { symbol: 'CORN', name: 'Teucrium Corn Fund', sector: 'ETF', region: 'US', currency: 'USD', type: 'ETF' },
+      { symbol: 'SOYB', name: 'Teucrium Soybean Fund', sector: 'ETF', region: 'US', currency: 'USD', type: 'ETF' },
+
     ];
   }
 

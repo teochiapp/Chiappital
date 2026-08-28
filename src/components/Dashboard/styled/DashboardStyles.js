@@ -23,8 +23,8 @@ export const DashboardHeaderStyled = styled.header`
 
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
   }
 `;
 
@@ -91,6 +91,10 @@ export const LogoutButton = styled.button`
 
 export const DashboardContentStyled = styled.main`
   padding: 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 0.5rem 0;
+  }
 `;
 
 export const DashboardContainerStyled = styled.div`

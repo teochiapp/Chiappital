@@ -195,7 +195,6 @@ function calculateOpScore(setupState, data) {
     }
     rawScore += rsiScore;
 
-
     // 6. CALIDAD DE LA BASE
     if (data.breakoutLateral) {
       rawScore += 6; pushConclusion('BO_QUALITY_BASE:6');
@@ -282,6 +281,41 @@ function calculateOpScore(setupState, data) {
         if (current.rvol > 1.8) {
           scoreCap = Math.min(scoreCap, 45);
         }
+      }
+    }
+
+    // 5. PRICE EXTENSION FROM EMA21 (Danger Zone Protection — Soft Cap)
+    // No usa la variable `scoreCap` del bloque (que aplica Math.min duro al final);
+    // opera directo sobre rawScore con su propio damping, para no aplastar
+    // binariamente breakouts excepcionales que están extendidos pero con
+    // fundamentos técnicos sólidos.
+    // Utilizamos dos factores de damping distintos para castigar más severamente (0.15)
+    // el chasing extremo en >=4 ATR, permitiendo algo más de respiro (0.35) a los que
+    // recién entran en la zona 3-4 ATR.
+    if (data.ema21DistanceAtr !== undefined && data.ema21DistanceAtr !== null) {
+      let extPenalty = 0;
+      let extSoftCap = null;
+      let extDamping = 0;
+
+      if (data.ema21DistanceAtr >= 3.0 && data.ema21DistanceAtr < 4.0) {
+        extPenalty = -8;
+        extSoftCap = 75;
+        extDamping = 0.35;
+        pushConclusion('BO_EXTENDED_EMA21_ATR:-8');
+      } else if (data.ema21DistanceAtr >= 4.0) {
+        extPenalty = -15;
+        extSoftCap = 60;
+        extDamping = 0.15;
+        pushConclusion('BO_OVEREXTENDED_EMA21_ATR:-15');
+      }
+
+      rawScore += extPenalty;
+
+      if (extSoftCap !== null && rawScore > extSoftCap) {
+        const excess = rawScore - extSoftCap;
+        const damped = Math.floor(excess * extDamping);
+        rawScore = extSoftCap + damped;
+        pushConclusion(`BO_EMA21_SOFT_CAPPED_AT:${extSoftCap}`);
       }
     }
 
@@ -907,7 +941,31 @@ function calculateOpScore(setupState, data) {
       }
     }
 
-    // 7. CAP GLOBAL Y FLOOR
+    // 7. LONG TERM HEALTH (Filtro contra Dead Cat Bounces)
+    let ltScore = 0;
+    if (data.price && data.ema200 && data.drawdown52w !== null && data.drawdown52w !== undefined) {
+      const priceUnderEma200 = data.price < data.ema200;
+      
+      if (!priceUnderEma200 && data.drawdown52w >= -15 && (data.rsiWeekly === null || data.rsiWeekly > 55)) { 
+        ltScore += 8; pushConclusion('BULL_T_LT_HIGH_QUALITY:8'); 
+      }
+      else if (!priceUnderEma200 && data.drawdown52w >= -30) { 
+        ltScore += 4; pushConclusion('BULL_T_LT_MODERATE_CORRECTION:4'); 
+      }
+      else if (priceUnderEma200 && data.drawdown52w < -35) { 
+        ltScore -= 5; pushConclusion('BULL_T_LT_WEAK_CORRECTION:-5'); 
+      }
+      
+      if (priceUnderEma200 && data.drawdown52w < -50 && (data.rsiWeekly !== null && data.rsiWeekly < 45)) { 
+        ltScore -= 10; 
+        scoreCap = scoreCap === null ? 30 : Math.min(scoreCap, 30);
+        pushConclusion('BULL_T_LT_CRASH:-10');
+        pushConclusion('CAP_BULL_T_LT_CRASH');
+      }
+    }
+    rawScore += ltScore;
+
+    // 8. CAP GLOBAL Y FLOOR
     scoreCap = scoreCap === null ? 70 : Math.min(scoreCap, 70);
     rawScore = Math.max(0, rawScore);
     score = rawScore;
@@ -2263,6 +2321,27 @@ function calculateOpScore(setupState, data) {
       score = Math.max(0, score);
       scoreCap = scoreCap === null ? earningsCap : Math.min(scoreCap, earningsCap);
     }
+  }
+
+  // ─── EMA200 SLOPE MODIFIER (Weinstein Rule) ──────────────────────────────
+  // "No comprar un valor con la media de largo plazo descendente", incluso si 
+  // el precio está momentáneamente por encima de ella. Cap duro, no soft cap: 
+  // a diferencia de la extensión de precio (donde un breakout excepcional puede 
+  // justificar estar extendido), ningún factor técnico de corto plazo compensa 
+  // estar comprando contra una tendencia de fondo en declive real.
+  const BULLISH_SETUPS_FOR_EMA200_CHECK = [
+    'bullish_breakout', 'bullish_pullback', 'bullish_reversal_confirmed',
+    'early_bullish_reversal', 'strong_uptrend', 'strong_uptrend_extended',
+    'bullish_transition'
+  ];
+
+  if (isValid && BULLISH_SETUPS_FOR_EMA200_CHECK.includes(setupState) 
+      && _data.ema200SlopeDir === 'DOWN') {
+    score -= 12;
+    rawScore -= 12;
+    score = Math.max(0, score);
+    scoreCap = scoreCap === null ? 30 : Math.min(scoreCap, 30);
+    pushConclusion('EMA200_SLOPE_DOWN_WEINSTEIN:-12');
   }
 
   // APPLY CAPS (Soft Cap)

@@ -7,7 +7,7 @@ async function importData() {
   try {
     await initializeDatabase();
     
-    const jsonPath = path.join(__dirname, '../mental_models_template.json');
+    const jsonPath = path.join(__dirname, '../mental_models-2.json');
     const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
     const db = getPool();

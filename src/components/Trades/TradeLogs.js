@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -166,80 +167,79 @@ const TradeLogs = () => {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const content = event.target.result;
-        const lines = content.split('\n');
-        const openTrades = [];
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line || line.startsWith(',,') || line.startsWith('Disponible') || line.startsWith('Liquidar') || line.startsWith('Subtotal') || line.startsWith('Especie') || line.startsWith('Fecha') || line.startsWith('Patrimonio') || line.startsWith('Tenencia') || line.startsWith('Cedears') || line.startsWith('Otros') || line.startsWith('DOLARUSA')) {
-            continue;
-          }
-          
-          let cols = [];
-          let inQuotes = false;
-          let current = '';
-          for (let char of line) {
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) { cols.push(current); current = ''; }
-            else current += char;
-          }
-          cols.push(current);
-          
-          if (cols.length < 6) continue;
+        const parsedTrades = [];
 
-          const symbolFull = cols[0];
-          if (!symbolFull.includes(' - ')) continue;
-          
-          const symbol = symbolFull.split(' - ')[0];
-          const qtyStr = cols[2];
-          const pctStr = cols[4];
-          const pppStr = cols[5]; 
-          
-          const qty = parseFloat(qtyStr.replace(/\./g, '').replace(',', '.'));
-          const portfolioPercentage = parseFloat(pctStr.replace(/"/g, '').replace(/\./g, '').replace(',', '.'));
-          const ppp = parseFloat(pppStr.replace(/"/g, '').replace(/\./g, '').replace(',', '.'));
-          
-          if (isNaN(ppp)) continue;
+        // Mapeo común de Cedears a tickers de NYSE/NASDAQ
+        const cedearToNyseMap = {
+          'GOOGL': 'GOOG',
+          'BRKB': 'BRK-B',
+          // Agregar más si es necesario
+        };
 
-          openTrades.push({
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row.length < 5) continue;
+          
+          const especie = row[0];
+          if (typeof especie !== 'string' || !especie.includes(' - ')) continue;
+
+          let rawSymbol = especie.split(' - ')[0].trim();
+          // Aplicar mapeo
+          const symbol = cedearToNyseMap[rawSymbol] || rawSymbol;
+
+          const pct = row[4]; // % del total
+          if (typeof pct !== 'number') continue;
+
+          parsedTrades.push({
             symbol: symbol,
-            type: 'buy',
-            status: 'open',
-            entry_price: ppp,
-            portfolio_percentage: isNaN(portfolioPercentage) ? null : portfolioPercentage,
-            createdAt: new Date().toISOString(),
-            notes: `Qty: ${qty} (Portafolio IEB)`
+            portfolio_percentage: pct,
           });
         }
 
-        if (openTrades.length === 0) {
-          alert('No se encontraron trades válidos en el archivo CSV.');
+        if (parsedTrades.length === 0) {
+          alert('No se encontraron trades válidos en el archivo Excel.');
           return;
         }
 
-        if (window.confirm(`¿Seguro que querés importar ${openTrades.length} activos abiertos de tu portafolio IEB a esta cuenta?`)) {
+        if (window.confirm(`¿Seguro que querés procesar ${parsedTrades.length} activos del portafolio IEB?\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
           const token = localStorage.getItem('st_token');
           if (!token) throw new Error('No hay sesión iniciada');
           
-          let count = 0;
-          for (const t of openTrades) {
-            await fetch('https://apichiappital.surcodes.com/api/trades', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-              body: JSON.stringify({ data: {
-                 symbol: t.symbol,
-                 type: t.type,
-                 entry_price: t.entry_price,
-                 portfolio_percentage: t.portfolio_percentage,
-                 notes: t.notes,
-                 account_type: accountType,
-                 created_at: t.createdAt
-              }})
-            });
-            count++;
+          let updated = 0;
+          let created = 0;
+
+          for (const pt of parsedTrades) {
+            const existingTrade = openTrades.find(t => (t.symbol || t.attributes?.symbol) === pt.symbol);
+
+            if (existingTrade) {
+              // Actualizar trade existente
+              const tradeId = existingTrade.id;
+              await updateTrade(tradeId, {
+                portfolio_percentage: pt.portfolio_percentage
+              });
+              updated++;
+            } else {
+              // Crear trade nuevo vacío
+              await createTrade({
+                 symbol: pt.symbol,
+                 type: 'buy',
+                 status: 'open',
+                 entry_price: 0, // Precio vacío
+                 portfolio_percentage: pt.portfolio_percentage,
+                 notes: 'Creado desde IEB',
+                 created_at: new Date().toISOString()
+              });
+              created++;
+            }
           }
-          alert('¡Portafolio importado con éxito!');
+          alert(`¡Portafolio procesado con éxito!\nActualizados: ${updated}\nNuevos: ${created}`);
+          // Ya no es estrictamente necesario refreshTrades() porque createTrade/updateTrade ya lo llaman internamente, pero lo dejamos por seguridad.
           refreshTrades();
         }
       } catch (err) {
@@ -253,7 +253,7 @@ const TradeLogs = () => {
       }
     };
     
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   };
 
   return (
@@ -281,7 +281,7 @@ const TradeLogs = () => {
 
         <input 
           type="file" 
-          accept=".csv" 
+          accept=".xlsx, .xls, .csv" 
           ref={fileInputRef} 
           style={{ display: 'none' }} 
           onChange={handleFileUpload} 
