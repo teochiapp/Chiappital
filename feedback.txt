@@ -1,0 +1,24 @@
+Acciones (13)
+Symbol	País	Sector	Ratio
+KLAC	Estados Unidos	Semiconductores (equipos de fabricación)	34:1
+DELL	Estados Unidos	Tecnología / Hardware (servidores, storage)	74:1
+WDC	Estados Unidos	Tecnología / Almacenamiento	92:1
+GEV	Estados Unidos	Energía / Utilities (generación, redes)	180:1
+TLN	Estados Unidos	Energía / Utilities (generación eléctrica)	63:1
+MS	Estados Unidos	Finanzas / Banca de inversión	41:1
+IBKR	Estados Unidos	Finanzas / Brokerage	17:1
+WELL	Estados Unidos	Real Estate (REIT — salud/adultos mayores)	48:1
+PLD	Estados Unidos	Real Estate (REIT — logística/industrial)	29:1
+LIN	Reino Unido/Irlanda*	Industria / Gases industriales	102:1 (Agregar como Europa)
+SHW	Estados Unidos	Industria / Materiales (pinturas)	69:1
+NTRA	Estados Unidos	Salud / Biotecnología (diagnóstico genético)	51:1
+
+*Linde plc está domiciliada en Irlanda con listing dual (NYSE + Frankfurt), pero opera y reporta primariamente como compañía estadounidense — poné el país que uses de criterio para tu taxonomía sectorial (mercado de cotización primario = USA, domicilio legal = Irlanda).
+
+ETFs (5)
+Symbol	País/Región	Sector (clase de activo)	Ratio
+BBCA	Canadá	ETF Renta Variable — Canadá (bancos, energía, minería)	20:1
+BBAX	Asia-Pacífico ex-Japón	ETF Renta Variable — mercados desarrollados APAC	13:1
+GSG	Estados Unidos (fondo)	ETF Commodities — canasta diversificada	6:1
+CORN	Estados Unidos (fondo)	ETF Commodities — agro (maíz, futuros)	4:1
+SOYB	Estados Unidos (fondo)	ETF Commodities — agro (soja, futuros)	5:1

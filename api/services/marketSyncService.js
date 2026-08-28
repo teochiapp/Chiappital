@@ -15,7 +15,7 @@ const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
 // Finnhub Rate Limiter Configuration
 const FINNHUB_MAX_CONCURRENT_REQUESTS = process.env.FINNHUB_MAX_CONCURRENT_REQUESTS ? parseInt(process.env.FINNHUB_MAX_CONCURRENT_REQUESTS) : 5;
-const FINNHUB_MAX_REQUESTS_PER_WINDOW = process.env.FINNHUB_MAX_REQUESTS_PER_WINDOW ? parseInt(process.env.FINNHUB_MAX_REQUESTS_PER_WINDOW) : 60;
+const FINNHUB_MAX_REQUESTS_PER_WINDOW = process.env.FINNHUB_MAX_REQUESTS_PER_WINDOW ? parseInt(process.env.FINNHUB_MAX_REQUESTS_PER_WINDOW) : 30;
 const FINNHUB_RATE_WINDOW_MS = process.env.FINNHUB_RATE_WINDOW_MS ? parseInt(process.env.FINNHUB_RATE_WINDOW_MS) : 60000;
 
 let finnhubWindowStart = 0;
@@ -23,6 +23,7 @@ let finnhubWindowRequests = 0;
 
 // Cache para EMA 21 (evitar recalcular innecesariamente en memoria durante la misma corrida si Yahoo falla)
 const emaMemoryCache = new Map();
+const invalidBreakStreakCache = new Map(); // symbol -> streak count
 
 async function runSync(reason = 'manual') {
   if (isSyncing) {
@@ -63,6 +64,7 @@ async function runSync(reason = 'manual') {
     const [rows] = await db.query(`
       SELECT 
         ts.symbol, 
+        ts.next_earnings_date,
         ts.priority, 
         ms.updated_at,
         ms.ema_updated_at,
@@ -136,7 +138,7 @@ async function runSync(reason = 'manual') {
       const isWeekend = nyTime.getDay() === 0 || nyTime.getDay() === 6;
       const hour = nyTime.getHours();
       const isMarketOpen = !isWeekend && (hour >= 9 && hour <= 16);
-      logger.info('MarketSync', `Market status: ${isMarketOpen ? 'OPEN' : 'CLOSED'} | NY Time: ${nyTime.getHours()}:${nyTime.getMinutes().toString().padStart(2, '0')} | Price TTL: 1m/5m | EMA TTL: 12h`);
+      logger.info('MarketSync', `Market status: ${isMarketOpen ? 'OPEN' : 'CLOSED'} | NY Time: ${nyTime.getHours()}:${nyTime.getMinutes().toString().padStart(2, '0')} | Price TTL: 1m/5m | EMA TTL: 1h`);
 
       // DEBUG Temporal para TTL
       logger.debug('MarketSync', `[DEBUG] TTL -> currentTime: ${now.getTime()}, thresholdMs: ${minThreshold}, oldestUpdatedAt: ${oldestUpdatedAt}, freshCount: ${freshCount}, staleCount: ${symbolsToUpdate.length}`);
@@ -237,7 +239,8 @@ async function runSync(reason = 'manual') {
         yahooFailed += failedFinnhubSymbols.length;
       } else {
         logger.debug('Yahoo', `Yahoo fallback triggered for ${failedFinnhubSymbols.length} symbols`);
-        const BATCH_SIZE = 20;
+        // Batch reducido a 10 para minimizar errores de rate-limit en el bulk quote de Yahoo.
+        const BATCH_SIZE = 10;
 
         for (let i = 0; i < failedFinnhubSymbols.length; i += BATCH_SIZE) {
           const batch = failedFinnhubSymbols.slice(i, i + BATCH_SIZE);
@@ -268,6 +271,10 @@ async function runSync(reason = 'manual') {
               yahooFailed += batch.length;
             }
           }
+          // Pausa entre batches de precios para no saturar Yahoo quote.
+          if (i + BATCH_SIZE < failedFinnhubSymbols.length) {
+            await new Promise(r => setTimeout(r, 200));
+          }
         }
       }
     }
@@ -279,7 +286,9 @@ async function runSync(reason = 'manual') {
     if (symbolsForEma.length > 0) {
       // Hacemos el cálculo secuencial (o lotes pequeños) para no spamear la API de histórico de Yahoo
       // ya que esto se hace solo 1 vez cada 12 horas.
-      const EMA_CONCURRENCY = 5;
+      // CONCURRENCIA REDUCIDA a 3 + delay entre batches para evitar rate-limit de Yahoo.
+      const EMA_CONCURRENCY = 3;
+      logger.info('Setup/EMA', `Starting EMA/Setup calculation for ${symbolsForEma.length} symbols...`);
       for (let i = 0; i < symbolsForEma.length; i += EMA_CONCURRENCY) {
         const batch = symbolsForEma.slice(i, i + EMA_CONCURRENCY);
         const promises = batch.map(async (sym) => {
@@ -297,6 +306,14 @@ async function runSync(reason = 'manual') {
           }
         });
         await Promise.allSettled(promises);
+        // Log de progreso cada 15 símbolos para confirmar que el proceso avanza.
+        if ((i + EMA_CONCURRENCY) % 15 === 0 || i + EMA_CONCURRENCY >= symbolsForEma.length) {
+          logger.debug('Setup/EMA', `Progress: ${Math.min(i + EMA_CONCURRENCY, symbolsForEma.length)}/${symbolsForEma.length} | OK: ${emaSuccess} | Fail: ${emaFailed}`);
+        }
+        // Pausa entre batches para no saturar Yahoo Finance y evitar rate-limit.
+        if (i + EMA_CONCURRENCY < symbolsForEma.length) {
+          await new Promise(r => setTimeout(r, 600));
+        }
       }
     }
     timeEma = performance.now() - emaStartTime;
@@ -307,7 +324,20 @@ async function runSync(reason = 'manual') {
     let rsiSuccess = 0;
     let rsiFailed = 0;
     if (symbolsForRsi.length > 0) {
-      const RSI_CONCURRENCY = 5;
+      // CONCURRENCIA REDUCIDA a 3 + delay entre batches para evitar rate-limit de Yahoo.
+      const RSI_CONCURRENCY = 3;
+
+      // Pre-calentar la caché de índices ANTES del loop paralelo.
+      // Esto evita que múltiples promises disparen la misma llamada a Yahoo al mismo tiempo.
+      const uniqueIndexSymbols = [...new Set(symbolsForRsi.map(s => s.index_symbol).filter(Boolean))];
+      if (uniqueIndexSymbols.length > 0) {
+        logger.debug('RSI/MACD', `Pre-fetching index history for: ${uniqueIndexSymbols.join(', ')}`);
+        for (const idxSym of uniqueIndexSymbols) {
+          await getIndexHistory(idxSym); // Popula indexCache de forma secuencial
+        }
+      }
+
+      logger.info('RSI/MACD', `Starting RSI/MACD/RS calculation for ${symbolsForRsi.length} symbols...`);
       for (let i = 0; i < symbolsForRsi.length; i += RSI_CONCURRENCY) {
         const batch = symbolsForRsi.slice(i, i + RSI_CONCURRENCY);
         const promises = batch.map(async (item) => {
@@ -356,6 +386,14 @@ async function runSync(reason = 'manual') {
           }
         });
         await Promise.allSettled(promises);
+        // Log de progreso cada 15 símbolos para confirmar que el proceso avanza.
+        if ((i + RSI_CONCURRENCY) % 15 === 0 || i + RSI_CONCURRENCY >= symbolsForRsi.length) {
+          logger.debug('RSI/MACD', `Progress: ${Math.min(i + RSI_CONCURRENCY, symbolsForRsi.length)}/${symbolsForRsi.length} | OK: ${rsiSuccess} | Fail: ${rsiFailed}`);
+        }
+        // Pausa entre batches para no saturar Yahoo Finance y evitar rate-limit.
+        if (i + RSI_CONCURRENCY < symbolsForRsi.length) {
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
       
       // --- Z-SCORE POST-PROCESSING ---
@@ -477,7 +515,8 @@ async function runSync(reason = 'manual') {
             logger.error('Database', `Error setting ERROR status for ${symbol}: ${e.message}`);
           }
         }
-        continue; // Pasamos al siguiente
+        // No hacemos 'continue;'. Permitimos que el flujo siga para calcular el OP Score 
+        // usando los datos cacheados en la base de datos (dbRow).
       }
 
       let updateQuery = 'INSERT INTO market_snapshot (symbol, ';
@@ -563,6 +602,23 @@ async function runSync(reason = 'manual') {
       const finalSetupState = setup !== undefined ? setup.setup_state : dbRow.setup_state;
       const finalFactors = setup !== undefined ? setup.setup_factors : (typeof dbRow.setup_factors === 'string' ? JSON.parse(dbRow.setup_factors) : dbRow.setup_factors) || {};
 
+      let invalidBreakStreak = 0;
+      const isBullishSetup = ['bullish_breakout', 'bullish_pullback', 'bullish_reversal_confirmed', 'early_bullish_reversal', 'strong_uptrend', 'strong_uptrend_extended'].includes(finalSetupState);
+      if (isBullishSetup) {
+        const _price = quote !== undefined ? quote.price : finalFactors.currentPrice;
+        const _ema21 = finalFactors.currentEma21;
+        const _sma30 = finalFactors.currentSma30;
+        const _atr14 = finalFactors.atr14;
+        let currentBreach = false;
+        if (_price && _ema21 && _sma30 && _atr14 && _price < _ema21 && _price < _sma30) {
+          const dist = Math.min(_ema21, _sma30) - _price;
+          currentBreach = dist > (0.5 * _atr14);
+        }
+        const priorStreak = invalidBreakStreakCache.get(symbol) || 0;
+        invalidBreakStreak = currentBreach ? priorStreak + 1 : 0;
+        invalidBreakStreakCache.set(symbol, invalidBreakStreak);
+      }
+
       const opData = {
         marketRegime: rsiData !== undefined && rsiData.market_regime !== undefined ? rsiData.market_regime : dbRow.market_regime,
         rsValue: rsiData !== undefined && rsiData.rs_value !== undefined ? rsiData.rs_value : dbRow.rs_value,
@@ -573,13 +629,14 @@ async function runSync(reason = 'manual') {
         drawdown52w: rsiData !== undefined && rsiData.drawdown_52w !== undefined ? rsiData.drawdown_52w : dbRow.drawdown_52w,
         rsiDaily: finalFactors.rsiDaily,
         atr14: finalFactors.atr14,
-        price: finalFactors.currentPrice,
+        price: quote !== undefined ? quote.price : finalFactors.currentPrice,
         trend: finalFactors.trend,
         ema21: finalFactors.currentEma21,
         sma30: finalFactors.currentSma30,
         ema200: finalFactors.currentEma200,
         recentCandles: finalFactors.recentCandles,
         ema21Distance: finalFactors.priceAboveEma21Pct,
+        ema21DistanceAtr: finalFactors.distToEma21Atr,
         ema21AboveSma30Pct: finalFactors.ema21AboveSma30Pct,
         macd: finalFactors.macd,
         macdWeekly: rsiData !== undefined && rsiData.macd_weekly !== undefined ? rsiData.macd_weekly : dbRow.macd_weekly,
@@ -589,7 +646,20 @@ async function runSync(reason = 'manual') {
         macdPrevWeekly: rsiData !== undefined && rsiData.macd_prev_weekly !== undefined ? rsiData.macd_prev_weekly : dbRow.macd_prev_weekly,
         macdPrevSignal: rsiData !== undefined && rsiData.macd_prev_signal !== undefined ? rsiData.macd_prev_signal : dbRow.macd_prev_signal,
         sectorTrend: finalFactors.sectorTrend !== undefined ? finalFactors.sectorTrend : (dbRow.sector_trend || null),
-        daysSinceTrigger: finalFactors.daysSinceTrigger
+        daysSinceTrigger: finalFactors.daysSinceTrigger,
+        baseLengthDays: finalFactors.baseLengthDays,
+        invalidBreakStreak: invalidBreakStreak,
+        daysToEarnings: (() => {
+          if (!dbRow.next_earnings_date) return null;
+          const today = new Date(); today.setHours(0,0,0,0);
+          const earningsDate = new Date(dbRow.next_earnings_date); earningsDate.setHours(0,0,0,0);
+          const diffMs = earningsDate - today;
+          return Math.round(diffMs / (1000 * 60 * 60 * 24));
+        })(),
+        // EMA21 slope data — usado en early_bullish_reversal y futuros setups
+        ema21SlopeDir:   finalFactors.ema21?.slope5Dir  || null,   // 'UP' | 'DOWN' | 'FLAT'
+        ema21SlopePct:   finalFactors.ema21?.slope5Pct  ?? null,   // % cambio en 5 velas
+        ema21SlopeTrend: finalFactors.ema21?.trend      || null    // 'ACCELERATING' | 'DECELERATING' | 'CONSTANT'
       };
 
       let opScoreResult = null;
@@ -724,6 +794,33 @@ async function fetchYahooBulk(symbols) {
   }
 }
 
+/**
+ * Wrapper que agrega un timeout a cualquier Promise de Yahoo Finance.
+ * Previene que el proceso quede clavado si Yahoo no responde.
+ * @param {Promise} promise - La promesa a ejecutar
+ * @param {number} ms - Tiempo máximo de espera en milisegundos
+ * @param {string} label - Etiqueta para el mensaje de error
+ */
+function withTimeout(promise, ms, label = 'request') {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Timeout after ${ms}ms [${label}]`)), ms);
+    })
+  ]).finally(() => clearTimeout(timer));
+}
+
+function computeBaseLengthDays(closes, triggerIdx, resistanceLevel, maxLookback = 90) {
+  const floor = resistanceLevel * 0.98;
+  for (let i = triggerIdx - 1; i >= Math.max(0, triggerIdx - maxLookback); i--) {
+    if (closes[i] >= floor) {
+      return triggerIdx - i;
+    }
+  }
+  return maxLookback;
+}
+
 function calculateEMAArray(data, period) {
   if (!data || data.length < period) return [];
   const k = 2 / (period + 1);
@@ -847,14 +944,16 @@ async function calculateDailySetup(symbol) {
   const SLOPE_THRESHOLD_PCT = 0.20;
   const MIN_SEPARATION_PCT = 1.0;
 
+  const chartOptions = { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' };
   let data;
   try {
-    data = await yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
+    // Timeout de 20s: si Yahoo no responde, lanzamos error en lugar de quedar clavados.
+    data = await withTimeout(yahooFinance.chart(symbol, chartOptions), 20000, `daily chart ${symbol}`);
   } catch (e) {
     // Los commodities (=F) y símbolos ya con sufijo no necesitan el fallback .BA
     if (!symbol.includes('.') && !symbol.includes('=')) {
       try {
-        data = await yahooFinance.chart(symbol + '.BA', { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' });
+        data = await withTimeout(yahooFinance.chart(symbol + '.BA', chartOptions), 20000, `daily chart ${symbol}.BA`);
       } catch (e2) {
         throw new Error(`Yahoo Chart Error ${e2.message}`);
       }
@@ -1221,6 +1320,9 @@ async function calculateDailySetup(symbol) {
           }
         }
         factors.daysSinceTrigger = L - triggerDay;
+        
+        // Calcular duración de la base con el historial completo
+        factors.baseLengthDays = computeBaseLengthDays(closes, L, max20, 90);
       }
     }
   }
@@ -1390,7 +1492,12 @@ async function calculateIndexRegime(indexSymbol) {
 async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod = 14) {
   let data;
   try {
-    data = await yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' });
+    // Timeout de 20s: si Yahoo no responde, lanzamos error en lugar de quedar clavados.
+    data = await withTimeout(
+      yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' }),
+      20000,
+      `weekly chart ${symbol}`
+    );
   } catch (e) {
     throw new Error(`Yahoo Chart Error ${e.message}`);
   }
@@ -1435,31 +1542,12 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
     }
   }
 
+  // FIX: Usar el helper calculateRsiArray en lugar de duplicar el cálculo inline.
   if (closes.length > rsiPeriod) {
-    let gains = 0, losses = 0;
-    for (let i = 1; i <= rsiPeriod; i++) {
-      const diff = closes[i] - closes[i - 1];
-      if (diff >= 0) gains += diff;
-      else losses -= diff;
-    }
-    let avgGain = gains / rsiPeriod;
-    let avgLoss = losses / rsiPeriod;
-    let rsiArray = [];
-    const getRsi = (ag, al) => al === 0 ? 100 : 100 - (100 / (1 + ag / al));
-    rsiArray.push(getRsi(avgGain, avgLoss));
-
-    for (let i = rsiPeriod + 1; i < closes.length; i++) {
-      const diff = closes[i] - closes[i - 1];
-      let gain = diff >= 0 ? diff : 0;
-      let loss = diff < 0 ? -diff : 0;
-      avgGain = (avgGain * (rsiPeriod - 1) + gain) / rsiPeriod;
-      avgLoss = (avgLoss * (rsiPeriod - 1) + loss) / rsiPeriod;
-      rsiArray.push(getRsi(avgGain, avgLoss));
-    }
-
-    if (rsiArray.length >= 2) {
-      const curr = parseFloat(rsiArray[rsiArray.length - 1].toFixed(2));
-      const prev = parseFloat(rsiArray[rsiArray.length - 2].toFixed(2));
+    const rsiArr = calculateRsiArray(closes, rsiPeriod);
+    if (rsiArr.length >= 2) {
+      const curr = parseFloat(rsiArr[rsiArr.length - 1].toFixed(2));
+      const prev = parseFloat(rsiArr[rsiArr.length - 2].toFixed(2));
       rsi = { current: curr, previous: prev, delta: parseFloat((curr - prev).toFixed(2)) };
     }
   }
@@ -1573,16 +1661,18 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
 async function resetDailyData() {
   const db = getPool();
   try {
-    logger.info('MarketSync', 'Midnight reset: clearing setups, EMAs, RSIs, and OP Scores...');
+    logger.info('MarketSync', 'Midnight reset: clearing setups, EMAs, RSIs, RS and OP Scores...');
     await db.execute(`
       UPDATE market_snapshot 
       SET ema_updated_at = NULL, 
           rsi_updated_at = NULL, 
+          rs_updated_at  = NULL,
           setup_state = NULL, 
           op_score = NULL,
           setup_verdict = NULL,
           setup_factors = NULL,
-          op_score_conclusions = NULL
+          op_score_conclusions = NULL,
+          market_regime = NULL
     `);
     logger.info('MarketSync', 'Midnight reset complete. Next sync will recalculate everything.');
   } catch (error) {

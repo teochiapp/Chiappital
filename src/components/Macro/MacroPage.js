@@ -30,16 +30,8 @@ import {
 } from './styled/MacroStyles';
 import AppLogo from '../common/Logo';
 
-const MacroPage = ({ data, loading, error }) => {
-  if (loading) {
-    return (
-      <MacroContainer>
-        <LoadingContainer>
-          <AppLogo size="60px" fontSize="2rem" />
-        </LoadingContainer>
-      </MacroContainer>
-    );
-  }
+const MacroPage = ({ data, sectionLoading = {}, error }) => {
+  // Ya no bloqueamos toda la página: cada sección muestra su propio skeleton.
 
   if (error) {
     return (
@@ -50,6 +42,22 @@ const MacroPage = ({ data, loading, error }) => {
       </MacroContainer>
     );
   }
+
+  // Skeleton animado reutilizable
+  const SectionSkeleton = ({ rows = 4 }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '4px 0' }}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} style={{
+          height: '36px', borderRadius: '6px',
+          background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)',
+          backgroundSize: '200% 100%',
+          animation: 'macroSkeletonPulse 1.4s ease-in-out infinite',
+          animationDelay: `${i * 0.08}s`
+        }} />
+      ))}
+      <style>{`@keyframes macroSkeletonPulse { 0%,100%{background-position:200% 0} 50%{background-position:0% 0} }`}</style>
+    </div>
+  );
 
   const formatPrice = (price, isPercentage = false, noDecimals = false) => {
     if (!price && price !== 0) return '-';
@@ -137,6 +145,8 @@ const MacroPage = ({ data, loading, error }) => {
           </CardHeader>
           
           <ListContainer>
+            {sectionLoading.earnings ? <SectionSkeleton rows={5} /> : (
+            <>
             <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600, marginTop: '0.5rem' }}>
               Before Open
             </div>
@@ -200,6 +210,8 @@ const MacroPage = ({ data, loading, error }) => {
                 </ListItem>
               ))
             )}
+            </>
+            )}
           </ListContainer>
         </MacroCard>
 
@@ -211,7 +223,7 @@ const MacroPage = ({ data, loading, error }) => {
           </CardHeader>
           
           <ListContainer>
-            {data.forex.map((fx, i) => (
+            {sectionLoading.forex ? <SectionSkeleton rows={6} /> : data.forex.map((fx, i) => (
               <ListItem key={i}>
                 <div className="item-left" style={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
                   {fx.iso && (
@@ -263,7 +275,7 @@ const MacroPage = ({ data, loading, error }) => {
           </CardHeader>
           
           <ListContainer>
-            {data.macro.map((m, i) => (
+            {sectionLoading.macro ? <SectionSkeleton rows={6} /> : data.macro.map((m, i) => (
               <ListItem key={i}>
                 <div className="item-left">
                   <span className="item-title">{m.name}</span>
@@ -304,7 +316,7 @@ const MacroPage = ({ data, loading, error }) => {
           </CardHeader>
           
           <CommoditiesGrid>
-            {data.commodities && data.commodities.map((c, i) => (
+            {sectionLoading.commodities ? <SectionSkeleton rows={4} /> : data.commodities && data.commodities.map((c, i) => (
               <ListItem key={i}>
                 <div className="item-left">
                   <span className="item-title">{c.name}</span>
@@ -343,7 +355,9 @@ const MacroPage = ({ data, loading, error }) => {
           </CardHeader>
           
           <NewsGrid>
-            {data.news.map((n, i) => (
+            {sectionLoading.news ? (
+              <div style={{ gridColumn: '1/-1' }}><SectionSkeleton rows={3} /></div>
+            ) : data.news.map((n, i) => (
               <NewsCard key={i} href={n.url} target="_blank" rel="noopener noreferrer">
                 {n.image && (
                   <img src={n.image} alt="News" className="news-image" loading="lazy" />

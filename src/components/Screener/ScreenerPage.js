@@ -952,6 +952,7 @@ const ScreenerPage = () => {
                                     s.rsState === 'Strong & Rising' ? '#22c55e' :
                                     s.rsState === 'Strong but Weakening' ? '#86efac' :
                                     s.rsState === 'Weak but Recovering' ? '#fca5a5' :
+                                    s.rsState === 'Neutral' ? '#94a3b8' :
                                     '#ef4444',
                                   fontWeight: 'bold'
                                 }}
@@ -1315,23 +1316,35 @@ const ScreenerPage = () => {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ margin: '0 0 4px 0', color: '#e2e8f0', fontSize: '0.95rem' }}>Conclusiones:</h4>
-                {opScoreModalData.opScoreConclusions.map((conc, idx) => (
-                  <div key={idx} style={{ 
-                    padding: '12px 16px', 
-                    background: 'rgba(15, 23, 42, 0.6)', 
-                    borderRadius: '6px', 
-                    borderLeft: '3px solid #8b5cf6',
-                    fontSize: '0.95rem',
-                    lineHeight: '1.5',
-                    color: '#cbd5e1',
-                    whiteSpace: 'pre-wrap'
-                  }}>
-                    {conc}
+              {(() => {
+                const allConc = opScoreModalData.opScoreConclusions || [];
+                const regularConc = allConc.filter(c => !c.startsWith('__DEBUG__'));
+                const debugEntry  = allConc.find(c => c.startsWith('__DEBUG__'));
+                const debugText   = debugEntry ? debugEntry.replace('__DEBUG__', '') : null;
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#e2e8f0', fontSize: '0.95rem' }}>Conclusiones:</h4>
+                    {regularConc.map((conc, idx) => (
+                      <div key={idx} style={{ 
+                        padding: '12px 16px', 
+                        background: 'rgba(15, 23, 42, 0.6)', 
+                        borderRadius: '6px', 
+                        borderLeft: '3px solid #8b5cf6',
+                        fontSize: '0.95rem',
+                        lineHeight: '1.5',
+                        color: '#cbd5e1',
+                        whiteSpace: 'pre-wrap'
+                      }}>
+                        {conc}
+                      </div>
+                    ))}
+
+                    {/* ── DEBUG COLLAPSIBLE ──────────────────────────── */}
+                    {debugText && <OpScoreDebugAccordion debugText={debugText} />}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </ScanBody>
           </ScanPanel>
         </ScanOverlay>
@@ -1343,6 +1356,44 @@ const ScreenerPage = () => {
 // ─── Animations ───────────────────────────────────────────────────────────────
 const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
 const spin   = keyframes`from{transform:rotate(0deg)}to{transform:rotate(360deg)}`;
+
+// ─── OpScore Debug Accordion (tab colapsable de variables de entrada) ─────────
+function OpScoreDebugAccordion({ debugText }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ marginTop: '8px', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(148,163,184,0.15)' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 14px', background: 'rgba(15,23,42,0.8)',
+          color: '#64748b', fontSize: '0.8rem', fontWeight: '600', letterSpacing: '0.04em',
+          border: 'none', cursor: 'pointer', transition: 'background 0.15s',
+          textTransform: 'uppercase',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(30,41,59,0.9)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(15,23,42,0.8)'}
+      >
+        <span>⚙️ Variables de Entrada (Debug)</span>
+        <span style={{ fontSize: '0.75rem', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: '12px 14px',
+          background: 'rgba(2,6,23,0.7)',
+          fontFamily: 'monospace',
+          fontSize: '0.78rem',
+          lineHeight: '1.7',
+          color: '#64748b',
+          whiteSpace: 'pre-wrap',
+          borderTop: '1px solid rgba(148,163,184,0.1)',
+        }}>
+          {debugText}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 const Layout = styled.div`

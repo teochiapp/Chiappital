@@ -5,6 +5,36 @@
  */
 const { generateConclusions } = require('./opScoreConclusions');
 
+function getPriorRedStreak(candles) {
+  // Cuenta velas rojas consecutivas inmediatamente antes de la última vela
+  if (!candles || candles.length < 2) return 0;
+  let streak = 0;
+  for (let i = candles.length - 2; i >= 0; i--) {
+    if (candles[i].isRed) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function isNR7(candles) {
+  if (!candles || candles.length < 7) return false;
+  const last7 = candles.slice(-7);
+  const ranges = last7.map(c => c.high - c.low);
+  const currentRange = ranges[ranges.length - 1];
+  return currentRange === Math.min(...ranges);
+}
+
+function isPocketPivot(candles, lookback = 10) {
+  if (!candles || candles.length < 2) return false;
+  const current = candles[candles.length - 1];
+  if (!current.isGreen || current.volume == null) return false;
+  const priorRedVolumes = candles.slice(-lookback, -1)
+    .filter(c => c.isRed && c.volume != null)
+    .map(c => c.volume);
+  if (priorRedVolumes.length === 0) return false;
+  return current.volume > Math.max(...priorRedVolumes);
+}
+
 function calculateOpScore(setupState, data) {
   let score = 0;
   let rawScore = 0;
@@ -14,43 +44,54 @@ function calculateOpScore(setupState, data) {
   const pushConclusion = (text) => conclusions.push(text);
 
   // ─── TRANSLATE Z-SCORE RS STATE TO COMPATIBLE STRINGS ───
-  // Esto mapea las bandas estadísticas finas a los buckets que el scoring ya tiene balanceados
+  // Esto mapea las bandas estadísticas finas a los buckets que el scoring ya tiene balanceados.
+  // FIX: se usa variable local para NO mutar el objeto data original.
+  // FIX: se agregan los estados legacy del fallback (N<10) para que pasen por el mismo mapeador.
+  let rsStateMapped = data.rsState || 'Neutral';
   if (data.rsState) {
     const s = data.rsState;
-    if (s === 'Very Strong & Rising') {
-      data.rsState = 'Very Strong';
-    } else if (s === 'Very Strong but Weakening') {
-      data.rsState = 'Strong but Weakening';
-    } else if (s === 'Positive & Rising') {
-      data.rsState = 'Strong';
-    } else if (s === 'Positive but Weakening') {
-      data.rsState = 'Positive';
-    } else if (s === 'Neutral & Rising') {
-      data.rsState = 'Positive';
-    } else if (s === 'Neutral & Falling') {
-      data.rsState = 'Neutral';
-    } else if (s === 'Weak but Recovering') {
-      data.rsState = 'Weak but Recovering';
-    } else if (s === 'Weak & Falling') {
-      data.rsState = 'Weak & Falling';
-    } else if (s === 'Very Weak but Recovering' || s === 'Very Weak & Falling') {
-      data.rsState = 'Very Weak';
-    }
+    if (s === 'Very Strong & Rising')                              { rsStateMapped = 'Very Strong'; }
+    else if (s === 'Very Strong but Weakening')                    { rsStateMapped = 'Strong but Weakening'; }
+    else if (s === 'Positive & Rising')                            { rsStateMapped = 'Strong'; }
+    else if (s === 'Positive but Weakening')                       { rsStateMapped = 'Positive'; }
+    else if (s === 'Neutral & Rising')                             { rsStateMapped = 'Positive'; }
+    else if (s === 'Neutral & Falling' || s === 'Neutral')         { rsStateMapped = 'Neutral'; }
+    else if (s === 'Weak but Recovering')                          { rsStateMapped = 'Weak but Recovering'; }
+    else if (s === 'Weak & Falling')                               { rsStateMapped = 'Weak & Falling'; }
+    else if (s === 'Very Weak but Recovering' || s === 'Very Weak & Falling') { rsStateMapped = 'Very Weak'; }
+    // Estados legacy del fallback (N<10) — ya están en el formato correcto para el scoring
+    else if (s === 'Strong & Rising')                              { rsStateMapped = 'Very Strong'; }
+    else if (s === 'Strong but Weakening')                         { rsStateMapped = 'Strong but Weakening'; }
+    // Si el estado ya es uno de los valores internos del scoring, lo dejamos tal cual
+    else { rsStateMapped = s; }
   }
+  // Exponemos rsStateMapped al data sin mutar la referencia original
+  const _data = { ...data, rsState: rsStateMapped };
 
   // ─── INTRADAY LIGHTWEIGHT VALIDATION ───────────────────────────────────────
   // Si es un setup alcista pero el precio en vivo ya rompió ambas medias por
   // más de 0.5 ATR, invalidamos el setup para evitar mostrar data "stale" hasta
   // que corra el próximo ciclo completo de medias.
   const isBullishSetup = ['bullish_breakout', 'bullish_pullback', 'bullish_reversal_confirmed', 'early_bullish_reversal', 'strong_uptrend', 'strong_uptrend_extended'].includes(setupState);
-  if (isBullishSetup && data.price && data.ema21 && data.sma30 && data.atr14) {
-    if (data.price < data.ema21 && data.price < data.sma30) {
-      const distanceToMedia = Math.min(data.ema21, data.sma30) - data.price;
-      if (distanceToMedia > (0.5 * data.atr14)) {
-        isValid = false;
-        pushConclusion('INVALID_BREAK_SUPPORT');
+  if (isBullishSetup && _data.price && _data.ema21 && _data.sma30 && _data.atr14) {
+    if (_data.price < _data.ema21 && _data.price < _data.sma30) {
+      const distanceToMedia = Math.min(_data.ema21, _data.sma30) - _data.price;
+      if (distanceToMedia > (0.5 * _data.atr14)) {
+        if ((_data.invalidBreakStreak || 0) >= 2) {
+          isValid = false;
+          pushConclusion('INVALID_BREAK_SUPPORT');
+        } else {
+          pushConclusion('INVALID_BREAK_SUPPORT_WARNING');
+        }
       }
     }
+  }
+
+  // FIX: Short-circuit cuando el setup está invalidado — no tiene sentido calcular
+  // el score completo para un setup que sabemos está roto.
+  if (!isValid) {
+    const finalConclusions = generateConclusions(setupState, _data, conclusions, isValid);
+    return { valid: false, rawScore: 0, scoreCap: 0, score: 0, conclusions: finalConclusions };
   }
 
   if (setupState === 'bullish_breakout') {
@@ -62,7 +103,7 @@ function calculateOpScore(setupState, data) {
     scoreCap = Infinity; // Sin cap global por defecto
 
     // Helper vars
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined && data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
       : 'STABLE';
@@ -143,8 +184,14 @@ function calculateOpScore(setupState, data) {
       else if (data.rsiDaily >= 50 && data.rsiDaily < 55) { rsiScore = 2; pushConclusion('BO_RSI_EARLY:2'); }
       else if (data.rsiDaily >= 55 && data.rsiDaily <= 65) { rsiScore = 6; pushConclusion('BO_RSI_SOLID:6'); }
       else if (data.rsiDaily > 65 && data.rsiDaily <= 70) { rsiScore = 3; pushConclusion('BO_RSI_HEALTHY:3'); }
-      else if (data.rsiDaily > 70 && data.rsiDaily <= 75) { rsiScore = -3; pushConclusion('BO_RSI_ELEVATED:-3'); }
-      else if (data.rsiDaily > 75) { rsiScore = -8; pushConclusion('BO_RSI_OVEREXTENDED:-8'); }
+      else if (data.rsiDaily > 70 && data.rsiDaily <= 75) { 
+        if (volScore === 10) { rsiScore = 3; pushConclusion('BO_RSI_STRONG_MOMENTUM:3'); }
+        else { rsiScore = -3; pushConclusion('BO_RSI_ELEVATED:-3'); }
+      }
+      else if (data.rsiDaily > 75) { 
+        if (volScore === 10) { rsiScore = 0; pushConclusion('BO_RSI_MOMENTUM_EXTENDED:0'); }
+        else { rsiScore = -8; pushConclusion('BO_RSI_OVEREXTENDED:-8'); }
+      }
     }
     rawScore += rsiScore;
 
@@ -156,11 +203,30 @@ function calculateOpScore(setupState, data) {
       rawScore += 3; // Base razonable por defecto dado que requería consolidación
     }
 
+    if (data.baseLengthDays !== undefined && data.baseLengthDays !== null) {
+      if (data.baseLengthDays >= 15 && data.baseLengthDays < 25) {
+        rawScore += 3; pushConclusion('BO_BASE_ACCEPTABLE:3');
+      } else if (data.baseLengthDays >= 25 && data.baseLengthDays < 45) {
+        rawScore += 6; pushConclusion('BO_BASE_IDEAL:6');
+      } else if (data.baseLengthDays >= 45 && data.baseLengthDays < 90) {
+        rawScore += 4; pushConclusion('BO_BASE_LONG:4');
+      } else if (data.baseLengthDays >= 90) {
+        rawScore += 5; pushConclusion('BO_BASE_NEW_TERRITORY:5');
+      }
+    }
+
     // 7. MACD
-    if (data.macdWeekly && data.macdWeekly.current !== null && data.macdWeekly.prevHist !== null) {
-      const { current, signal, hist, prevHist } = data.macdWeekly;
-      if (current > signal) {
-        if (hist > prevHist) {
+    // FIX BUG: data.macdWeekly es un escalar (número), no un objeto.
+    // Se construye el objeto igual que en strong_uptrend a partir de los campos individuales.
+    const boMacdW = {
+      current:    (_data.macdWeekly   !== undefined && _data.macdWeekly   !== null) ? _data.macdWeekly   : null,
+      signal:     (_data.macdSignal   !== undefined && _data.macdSignal   !== null) ? _data.macdSignal   : null,
+      hist:       (_data.macdHist     !== undefined && _data.macdHist     !== null) ? _data.macdHist     : null,
+      prevHist:   (_data.macdPrevHist !== undefined && _data.macdPrevHist !== null) ? _data.macdPrevHist : null,
+    };
+    if (boMacdW.current !== null && boMacdW.signal !== null && boMacdW.hist !== null && boMacdW.prevHist !== null) {
+      if (boMacdW.current > boMacdW.signal) {
+        if (boMacdW.hist > boMacdW.prevHist) {
           rawScore += 6; pushConclusion('BO_MACD_WEEKLY_ACCEL:6');
         } else {
           rawScore += 2;
@@ -169,8 +235,8 @@ function calculateOpScore(setupState, data) {
         rawScore -= 5;
       }
     }
-    if (data.macd && data.macd.current !== null && data.macd.prevHist !== null) {
-      const { current, signal, prevMacd, prevSignal } = data.macd;
+    if (_data.macd && _data.macd.current !== null && _data.macd.prevHist !== null) {
+      const { current, signal, prevMacd, prevSignal } = _data.macd;
       if (prevMacd !== null && prevSignal !== null && prevMacd <= prevSignal && current > signal) {
         rawScore += 4; pushConclusion('BO_MACD_FRESH_CROSS:4');
       }
@@ -231,7 +297,7 @@ function calculateOpScore(setupState, data) {
 
     // 2. RELATIVE STRENGTH
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined && data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
       : 'STABLE';
@@ -360,7 +426,18 @@ function calculateOpScore(setupState, data) {
       const isStrongClose = (current.close - current.low) / range > 0.7;
       const isGiantBear = current.isRed && data.atr14 && range > (1.5 * data.atr14);
 
-      if (isHammer) { paScore += 3; pushConclusion('FLAG_HAMMER:3'); }
+      if (isHammer) {
+        const priorRedStreak = getPriorRedStreak(data.recentCandles);
+        let hammerBonus;
+        if (priorRedStreak >= 3) { hammerBonus = 5; pushConclusion('FLAG_HAMMER_STRONG_CONTEXT:5'); }
+        else if (priorRedStreak >= 1) { hammerBonus = 3; pushConclusion('FLAG_HAMMER_MODERATE_CONTEXT:3'); }
+        else { hammerBonus = 1; pushConclusion('FLAG_HAMMER_WEAK_CONTEXT:1'); }
+        if (isNR7(data.recentCandles)) { hammerBonus += 2; pushConclusion('FLAG_NR7_CONTRACTION:2'); }
+        paScore += hammerBonus;
+      }
+      if (isPocketPivot(data.recentCandles)) {
+        paScore += 3; pushConclusion('BULLISH_POCKET_PIVOT:3');
+      }
       if (isStrongClose) { paScore += 3; pushConclusion('FLAG_STRONG_CLOSE:3'); }
 
       if (isUpperWick && !isWeakClose) { paScore -= 5; pushConclusion('FLAG_UPPER_WICK:-5'); }
@@ -425,7 +502,7 @@ function calculateOpScore(setupState, data) {
 
     // 4. RELATIVE STRENGTH
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined && data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
       : 'STABLE';
@@ -550,7 +627,7 @@ function calculateOpScore(setupState, data) {
 
     // 3. FUERZA RELATIVA
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined && data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
       : 'STABLE';
@@ -632,9 +709,26 @@ function calculateOpScore(setupState, data) {
     }
 
     // 7. SLOPE / CAMBIO ESTRUCTURAL
-    if (data.recentCandles && data.recentCandles.length > 2) {
-      rawScore += 2; // Asumiendo UP normal por detección
+    // FIX: +2 fijo reemplazado por scoring real basado en la pendiente de EMA21.
+    // ema21SlopeDir y ema21SlopeTrend son pasados desde marketSyncService via opData.
+    const ema21SlopeDir   = _data.ema21SlopeDir   || null; // 'UP' | 'DOWN' | 'FLAT' | null
+    const ema21SlopeTrend = _data.ema21SlopeTrend || null; // 'ACCELERATING' | 'DECELERATING' | 'CONSTANT' | null
+    const ema21SlopePct   = (_data.ema21SlopePct !== undefined && _data.ema21SlopePct !== null) ? _data.ema21SlopePct : null;
+
+    if (_data.ema21SlopeDir === 'UP') {
+      rawScore += 3;
+      pushConclusion('EBR_EMA21_SLOPE_UP:3');
+      if (_data.ema21SlopeTrend === 'ACCELERATING') {
+        rawScore += 2;
+        pushConclusion('EBR_EMA21_ACCELERATING:2');
+      }
+    } else if (_data.ema21SlopeDir === 'DOWN') {
+      rawScore -= 3;
+      pushConclusion('EBR_EMA21_SLOPE_DOWN:-3');
+    } else {
+      pushConclusion('EBR_EMA21_SLOPE_FLAT:0');
     }
+    // Bonus estructural: precio ya recuperó SMA30 (señal de cambio de fase)
     if (data.price && data.sma30 && data.price > data.sma30) {
       rawScore += 4; pushConclusion('EBR_STRUCTURAL_RECOVERY:4');
     }
@@ -738,7 +832,7 @@ function calculateOpScore(setupState, data) {
 
     // 2. RELATIVE STRENGTH
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     if (rsState === 'Very Strong' || rsState === 'Strong & Rising') rsScore += 15;
     else if (rsState === 'Strong' || rsState === 'Strong but Weakening') rsScore += 10;
     else if (rsState === 'Positive') rsScore += 5;
@@ -828,7 +922,7 @@ function calculateOpScore(setupState, data) {
 
     // 2. RELATIVE STRENGTH (Invertido: RS fuerte confirma caída, mejorando es rescate)
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined && data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
       : 'STABLE';
@@ -1024,8 +1118,13 @@ function calculateOpScore(setupState, data) {
         const isNearRangeLow = rangeLow !== null && current.low <= rangeLow * 1.02;
 
         if (isHammer && isNearRangeLow) {
-          reboundScore += 4;
-          pushConclusion('LATERAL_REBOUND_HAMMER:4');
+          const priorRedStreak = getPriorRedStreak(data.recentCandles);
+          let hammerBonus;
+          if (priorRedStreak >= 3) { hammerBonus = 5; pushConclusion('LATERAL_HAMMER_STRONG_CONTEXT:5'); }
+          else if (priorRedStreak >= 1) { hammerBonus = 3; pushConclusion('LATERAL_HAMMER_MODERATE_CONTEXT:3'); }
+          else { hammerBonus = 1; pushConclusion('LATERAL_HAMMER_WEAK_CONTEXT:1'); }
+          if (isNR7(data.recentCandles)) { hammerBonus += 2; pushConclusion('LATERAL_NR7_CONTRACTION:2'); }
+          reboundScore += hammerBonus;
 
           // Bonus adicional si ADEMÁS el precio recupera la EMA21
           if (data.ema21 && current.close > data.ema21) {
@@ -1045,6 +1144,10 @@ function calculateOpScore(setupState, data) {
         if (current.isGreen && current.rvol !== null && current.rvol > 1.3) {
           reboundScore += 4;
           pushConclusion('LATERAL_REBOUND_VOLUME:4');
+        }
+        if (isPocketPivot(data.recentCandles)) {
+          reboundScore += 3;
+          pushConclusion('LATERAL_POCKET_PIVOT:3');
         }
       }
 
@@ -1119,7 +1222,7 @@ function calculateOpScore(setupState, data) {
     // En lateral el RS informa si el activo muestra algo de fortaleza relativa,
     // no reemplaza la ausencia de tendencia.
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined &&
       data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
@@ -1398,7 +1501,7 @@ function calculateOpScore(setupState, data) {
     // El RS confirma si la tendencia todavía tiene fortaleza relativa.
     // No puede convertir un setup tardío en uno de alta calidad.
     let rsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined &&
       data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
@@ -1590,7 +1693,7 @@ function calculateOpScore(setupState, data) {
 
     // 5. RELATIVE STRENGTH
     let bRsScore = 0;
-    const bRsState = data.rsState || 'Neutral';
+    const bRsState = _data.rsState || 'Neutral';
     const bRsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined &&
       data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
@@ -1700,9 +1803,14 @@ function calculateOpScore(setupState, data) {
           Math.min(...data.recentCandles.slice(0, -1).map(c => c.low)) * 1.02;
 
         if (isHammer && isNearRecent) {
-          paScore += 4;
+          const priorRedStreak = getPriorRedStreak(data.recentCandles);
+          let hammerBonus;
+          if (priorRedStreak >= 3) { hammerBonus = 5; pushConclusion('BEARISH_HAMMER_STRONG_CONTEXT:5'); }
+          else if (priorRedStreak >= 1) { hammerBonus = 3; pushConclusion('BEARISH_HAMMER_MODERATE_CONTEXT:3'); }
+          else { hammerBonus = 1; pushConclusion('BEARISH_HAMMER_WEAK_CONTEXT:1'); }
+          if (isNR7(data.recentCandles)) { hammerBonus += 2; pushConclusion('BEARISH_NR7_CONTRACTION:2'); }
+          paScore += hammerBonus;
           severityPosSignals++;
-          pushConclusion('BEARISH_HAMMER_SUPPORT:4');
         }
 
         // Strong close después de caída
@@ -1846,19 +1954,28 @@ function calculateOpScore(setupState, data) {
     let extScore = 0;
     let extCap = null;
 
-    if (suEma21Dist < 0) { extScore = -5; pushConclusion('SU_LOST_EMA21:-5'); }
-    else if (suEma21Dist >= 0 && suEma21Dist <= 5) { extScore = 8; pushConclusion('SU_NEAR_EMA21:8'); }
-    else if (suEma21Dist > 5 && suEma21Dist <= 10) { extScore = 5; pushConclusion('SU_HEALTHY_EXTENSION:5'); }
-    else if (suEma21Dist > 10 && suEma21Dist <= 15) { extScore = 0; pushConclusion('SU_MATURE:0'); }
-    else if (suEma21Dist > 15 && suEma21Dist <= 20) { extScore = -7; extCap = 65; pushConclusion('SU_EXTENDED:-7'); }
-    else if (suEma21Dist > 20) { extScore = -12; extCap = 55; pushConclusion('SU_OVEREXTENDED:-12'); }
+    if (suEma21Dist < 0) { 
+      extScore = -5; pushConclusion('SU_LOST_EMA21:-5'); 
+    } else if (data.ema21DistanceAtr !== undefined && data.ema21DistanceAtr !== null) {
+      if (data.ema21DistanceAtr < 1.0) { extScore = 8; pushConclusion('SU_NEAR_EMA21_ATR:8'); }
+      else if (data.ema21DistanceAtr >= 1.0 && data.ema21DistanceAtr < 2.0) { extScore = 5; pushConclusion('SU_HEALTHY_EXTENSION_ATR:5'); }
+      else if (data.ema21DistanceAtr >= 2.0 && data.ema21DistanceAtr < 3.0) { extScore = 0; pushConclusion('SU_MATURE_ATR:0'); }
+      else if (data.ema21DistanceAtr >= 3.0 && data.ema21DistanceAtr < 4.0) { extScore = -7; extCap = 65; pushConclusion('SU_EXTENDED_ATR:-7'); }
+      else { extScore = -12; extCap = 55; pushConclusion('SU_OVEREXTENDED_ATR:-12'); }
+    } else {
+      if (suEma21Dist >= 0 && suEma21Dist <= 5) { extScore = 8; pushConclusion('SU_NEAR_EMA21:8'); }
+      else if (suEma21Dist > 5 && suEma21Dist <= 10) { extScore = 5; pushConclusion('SU_HEALTHY_EXTENSION:5'); }
+      else if (suEma21Dist > 10 && suEma21Dist <= 15) { extScore = 0; pushConclusion('SU_MATURE:0'); }
+      else if (suEma21Dist > 15 && suEma21Dist <= 20) { extScore = -7; extCap = 65; pushConclusion('SU_EXTENDED:-7'); }
+      else if (suEma21Dist > 20) { extScore = -12; extCap = 55; pushConclusion('SU_OVEREXTENDED:-12'); }
+    }
 
     rawScore += extScore;
     if (extCap !== null) { scoreCap = scoreCap === null ? extCap : Math.min(scoreCap, extCap); }
 
     // 3. RELATIVE STRENGTH
     let suRsScore = 0;
-    const rsState = data.rsState || 'Neutral';
+    const rsState = _data.rsState || 'Neutral';
     const rsTrend = (data.rsValue !== undefined && data.rsPrevious !== undefined &&
       data.rsValue !== null && data.rsPrevious !== null)
       ? (data.rsValue > data.rsPrevious ? 'IMPROVING' : (data.rsValue < data.rsPrevious ? 'DETERIORATING' : 'STABLE'))
@@ -2020,8 +2137,18 @@ function calculateOpScore(setupState, data) {
     }
     rawScore += suPaScore;
 
-    // 9. CAP GLOBAL: strong_uptrend nunca supera 60
-    scoreCap = scoreCap === null ? 60 : Math.min(scoreCap, 60);
+    // 9. CAP GLOBAL
+    if (data.ema21DistanceAtr !== undefined && data.ema21DistanceAtr !== null) {
+      if (data.ema21DistanceAtr < 1.0) {
+        scoreCap = scoreCap === null ? 75 : Math.min(scoreCap, 75);
+      } else if (data.ema21DistanceAtr >= 1.0 && data.ema21DistanceAtr < 2.0) {
+        scoreCap = scoreCap === null ? 68 : Math.min(scoreCap, 68);
+      } else if (data.ema21DistanceAtr >= 2.0 && data.ema21DistanceAtr < 3.0) {
+        scoreCap = scoreCap === null ? 60 : Math.min(scoreCap, 60);
+      }
+    } else {
+      scoreCap = scoreCap === null ? 60 : Math.min(scoreCap, 60);
+    }
     score = Math.max(10, rawScore);
 
   } else {
@@ -2030,7 +2157,7 @@ function calculateOpScore(setupState, data) {
 
   // ─── TRIGGER RECENCY DECAY ──────────────────────────────────────────────────
   if (data.daysSinceTrigger !== undefined && data.daysSinceTrigger > 1 && isValid) {
-    const decayScore = -2 * (data.daysSinceTrigger - 1);
+    const decayScore = Math.max(-2 * (data.daysSinceTrigger - 1), -8);
     score += decayScore;
     rawScore += decayScore;
     pushConclusion(`TRIGGER_DECAY_${data.daysSinceTrigger}D:${decayScore}`);
@@ -2057,15 +2184,15 @@ function calculateOpScore(setupState, data) {
       sectorScore = -8;
       pushConclusion(`SECTOR_BEARISH:${sectorScore}`);
       
-      // Caps contextuales por sector bajista
+      // FIX: Caps contextuales por sector bajista — valores ajustados para mayor efectividad
       if (setupState === 'bullish_breakout' || setupState === 'bullish_pullback') {
-        scoreCap = scoreCap === null ? 80 : Math.min(scoreCap, 80);
+        scoreCap = scoreCap === null ? 70 : Math.min(scoreCap, 70);
         pushConclusion('SECTOR_BEARISH_CAP');
       } else if (setupState === 'bullish_reversal_confirmed') {
-        scoreCap = scoreCap === null ? 75 : Math.min(scoreCap, 75);
+        scoreCap = scoreCap === null ? 65 : Math.min(scoreCap, 65);
         pushConclusion('SECTOR_BEARISH_CAP');
       } else if (setupState === 'early_bullish_reversal' || setupState === 'strong_uptrend') {
-        scoreCap = scoreCap === null ? 65 : Math.min(scoreCap, 65);
+        scoreCap = scoreCap === null ? 55 : Math.min(scoreCap, 55);
         pushConclusion('SECTOR_BEARISH_CAP');
       }
     }
@@ -2090,15 +2217,15 @@ function calculateOpScore(setupState, data) {
       regimeScore = -5;
       pushConclusion(`REGIME_BEARISH:${regimeScore}`);
       
-      // Caps contextuales por régimen bajista
+      // FIX: Caps contextuales por régimen bajista — valores ajustados para mayor efectividad
       if (setupState === 'bullish_breakout' || setupState === 'bullish_pullback') {
-        scoreCap = scoreCap === null ? 80 : Math.min(scoreCap, 80);
+        scoreCap = scoreCap === null ? 70 : Math.min(scoreCap, 70);
         pushConclusion('REGIME_BEARISH_CAP');
       } else if (setupState === 'bullish_reversal_confirmed') {
-        scoreCap = scoreCap === null ? 75 : Math.min(scoreCap, 75);
+        scoreCap = scoreCap === null ? 65 : Math.min(scoreCap, 65);
         pushConclusion('REGIME_BEARISH_CAP');
       } else if (setupState === 'early_bullish_reversal' || setupState === 'strong_uptrend') {
-        scoreCap = scoreCap === null ? 65 : Math.min(scoreCap, 65);
+        scoreCap = scoreCap === null ? 55 : Math.min(scoreCap, 55);
         pushConclusion('REGIME_BEARISH_CAP');
       }
     } else {
@@ -2110,6 +2237,34 @@ function calculateOpScore(setupState, data) {
     score = Math.max(0, score);
   }
 
+  // ─── EARNINGS PROXIMITY MODIFIER ─────────────────────────────────────────
+  if (_data.daysToEarnings !== null && _data.daysToEarnings !== undefined && isValid) {
+    const d = _data.daysToEarnings;
+    let earningsScore = 0;
+    let earningsCap = null;
+
+    if (d === 0) {
+      earningsScore = -15;
+      earningsCap = 35;
+      pushConclusion('EARNINGS_TODAY:-15');
+    } else if (d >= 1 && d <= 2) {
+      earningsScore = -10;
+      earningsCap = 50;
+      pushConclusion('EARNINGS_IMMINENT:-10');
+    } else if (d >= 3 && d <= 5) {
+      earningsScore = -5;
+      earningsCap = 65;
+      pushConclusion('EARNINGS_APPROACHING:-5');
+    }
+
+    if (earningsCap !== null) {
+      score += earningsScore;
+      rawScore += earningsScore;
+      score = Math.max(0, score);
+      scoreCap = scoreCap === null ? earningsCap : Math.min(scoreCap, earningsCap);
+    }
+  }
+
   // APPLY CAPS (Soft Cap)
   if (scoreCap !== null && score > scoreCap) {
     const excess = score - scoreCap;
@@ -2119,7 +2274,7 @@ function calculateOpScore(setupState, data) {
   }
 
   // Generar conclusiones legibles pasándole los internal flags generados
-  const finalConclusions = generateConclusions(setupState, data, conclusions, isValid);
+  const finalConclusions = generateConclusions(setupState, _data, conclusions, isValid);
 
 
   return {

@@ -650,11 +650,20 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
       case 'SOFT_CAPPED_AT':
         conclusions.push(`🚧 Puntaje moderado: El setup es excelente pero estructuralmente tiene un tope sugerido. Se ha aplicado un Soft Cap.`);
         break;
+
+      default:
+        // TRIGGER_DECAY: clave dinámica como TRIGGER_DECAY_3D
+        if (key.startsWith('TRIGGER_DECAY_')) {
+          const days = key.replace('TRIGGER_DECAY_', '').replace('D', '');
+          conclusions.push(`⏱️ Penalización por antigüedad del trigger (${days}d): ${val} pts.`);
+        }
+        break;
     }
   });
 
+  // ─── DEBUG BLOCK (renderizado como tab colapsable en frontend) ─────────────
+  // El prefijo __DEBUG__ permite al frontend identificarlo y mostrarlo aparte.
   const debugInfo = [
-    `[⚙️ DEBUG VARIABLES DE ENTRADA]`,
     `• Precio: $${parseFloat(data.price)?.toFixed(2)}`,
     `• RS: ${data.rsValue !== undefined && data.rsValue !== null ? data.rsValue + '%' : 'N/A'} (Prev: ${data.rsPrevious !== undefined && data.rsPrevious !== null ? data.rsPrevious + '%' : 'N/A'}) - Estado: ${data.rsState || 'N/A'}`,
     `• MACD: ${data.macd && data.macd.current !== null ? `Curr: ${data.macd.current}, Signal: ${data.macd.signal}, Hist: ${data.macd.hist}` : 'N/A'}`,
@@ -665,8 +674,8 @@ function generateConclusions(setupState, data, internalFlags = [], isValid = tru
     `• RSI Diario: ${parseFloat(data.rsiDaily)?.toFixed(2) || 'N/A'}`,
     `• RSI Semanal: ${parseFloat(data.rsiWeekly)?.toFixed(2) || 'N/A'}`
   ].join('\n');
-  
-  conclusions.push(debugInfo);
+
+  conclusions.push(`__DEBUG__${debugInfo}`);
 
   return conclusions;
 }

@@ -82,7 +82,8 @@ const DebugConsole = () => {
   const handleForceSync = async () => {
     try {
       loggerService.info('Enviando petición de Force Sync al backend...', 'SYSTEM');
-      const res = await fetch('http://localhost:3001/api/market/sync-now', { method: 'POST' });
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${baseUrl}/api/market/sync-now`, { method: 'POST' });
       if (res.ok) {
         loggerService.success('Force Sync iniciado en el servidor.', 'SYSTEM');
       } else {
@@ -97,7 +98,8 @@ const DebugConsole = () => {
     if (window.confirm('¿Estás seguro de que quieres limpiar la tabla market_snapshot? Se recalculará todo desde cero en la próxima sincronización.')) {
       try {
         loggerService.info('Vaciando tabla market_snapshot...', 'SYSTEM');
-        const res = await fetch('http://localhost:3001/api/market/truncate-snapshot', { method: 'POST' });
+        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+        const res = await fetch(`${baseUrl}/api/market/truncate-snapshot`, { method: 'POST' });
         if (res.ok) {
           loggerService.success('Tabla market_snapshot vaciada correctamente.', 'SYSTEM');
         } else {

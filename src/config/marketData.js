@@ -163,6 +163,28 @@ export const symbolMapping = {
   'BTC': { country: 'USA', sector: 'CRYPTO', company: 'Bitcoin' },
   'ETH': { country: 'USA', sector: 'CRYPTO', company: 'Ethereum' },
   'SOL': { country: 'USA', sector: 'CRYPTO', company: 'Solana' },
+  
+  // 🆕 Nuevos CEDEARs (Acciones)
+  'KLAC': { country: 'USA', sector: 'SEMICONDUCTORS', company: 'KLA Corporation' },
+  'SKHY': { country: 'KOR', sector: 'SEMICONDUCTORS', company: 'SK Hynix' },
+  'DELL': { country: 'USA', sector: 'SOFTWARE', company: 'Dell Technologies' },
+  'WDC': { country: 'USA', sector: 'SOFTWARE', company: 'Western Digital' },
+  'GEV': { country: 'USA', sector: 'UTILITIES', company: 'GE Vernova' },
+  'TLN': { country: 'USA', sector: 'UTILITIES', company: 'Talen Energy' },
+  'MS': { country: 'USA', sector: 'FINANCIAL', company: 'Morgan Stanley' },
+  'IBKR': { country: 'USA', sector: 'FINANCIAL', company: 'Interactive Brokers' },
+  'WELL': { country: 'USA', sector: 'REAL_ESTATE', company: 'Welltower' },
+  'PLD': { country: 'USA', sector: 'REAL_ESTATE', company: 'Prologis' },
+  'LIN': { country: 'USA', sector: 'INDUSTRIAL', company: 'Linde plc' },
+  'SHW': { country: 'USA', sector: 'MATERIALS', company: 'Sherwin-Williams' },
+  'NTRA': { country: 'USA', sector: 'HEALTHCARE', company: 'Natera' },
+  
+  // 🆕 Nuevos CEDEARs (ETFs)
+  'BBCA': { country: 'CAN', sector: 'ETF', company: 'JPMorgan BetaBuilders Canada ETF' },
+  'BBAX': { country: 'OTHER', sector: 'ETF', company: 'JPMorgan BetaBuilders Developed Asia Pacific-ex Japan ETF' },
+  'GSG': { country: 'USA', sector: 'ETF', company: 'iShares S&P GSCI Commodity-Indexed Trust' },
+  'CORN': { country: 'USA', sector: 'ETF', company: 'Teucrium Corn Fund' },
+  'SOYB': { country: 'USA', sector: 'ETF', company: 'Teucrium Soybean Fund' },
 };
 
 // Función para obtener datos de un símbolo o trade completo
