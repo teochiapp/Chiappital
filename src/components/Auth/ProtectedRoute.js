@@ -43,6 +43,7 @@ const ProtectedRoute = ({ children }) => {
   // Si no hay usuario autenticado, redirigir al Login
   if (!user) {
     console.log('🚫 ProtectedRoute - No hay usuario, redirigiendo a /login');
+    localStorage.setItem('intended_destination', location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

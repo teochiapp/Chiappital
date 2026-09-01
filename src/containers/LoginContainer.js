@@ -13,10 +13,12 @@ const LoginContainer = () => {
   const { familyLogin, error, user } = useStrapiAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/select-account';
+  const storedIntended = localStorage.getItem('intended_destination');
+  const from = location.state?.from?.pathname || storedIntended || '/select-account';
 
   // Si ya está logueado, redirigir a selección de cuenta o a la ruta original
   if (user) {
+    localStorage.removeItem('intended_destination');
     return <Navigate to={from} replace />;
   }
 
@@ -36,6 +38,7 @@ const LoginContainer = () => {
     setIsSubmitting(false);
 
     if (result.success) {
+      localStorage.removeItem('intended_destination');
       navigate(from, { replace: true });
     }
   };
