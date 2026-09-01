@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
     } = tradeData;
 
     // Validaciones básicas
-    if (!symbol || !type || !entry_price) {
+    if (!symbol || !type || entry_price === undefined || entry_price === null || entry_price === '') {
       return res.status(400).json({
         error: { message: 'symbol, type y entry_price son requeridos.' }
       });

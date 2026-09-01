@@ -12,6 +12,7 @@ import LabContainer from './containers/LabContainer';
 import ScreenerContainer from './containers/ScreenerContainer';
 import AlertsContainer from './containers/AlertsContainer';
 import MacroContainer from './containers/MacroContainer';
+import BacktestingContainer from './containers/BacktestingContainer';
 
 // Personal Hub
 import PersonalHub from './modules/personal/pages/PersonalHub';
@@ -126,6 +127,22 @@ function App() {
                                 element={
                                     <ProtectedRoute>
                                         <MacroContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/backtesting"
+                                element={
+                                    <ProtectedRoute>
+                                        <BacktestingContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/backtesting/:ticker"
+                                element={
+                                    <ProtectedRoute>
+                                        <BacktestingContainer />
                                     </ProtectedRoute>
                                 }
                             />

@@ -485,20 +485,20 @@ router.put('/mental-models/:id/review', async (req, res) => {
       }
     } else if (quality === 2) {
       if (repetition === 0) {
-        interval_days = 1;
+        interval_days = 14;
       } else if (repetition === 1) {
-        interval_days = 6;
+        interval_days = 30;
       } else {
         interval_days = Math.round(interval_days * ease_factor);
       }
       repetition += 1;
     } else if (quality === 3) {
       if (repetition === 0) {
-        interval_days = 4;
+        interval_days = 21;
       } else if (repetition === 1) {
-        interval_days = Math.round(6 * ease_factor);
+        interval_days = 45;
       } else {
-        interval_days = Math.round(interval_days * ease_factor * 1.3);
+        interval_days = Math.round(interval_days * ease_factor * 1.5);
       }
       repetition += 1;
     }

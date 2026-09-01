@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X, 
-Target, ChevronRight, BellRing, Activity, BarChart2, Award, Bitcoin, PlayCircle } from 'lucide-react';
+import {
+  RefreshCw, AlertCircle, TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, Globe, Layers, Zap, X,
+  Target, ChevronRight, BellRing, Activity, BarChart2, Award, Bitcoin, PlayCircle, LineChart
+} from 'lucide-react';
 import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
+import { useNavigate } from 'react-router-dom';
 import symbolSearchService from '../../services/symbolSearchService';
 import priceService from '../../services/priceService';
 import rsiService from '../../services/rsiService';
@@ -58,26 +61,26 @@ const MAP_SECTOR = {
 
 // Nombres de las regiones
 const REGION_LABELS = {
-  US:     'USA',
-  AR:     'Argentina',
-  BR:     'Brasil',
-  CN:     'China',
-  EU:     'Europa',
-  JP:     'Japón',
-  IN:     'India',
+  US: 'USA',
+  AR: 'Argentina',
+  BR: 'Brasil',
+  CN: 'China',
+  EU: 'Europa',
+  JP: 'Japón',
+  IN: 'India',
   Global: 'Criptos',
   Commodities: 'Commodities',
 };
 
 // Códigos ISO 3166-1 alpha-2 para flagcdn.com
 const REGION_ISO = {
-  US:     'us',
-  AR:     'ar',
-  BR:     'br',
-  CN:     'cn',
-  EU:     'eu',
-  JP:     'jp',
-  IN:     'in',
+  US: 'us',
+  AR: 'ar',
+  BR: 'br',
+  CN: 'cn',
+  EU: 'eu',
+  JP: 'jp',
+  IN: 'in',
   Global: null, // sin bandera
   Commodities: null, // sin bandera
 };
@@ -101,15 +104,15 @@ export const RegionFlag = ({ code, showName = true }) => {
     <RegionFlagWrap>
       {iso
         ? <img
-            src={`https://flagcdn.com/20x15/${iso}.png`}
-            srcSet={`https://flagcdn.com/40x30/${iso}.png 2x`}
-            width="20" height="15"
-            alt={name}
-            style={{ borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
-          />
-        : (code === 'Commodities' 
-            ? <Layers size={18} color="#eab308" style={{ flexShrink: 0 }} /> 
-            : <Bitcoin size={18} color="#f59e0b" style={{ flexShrink: 0 }} />)
+          src={`https://flagcdn.com/20x15/${iso}.png`}
+          srcSet={`https://flagcdn.com/40x30/${iso}.png 2x`}
+          width="20" height="15"
+          alt={name}
+          style={{ borderRadius: 2, objectFit: 'cover', flexShrink: 0 }}
+        />
+        : (code === 'Commodities'
+          ? <Layers size={18} color="#eab308" style={{ flexShrink: 0 }} />
+          : <Bitcoin size={18} color="#f59e0b" style={{ flexShrink: 0 }} />)
       }
       {showName && <span>{name}</span>}
     </RegionFlagWrap>
@@ -117,12 +120,12 @@ export const RegionFlag = ({ code, showName = true }) => {
 };
 
 const ScreenerPage = () => {
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState(null);
-  const [stockData, setStockData]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stockData, setStockData] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [sortKey, setSortKey]       = useState('symbol');
-  const [sortDir, setSortDir]       = useState('asc');
+  const [sortKey, setSortKey] = useState('symbol');
+  const [sortDir, setSortDir] = useState('asc');
   const [filterRegion, setFilterRegion] = useState('ALL');
   const [filterSector, setFilterSector] = useState('ALL');
   const [selectedScanRsi, setSelectedScanRsi] = useState([]);
@@ -130,7 +133,7 @@ const ScreenerPage = () => {
   const [selectedScanDrawdown, setSelectedScanDrawdown] = useState([]);
   const [selectedScanRs, setSelectedScanRs] = useState([]);
   const [selectedScanOpScore, setSelectedScanOpScore] = useState([]);
-  const [groupMode, setGroupMode]   = useState('general'); // 'region' | 'sector' | 'general'
+  const [groupMode, setGroupMode] = useState('general'); // 'region' | 'sector' | 'general'
   const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
   const toggleFilter = (setState, value) => {
@@ -139,27 +142,32 @@ const ScreenerPage = () => {
 
   // Data del laboratorio (Sectores y Paises)
   const { sectorData, countryData } = useLabData();
+  const navigate = useNavigate();
 
   // ── Scan Rápido ──────────────────────────────────────────────────────────────
-  const [showScan, setShowScan]         = useState(false);
+  const [showScan, setShowScan] = useState(false);
   const [selectedScanRegions, setSelectedScanRegions] = useState([]);
   const [selectedScanSectors, setSelectedScanSectors] = useState([]);
   const [selectedScanStates, setSelectedScanStates] = useState([]);
   const [scanThreshold, setScanThreshold] = useState(1.0); // %
-  const [scanResults, setScanResults]   = useState([]);
-  const [scanRan, setScanRan]           = useState(false);
-  const [scanLoading, setScanLoading]   = useState(false);
+  const [scanResults, setScanResults] = useState([]);
+  const [scanRan, setScanRan] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
 
   // ── Alertas ───────────────────────────────────────────────────────────────
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [alertInitialData, setAlertInitialData] = useState(null);
 
-  const handleOpenAlert = (symbol, price) => {
-    setAlertInitialData({ symbol, currentPrice: price });
+  const handleOpenAlert = (symbol, currentPrice) => {
+    setAlertInitialData({ symbol, currentPrice });
     setShowAlertModal(true);
   };
 
-  // ── OP Score Modal ────────────────────────────────────────────────────────
+  const handleOpenBacktest = (symbol, state, opScore) => {
+    navigate(`/backtesting/${symbol}?setup=${state || ''}&score=${opScore || 55}`);
+  };
+
+  // Pre-computar contadores de regiones y sectores (Data estática / opcional) ────────────────────────────────────────────────────────
   const [showOpScoreModal, setShowOpScoreModal] = useState(false);
   const [opScoreModalData, setOpScoreModalData] = useState(null);
 
@@ -171,10 +179,10 @@ const ScreenerPage = () => {
 
   // ── ETF Component Drill-down Modal ────────────────────────────────────────
   const [selectedETF, setSelectedETF] = useState(null);
-  
+
   const handleOpenETF = (symbol) => {
     const symbolLower = symbol.toLowerCase();
-    
+
     // Buscar en MAP_REGION
     const regionEntries = Object.entries(MAP_REGION);
     const rMatch = regionEntries.find(([k, v]) => v === symbolLower);
@@ -189,7 +197,7 @@ const ScreenerPage = () => {
       });
       return;
     }
-    
+
     // Buscar en MAP_SECTOR
     const sectorEntries = Object.entries(MAP_SECTOR);
     const sMatch = sectorEntries.find(([k, v]) => v === symbolLower);
@@ -229,7 +237,7 @@ const ScreenerPage = () => {
       if (forceRefresh) priceService.clearCache();
       const tickers = symbolsList.map(s => s.symbol);
       const quotesMap = await priceService.getMultipleQuotes(tickers);
-      
+
       let latestUpdate = null;
 
       const combined = symbolsList.map(item => {
@@ -239,12 +247,12 @@ const ScreenerPage = () => {
         const changePercent = (quoteData && typeof quoteData.changePercent === 'number' && !isNaN(quoteData.changePercent))
           ? quoteData.changePercent
           : null;
-        
+
         if (quoteData?.updatedAt) {
           const d = new Date(quoteData.updatedAt);
           if (!latestUpdate || d > latestUpdate) latestUpdate = d;
         }
-        
+
         return {
           ...item,
           price,
@@ -274,7 +282,7 @@ const ScreenerPage = () => {
       });
       setStockData(combined);
       setLastUpdate(latestUpdate || new Date());
-      
+
       const symbolsToFetchRsi = combined
         .filter(item => item.weeklyRsi === null)
         .map(item => item.symbol);
@@ -282,9 +290,9 @@ const ScreenerPage = () => {
       if (symbolsToFetchRsi.length > 0) {
         rsiService.getMultipleWeeklyRsi(symbolsToFetchRsi, (symbol, rsiData) => {
           if (rsiData && rsiData.current !== null) {
-            setStockData(prevData => prevData.map(item => 
-              item.symbol === symbol ? { 
-                ...item, 
+            setStockData(prevData => prevData.map(item =>
+              item.symbol === symbol ? {
+                ...item,
                 weeklyRsi: rsiData.current,
                 weeklyRsiPrevious: rsiData.previous,
                 weeklyRsiDelta: rsiData.delta
@@ -292,13 +300,13 @@ const ScreenerPage = () => {
             ));
           } else if (rsiData && rsiData.current === null) {
             // Manejo de error gracefully: marcamos como N/A para no quedar iterando
-            setStockData(prevData => prevData.map(item => 
+            setStockData(prevData => prevData.map(item =>
               item.symbol === symbol ? { ...item, weeklyRsi: 'N/A' } : item
             ));
           }
         }).catch(err => console.warn('Error en fetch RSI:', err));
       }
-      
+
     } catch (err) {
       console.error(err);
       setError('Error al obtener datos del screener');
@@ -373,7 +381,7 @@ const ScreenerPage = () => {
           const isBullishShrinking = !isGoldenCross && (s.weeklyMacd > s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist <= s.weeklyMacdPrevHist);
           const isBearishGrowing = (s.weeklyMacd <= s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist);
           const isBearishShrinking = (s.weeklyMacd <= s.weeklyMacdSignal) && (s.weeklyMacdPrevHist !== null && s.weeklyMacdHist >= s.weeklyMacdPrevHist);
-          
+
           return selectedScanMacd.some(m => {
             if (m === 'Golden Cross') return isGoldenCross;
             if (m === 'Bullish (+)') return isBullishGrowing;
@@ -437,10 +445,10 @@ const ScreenerPage = () => {
   // Sectores disponibles para el scan (independientes y solo ALCISTAS)
   const scanSectors = useMemo(() => {
     let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
-    
+
     // Sectores únicos en el universo actual
     const unique = [...new Set(pool.map(s => s.sector).filter(Boolean))];
-    
+
     // Filtrar solo los sectores que estén marcados como ALCISTAS (diario)
     const bullSectors = unique.filter(sec => {
       const mappedId = MAP_SECTOR[sec];
@@ -457,7 +465,7 @@ const ScreenerPage = () => {
   const scanRegions = useMemo(() => {
     const data = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     const unique = [...new Set(data.map(s => s.region).filter(Boolean))];
-    
+
     const bullRegions = unique.filter(reg => {
       const mappedId = MAP_REGION[reg];
       if (!mappedId) return false;
@@ -472,7 +480,7 @@ const ScreenerPage = () => {
   // Contar cuántos símbolos en el universo actual ya tienen EMA calculada
   const emaReadyCount = useMemo(() => {
     let pool = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
-    
+
     const isRegionSelected = selectedScanRegions.length > 0;
     const isSectorSelected = selectedScanSectors.length > 0;
 
@@ -487,11 +495,11 @@ const ScreenerPage = () => {
         const mappedRegId = MAP_REGION[s.region];
         const rData = mappedRegId ? countryData?.[mappedRegId] || {} : {};
         const passRegion = (rData.dailyTrend || rData.trend || 'lateral') === 'alcista';
-        
+
         const mappedSecId = MAP_SECTOR[s.sector];
         const sData = mappedSecId ? sectorData?.[mappedSecId] || {} : {};
         const passSector = (sData.dailyTrend || sData.trend || 'lateral') === 'alcista';
-        
+
         return passRegion || passSector;
       });
     }
@@ -530,20 +538,20 @@ const ScreenerPage = () => {
   // Datos filtrados + ordenados
   const visibleData = useMemo(() => {
     let d = stockData;
-    
+
     // Si estamos en modo 'region' o 'sector', excluimos los ETFs.
     // Si estamos en 'general' o 'opScore', mostramos todo.
     if (groupMode === 'region' || groupMode === 'sector') {
       d = d.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     }
-    
+
     if (filterRegion !== 'ALL') d = d.filter(s => s.region === filterRegion);
     if (filterSector !== 'ALL') d = d.filter(s => s.sector === filterSector);
 
     return [...d].sort((a, b) => {
       let va = a[sortKey];
       let vb = b[sortKey];
-      
+
       const isEmpty = (val) => val === null || val === undefined || val === 'N/A' || val === '';
       const emptyA = isEmpty(va);
       const emptyB = isEmpty(vb);
@@ -561,7 +569,7 @@ const ScreenerPage = () => {
 
       let strA = String(va).toLowerCase();
       let strB = String(vb).toLowerCase();
-      
+
       if (strA < strB) return sortDir === 'asc' ? -1 : 1;
       if (strA > strB) return sortDir === 'asc' ? 1 : -1;
       return 0;
@@ -585,7 +593,7 @@ const ScreenerPage = () => {
           key = s.sector || 'General';
         }
       }
-      
+
       if (!groups[key]) groups[key] = [];
       groups[key].push(s);
     });
@@ -609,10 +617,10 @@ const ScreenerPage = () => {
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { 
-      setSortKey(key); 
+    else {
+      setSortKey(key);
       const defaultDesc = ['price', 'changePercent', 'emaDistance', 'weeklyRsi', 'weeklyMacd', 'rsValue', 'opScore', 'drawdown52w'];
-      setSortDir(defaultDesc.includes(key) ? 'desc' : 'asc'); 
+      setSortDir(defaultDesc.includes(key) ? 'desc' : 'asc');
     }
   };
 
@@ -789,9 +797,9 @@ const ScreenerPage = () => {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <SymTxt>{s.symbol}</SymTxt>
                                 {(Object.values(MAP_REGION).includes(s.symbol.toLowerCase()) || Object.values(MAP_SECTOR).includes(s.symbol.toLowerCase())) && (
-                                  <PlayCircle 
-                                    size={16} 
-                                    color="#3b82f6" 
+                                  <PlayCircle
+                                    size={16}
+                                    color="#3b82f6"
                                     style={{ cursor: 'pointer', flexShrink: 0 }}
                                     onClick={(e) => { e.stopPropagation(); handleOpenETF(s.symbol); }}
                                     title="Ver componentes vinculados"
@@ -831,7 +839,7 @@ const ScreenerPage = () => {
                           <Td $w="105px" $right>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                               {s.emaDistance === null ? (
-                                <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'flex-end', gap:'4px'}}>
+                                <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                                   <RefreshCw size={10} className="spin" /> Calc...
                                 </MetaTxt>
                               ) : (
@@ -840,37 +848,37 @@ const ScreenerPage = () => {
                                 </ChangeBadge>
                               )}
                               {s.setupState && s.setupVerdict && (
-                                <div 
+                                <div
                                   style={{
                                     marginTop: '4px',
                                     fontSize: '0.6rem',
                                     lineHeight: '1.2',
                                     textAlign: 'right',
                                     whiteSpace: 'normal',
-                                    color: 
+                                    color:
                                       s.setupState === 'strong_uptrend' ? '#10b981' :
-                                      s.setupState === 'bullish_breakout' ? '#f97316' :
-                                      s.setupState === 'bullish_pullback' ? '#3b82f6' :
-                                      s.setupState === 'bullish_reversal_confirmed' ? '#8b5cf6' :
-                                      s.setupState === 'early_bullish_reversal' ? '#d946ef' :
-                                      s.setupState === 'bearish_trend' ? '#ef4444' :
-                                      s.setupState === 'lateral_trend' ? '#eab308' :
-                                      s.setupState === 'neutral' ? '#ef4444' :
-                                      '#94a3b8'
+                                        s.setupState === 'bullish_breakout' ? '#f97316' :
+                                          s.setupState === 'bullish_pullback' ? '#3b82f6' :
+                                            s.setupState === 'bullish_reversal_confirmed' ? '#8b5cf6' :
+                                              s.setupState === 'early_bullish_reversal' ? '#d946ef' :
+                                                s.setupState === 'bearish_trend' ? '#ef4444' :
+                                                  s.setupState === 'lateral_trend' ? '#eab308' :
+                                                    s.setupState === 'neutral' ? '#ef4444' :
+                                                      '#94a3b8'
                                   }}
                                 >
                                   {(() => {
                                     if (s.setupVerdict === 'Transición Alcista') {
-                                      return <><span style={{color: '#eab308'}}>Transición</span> <span style={{color: '#10b981'}}>Alcista</span></>;
+                                      return <><span style={{ color: '#eab308' }}>Transición</span> <span style={{ color: '#10b981' }}>Alcista</span></>;
                                     }
                                     if (s.setupVerdict === 'Transición Bajista') {
-                                      return <><span style={{color: '#eab308'}}>Transición</span> <span style={{color: '#ef4444'}}>Bajista</span></>;
+                                      return <><span style={{ color: '#eab308' }}>Transición</span> <span style={{ color: '#ef4444' }}>Bajista</span></>;
                                     }
                                     if (s.setupVerdict === 'Alcista Tardío') {
-                                      return <><span style={{color: '#10b981'}}>Alcista</span> <span style={{color: '#ef4444'}}>Tardío</span></>;
+                                      return <><span style={{ color: '#10b981' }}>Alcista</span> <span style={{ color: '#ef4444' }}>Tardío</span></>;
                                     }
                                     if (s.setupVerdict === 'Tendencia en Peligro' || s.setupVerdict === 'Tendencia en peligro') {
-                                      return <span style={{color: '#ef4444'}}>{s.setupVerdict}</span>;
+                                      return <span style={{ color: '#ef4444' }}>{s.setupVerdict}</span>;
                                     }
                                     return s.setupVerdict;
                                   })()}
@@ -880,16 +888,16 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="105px" $center>
                             {s.weeklyRsi === null ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 <RefreshCw size={10} className="spin" /> Calc...
                               </MetaTxt>
                             ) : s.weeklyRsi === 'N/A' ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#64748b' }}>
                                 N/A
                               </MetaTxt>
                             ) : (
-                              <MetaTxt 
-                                style={{color: s.weeklyRsi > 70 ? '#f43f5e' : s.weeklyRsi < 30 ? '#10b981' : '#e2e8f0', fontWeight: 'bold'}}
+                              <MetaTxt
+                                style={{ color: s.weeklyRsi > 70 ? '#f43f5e' : s.weeklyRsi < 30 ? '#10b981' : '#e2e8f0', fontWeight: 'bold' }}
                                 title={`Prev: ${s.weeklyRsiPrevious} | Delta: ${s.weeklyRsiDelta > 0 ? '+' : ''}${s.weeklyRsiDelta}`}
                               >
                                 {typeof s.weeklyRsi === 'number' ? s.weeklyRsi.toFixed(1) : s.weeklyRsi}
@@ -898,19 +906,19 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="105px" $center>
                             {s.weeklyMacd === null ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 <RefreshCw size={10} className="spin" /> Calc...
                               </MetaTxt>
                             ) : s.weeklyMacd === 'N/A' ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#64748b' }}>
                                 N/A
                               </MetaTxt>
                             ) : (
-                              <MetaTxt 
+                              <MetaTxt
                                 style={{
                                   color: (s.weeklyMacdPrev !== null && s.weeklyMacdPrevSignal !== null && s.weeklyMacdPrev <= s.weeklyMacdPrevSignal && s.weeklyMacd > s.weeklyMacdSignal) ? '#f59e0b' :
-                                         (s.weeklyMacd > s.weeklyMacdSignal) ? ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist) ? '#10b981' : '#a7f3d0') :
-                                         ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist) ? '#f43f5e' : '#fda4af'),
+                                    (s.weeklyMacd > s.weeklyMacdSignal) ? ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist > s.weeklyMacdPrevHist) ? '#10b981' : '#a7f3d0') :
+                                      ((s.weeklyMacdPrevHist !== null && s.weeklyMacdHist < s.weeklyMacdPrevHist) ? '#f43f5e' : '#fda4af'),
                                   fontWeight: 'bold'
                                 }}
                                 title={`MACD: ${s.weeklyMacd} | Signal: ${s.weeklyMacdSignal} | Hist: ${s.weeklyMacdHist}\nPrev MACD: ${s.weeklyMacdPrev} | Prev Signal: ${s.weeklyMacdPrevSignal} | Prev Hist: ${s.weeklyMacdPrevHist}`}
@@ -921,15 +929,15 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="105px" $center>
                             {s.drawdown52w === null ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                 <RefreshCw size={10} className="spin" /> Calc...
                               </MetaTxt>
                             ) : s.drawdown52w === 'N/A' ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#64748b' }}>
                                 N/A
                               </MetaTxt>
                             ) : (
-                              <MetaTxt 
+                              <MetaTxt
                                 style={{
                                   color: s.drawdown52w >= -5 ? '#e2e8f0' : '#f43f5e',
                                   fontWeight: 'bold'
@@ -941,19 +949,19 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="105px" $center>
                             {s.rsValue === null || s.rsValue === undefined ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'4px', color: '#64748b'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#64748b' }}>
                                 N/A
                               </MetaTxt>
                             ) : (
                               <MetaTxt
                                 title={s.rsState}
                                 style={{
-                                  color: 
+                                  color:
                                     s.rsState === 'Strong & Rising' ? '#22c55e' :
-                                    s.rsState === 'Strong but Weakening' ? '#86efac' :
-                                    s.rsState === 'Weak but Recovering' ? '#fca5a5' :
-                                    s.rsState === 'Neutral' ? '#94a3b8' :
-                                    '#ef4444',
+                                      s.rsState === 'Strong but Weakening' ? '#86efac' :
+                                        s.rsState === 'Weak but Recovering' ? '#fca5a5' :
+                                          s.rsState === 'Neutral' ? '#94a3b8' :
+                                            '#ef4444',
                                   fontWeight: 'bold'
                                 }}
                               >
@@ -963,12 +971,12 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="90px" $center>
                             {s.opScore === null || s.opScore === undefined ? (
-                              <MetaTxt style={{display:'flex', alignItems:'center', justifyContent:'center', color: '#64748b'}}>
+                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                                 N/A
                               </MetaTxt>
                             ) : (
-                              <OpScoreCircle 
-                                $score={s.opScore} 
+                              <OpScoreCircle
+                                $score={s.opScore}
                                 onClick={() => handleOpenOpScore(s)}
                                 title="Ver Conclusiones"
                               >
@@ -978,15 +986,21 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="90px" $center>
                             <ActionsWrap>
-                              <TVLink 
-                                href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${getTVSymbol(s.symbol)}`} 
-                                target="_blank" 
+                              <TVLink
+                                href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${getTVSymbol(s.symbol)}`}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 title="Ver en TradingView"
                               >
                                 <SiTradingview size={15} />
                               </TVLink>
-                              <AlertActionBtn 
+                              <AlertActionBtn
+                                onClick={() => handleOpenBacktest(s.symbol, s.setupState, s.opScore)}
+                                title="Backtest Setup Actual"
+                              >
+                                <LineChart size={15} color="#8b5cf6" />
+                              </AlertActionBtn>
+                              <AlertActionBtn
                                 onClick={() => handleOpenAlert(s.symbol, s.price)}
                                 title="Crear Alerta"
                               >
@@ -1025,8 +1039,8 @@ const ScreenerPage = () => {
             <ScanBody>
               {/* Descripción */}
               <ScanDescription>
-                Encuentra oportunidades combinando la tendencia diaria del Lab, indicadores semanales (RSI, MACD, RS) y distancia a la EMA 21.<br/>
-                <span style={{color: colors.primary}}>Las opciones de País y Sector solo muestran los marcados como <strong>Alcistas</strong>.</span>
+                Encuentra oportunidades combinando la tendencia diaria del Lab, indicadores semanales (RSI, MACD, RS) y distancia a la EMA 21.<br />
+                <span style={{ color: colors.primary }}>Las opciones de País y Sector solo muestran los marcados como <strong>Alcistas</strong>.</span>
               </ScanDescription>
 
               {/* Filtro País */}
@@ -1102,85 +1116,85 @@ const ScreenerPage = () => {
               </ScanFilterBlock>
 
               {/* Fila: RSI Semanal */}
-          <ScanFilterBlock>
-            <ScanFilterLabel><Activity size={13} /> RSI Sem.</ScanFilterLabel>
-            <PillGroup>
-              <Pill $active={selectedScanRsi.length === 0} onClick={() => setSelectedScanRsi([])}>
-                Todos
-              </Pill>
-              {['< 30', '30-50', '50-70', '> 70'].map(val => (
-                <Pill key={val} $active={selectedScanRsi.includes(val)} onClick={() => toggleFilter(setSelectedScanRsi, val)}>
-                  {val}
-                </Pill>
-              ))}
-            </PillGroup>
-          </ScanFilterBlock>
+              <ScanFilterBlock>
+                <ScanFilterLabel><Activity size={13} /> RSI Sem.</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanRsi.length === 0} onClick={() => setSelectedScanRsi([])}>
+                    Todos
+                  </Pill>
+                  {['< 30', '30-50', '50-70', '> 70'].map(val => (
+                    <Pill key={val} $active={selectedScanRsi.includes(val)} onClick={() => toggleFilter(setSelectedScanRsi, val)}>
+                      {val}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
 
-          {/* Fila: MACD Semanal */}
-          <ScanFilterBlock>
-            <ScanFilterLabel><BarChart2 size={13} /> MACD</ScanFilterLabel>
-            <PillGroup>
-              <Pill $active={selectedScanMacd.length === 0} onClick={() => setSelectedScanMacd([])}>
-                Todos
-              </Pill>
-              {[
-                { label: 'Golden Cross', color: '#f59e0b' },
-                { label: 'Bullish (+)', color: '#10b981' },
-                { label: 'Bullish (-)', color: '#a7f3d0' },
-                { label: 'Bearish (-)', color: '#fda4af' },
-                { label: 'Bearish (+)', color: '#f43f5e' }
-              ].map(item => (
-                <Pill key={item.label} $active={selectedScanMacd.includes(item.label)} onClick={() => toggleFilter(setSelectedScanMacd, item.label)}>
-                  <ColorDot style={{ backgroundColor: item.color }} /> {item.label}
-                </Pill>
-              ))}
-            </PillGroup>
-          </ScanFilterBlock>
+              {/* Fila: MACD Semanal */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><BarChart2 size={13} /> MACD</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanMacd.length === 0} onClick={() => setSelectedScanMacd([])}>
+                    Todos
+                  </Pill>
+                  {[
+                    { label: 'Golden Cross', color: '#f59e0b' },
+                    { label: 'Bullish (+)', color: '#10b981' },
+                    { label: 'Bullish (-)', color: '#a7f3d0' },
+                    { label: 'Bearish (-)', color: '#fda4af' },
+                    { label: 'Bearish (+)', color: '#f43f5e' }
+                  ].map(item => (
+                    <Pill key={item.label} $active={selectedScanMacd.includes(item.label)} onClick={() => toggleFilter(setSelectedScanMacd, item.label)}>
+                      <ColorDot style={{ backgroundColor: item.color }} /> {item.label}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
 
-          {/* Fila: Drawdown 52W */}
-          <ScanFilterBlock>
-            <ScanFilterLabel><TrendingDown size={13} /> Drawdown</ScanFilterLabel>
-            <PillGroup>
-              <Pill $active={selectedScanDrawdown.length === 0} onClick={() => setSelectedScanDrawdown([])}>
-                Todos
-              </Pill>
-              {['0 a -10%', '-10% a -20%', '-20% a -30%', '< -30%'].map(val => (
-                <Pill key={val} $active={selectedScanDrawdown.includes(val)} onClick={() => toggleFilter(setSelectedScanDrawdown, val)}>
-                  {val}
-                </Pill>
-              ))}
-            </PillGroup>
-          </ScanFilterBlock>
+              {/* Fila: Drawdown 52W */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><TrendingDown size={13} /> Drawdown</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanDrawdown.length === 0} onClick={() => setSelectedScanDrawdown([])}>
+                    Todos
+                  </Pill>
+                  {['0 a -10%', '-10% a -20%', '-20% a -30%', '< -30%'].map(val => (
+                    <Pill key={val} $active={selectedScanDrawdown.includes(val)} onClick={() => toggleFilter(setSelectedScanDrawdown, val)}>
+                      {val}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
 
-          {/* Fila: RS 12W */}
-          <ScanFilterBlock>
-            <ScanFilterLabel><Award size={13} /> RS 12W</ScanFilterLabel>
-            <PillGroup>
-              <Pill $active={selectedScanRs.length === 0} onClick={() => setSelectedScanRs([])}>
-                Todos
-              </Pill>
-              {['> 10%', '0 a 10%', '-10% a 0%', '< -10%'].map(val => (
-                <Pill key={val} $active={selectedScanRs.includes(val)} onClick={() => toggleFilter(setSelectedScanRs, val)}>
-                  {val}
-                </Pill>
-              ))}
-            </PillGroup>
-          </ScanFilterBlock>
+              {/* Fila: RS 12W */}
+              <ScanFilterBlock>
+                <ScanFilterLabel><Award size={13} /> RS 12W</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanRs.length === 0} onClick={() => setSelectedScanRs([])}>
+                    Todos
+                  </Pill>
+                  {['> 10%', '0 a 10%', '-10% a 0%', '< -10%'].map(val => (
+                    <Pill key={val} $active={selectedScanRs.includes(val)} onClick={() => toggleFilter(setSelectedScanRs, val)}>
+                      {val}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
 
-          <ScanFilterBlock>
-            <ScanFilterLabel><Target size={12}/> OP Score</ScanFilterLabel>
-            <PillGroup>
-              <Pill $active={selectedScanOpScore.length === 0} onClick={() => setSelectedScanOpScore([])}>
-                Todos
-              </Pill>
-              {['>= 80', '60 - 79', '40 - 59', '< 40'].map(val => (
-                <Pill key={val} $active={selectedScanOpScore.includes(val)} onClick={() => toggleFilter(setSelectedScanOpScore, val)}>
-                  {val}
-                </Pill>
-              ))}
-            </PillGroup>
-          </ScanFilterBlock>
-        
+              <ScanFilterBlock>
+                <ScanFilterLabel><Target size={12} /> OP Score</ScanFilterLabel>
+                <PillGroup>
+                  <Pill $active={selectedScanOpScore.length === 0} onClick={() => setSelectedScanOpScore([])}>
+                    Todos
+                  </Pill>
+                  {['>= 80', '60 - 79', '40 - 59', '< 40'].map(val => (
+                    <Pill key={val} $active={selectedScanOpScore.includes(val)} onClick={() => toggleFilter(setSelectedScanOpScore, val)}>
+                      {val}
+                    </Pill>
+                  ))}
+                </PillGroup>
+              </ScanFilterBlock>
+
               {/* Umbral EMA */}
               <ScanFilterBlock>
                 <ScanFilterLabel>
@@ -1218,7 +1232,7 @@ const ScreenerPage = () => {
                         ? <>✅ {scanResults.length} acción{scanResults.length !== 1 ? 'es' : ''} cerca de EMA 21</>
                         : <>❌ Sin resultados con los filtros actuales</>}
                     </ScanResultsTitle>
-                    
+
                     <ScanActiveFiltersBox>
                       {selectedScanRegions.length > 0 && <ActiveFilterPill>Regiones: {selectedScanRegions.join(', ')}</ActiveFilterPill>}
                       {selectedScanSectors.length > 0 && <ActiveFilterPill>Sectores: {selectedScanSectors.join(', ')}</ActiveFilterPill>}
@@ -1261,6 +1275,9 @@ const ScreenerPage = () => {
                           >
                             <ChevronRight size={14} />
                           </ScanTVLink>
+                          <AlertActionBtn style={{ padding: '4px', marginTop: '0.1rem' }} onClick={() => handleOpenBacktest(s.symbol, s.setupState, s.opScore)} title="Backtest Setup Actual">
+                            <LineChart size={14} color="#8b5cf6" />
+                          </AlertActionBtn>
                           <AlertActionBtn style={{ padding: '4px', marginTop: '0.1rem' }} onClick={() => handleOpenAlert(s.symbol, s.price)} title="Crear Alerta">
                             <BellRing size={14} />
                           </AlertActionBtn>
@@ -1275,18 +1292,18 @@ const ScreenerPage = () => {
         </ScanOverlay>
       )}
 
-      <ETFComponentsModal 
-        selectedETF={selectedETF} 
-        etfComponents={etfComponents} 
-        onClose={handleCloseETF} 
-        onOpenOpScore={handleOpenOpScore} 
-        onOpenAlert={handleOpenAlert} 
+      <ETFComponentsModal
+        selectedETF={selectedETF}
+        etfComponents={etfComponents}
+        onClose={handleCloseETF}
+        onOpenOpScore={handleOpenOpScore}
+        onOpenAlert={handleOpenAlert}
       />
 
 
       {/* ── Modal Nueva Alerta ────────────────────────────────────────── */}
-      <CreateAlertModal 
-        isOpen={showAlertModal} 
+      <CreateAlertModal
+        isOpen={showAlertModal}
         onClose={() => setShowAlertModal(false)}
         initialData={alertInitialData}
         onSuccess={() => {
@@ -1300,7 +1317,7 @@ const ScreenerPage = () => {
           <ScanPanel onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%' }}>
             <ScanPanelHeader>
               <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Target size={18} color="#8b5cf6" /> 
+                <Target size={18} color="#8b5cf6" />
                 OP Score - {opScoreModalData.symbol}
               </h3>
               <ScanCloseBtn onClick={() => setShowOpScoreModal(false)}><X size={18} /></ScanCloseBtn>
@@ -1315,21 +1332,21 @@ const ScreenerPage = () => {
                   <div style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Análisis Estructural Completo</div>
                 </div>
               </div>
-              
+
               {(() => {
                 const allConc = opScoreModalData.opScoreConclusions || [];
                 const regularConc = allConc.filter(c => !c.startsWith('__DEBUG__'));
-                const debugEntry  = allConc.find(c => c.startsWith('__DEBUG__'));
-                const debugText   = debugEntry ? debugEntry.replace('__DEBUG__', '') : null;
+                const debugEntry = allConc.find(c => c.startsWith('__DEBUG__'));
+                const debugText = debugEntry ? debugEntry.replace('__DEBUG__', '') : null;
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <h4 style={{ margin: '0 0 4px 0', color: '#e2e8f0', fontSize: '0.95rem' }}>Conclusiones:</h4>
                     {regularConc.map((conc, idx) => (
-                      <div key={idx} style={{ 
-                        padding: '12px 16px', 
-                        background: 'rgba(15, 23, 42, 0.6)', 
-                        borderRadius: '6px', 
+                      <div key={idx} style={{
+                        padding: '12px 16px',
+                        background: 'rgba(15, 23, 42, 0.6)',
+                        borderRadius: '6px',
                         borderLeft: '3px solid #8b5cf6',
                         fontSize: '0.95rem',
                         lineHeight: '1.5',
@@ -1355,7 +1372,7 @@ const ScreenerPage = () => {
 
 // ─── Animations ───────────────────────────────────────────────────────────────
 const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
-const spin   = keyframes`from{transform:rotate(0deg)}to{transform:rotate(360deg)}`;
+const spin = keyframes`from{transform:rotate(0deg)}to{transform:rotate(360deg)}`;
 
 // ─── OpScore Debug Accordion (tab colapsable de variables de entrada) ─────────
 function OpScoreDebugAccordion({ debugText }) {
@@ -1825,7 +1842,7 @@ const Pill = styled.button`
 // ─── States ───────────────────────────────────────────────────────────────────
 const StateBox = styled.div`
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:260px;gap:1rem;color:${p=>p.$error?'#f43f5e':'#475569'};
+  height:260px;gap:1rem;color:${p => p.$error ? '#f43f5e' : '#475569'};
   .spin{animation:${spin} 1s linear infinite;}
 `;
 
@@ -2008,13 +2025,13 @@ const PriceTxt = styled.span`
 const ChangeBadge = styled.div`
   display:inline-flex;align-items:center;justify-content:flex-end;gap:.2rem;
   font-size:.78rem;font-weight:600;
-  color:${p=>p.$pos?'#34d399':'#f43f5e'};
+  color:${p => p.$pos ? '#34d399' : '#f43f5e'};
 `;
 
 const VolBadge = styled.div`
   display:inline-flex;align-items:center;justify-content:flex-end;gap:.2rem;
   font-size:.65rem;font-weight:600;
-  color:${p=>p.$acc?'#34d399':'#f59e0b'};
+  color:${p => p.$acc ? '#34d399' : '#f59e0b'};
   margin-top: 2px;
 `;
 

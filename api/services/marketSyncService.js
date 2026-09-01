@@ -448,15 +448,15 @@ async function runSync(reason = 'manual') {
             const isRising = zV > zP;
             
             if (zV > 1.5) {
-               state = isRising ? 'Very Strong & Rising' : 'Very Strong but Weakening';
+               state = isRising ? 'Very Strong' : 'Strong';
             } else if (zV > 0.5 && zV <= 1.5) {
-               state = isRising ? 'Positive & Rising' : 'Positive but Weakening';
+               state = isRising ? 'Strong & Rising' : 'Strong but Weakening';
             } else if (zV > -0.5 && zV <= 0.5) {
-               state = isRising ? 'Neutral & Rising' : 'Neutral & Falling';
+               state = 'Positive';
             } else if (zV > -1.5 && zV <= -0.5) {
-               state = isRising ? 'Weak but Recovering' : 'Weak & Falling';
+               state = isRising ? 'Weak but Recovering' : 'Weak';
             } else if (zV <= -1.5) {
-               state = isRising ? 'Very Weak but Recovering' : 'Very Weak & Falling';
+               state = isRising ? 'Weak & Falling' : 'Very Weak';
             }
             
             if (!newRsis.has(item.symbol)) {

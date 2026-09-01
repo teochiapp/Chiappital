@@ -12,6 +12,7 @@ const labRouter = require('./routes/lab');
 const personalRouter = require('./routes/personal');
 const alertsRouter = require('./routes/alerts');
 const marketRouter = require('./routes/market');
+const backtestingRouter = require('./routes/backtesting');
 const { runSync } = require('./services/marketSyncService');
 const logger = require('./utils/logger');
 
@@ -88,6 +89,9 @@ app.use('/api/alerts', alertsRouter);
 
 // Market Data
 app.use('/api/market', marketRouter);
+
+// Backtesting
+app.use('/api/backtesting', backtestingRouter);
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

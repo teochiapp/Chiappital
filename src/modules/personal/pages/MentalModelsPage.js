@@ -64,8 +64,8 @@ const MentalModelsPage = () => {
       todayQueue = [...todayQueue, ...byBook[b]];
     });
 
-    // 5.5 Limitar a ~30 tarjetas (Aprox. 20 minutos de estudio asumiendo 40s por tarjeta)
-    const MAX_CARDS = 30;
+    // 5.5 Limitar a ~60 tarjetas para poder avanzar con la gran colección
+    const MAX_CARDS = 60;
     if (todayQueue.length > MAX_CARDS) {
       // Tomamos una mezcla o simplemente los primeros 30.
       // Como ya está ordenado por libro principal, priorizará llenar con los del primer libro.
@@ -173,14 +173,14 @@ const MentalModelsPage = () => {
       return `~${Math.max(1, Math.round(interval_days * 1.2))}d`;
     }
     if (quality === 2) {
-      if (repetition === 0) return '1d';
-      if (repetition === 1) return '6d';
+      if (repetition === 0) return '14d';
+      if (repetition === 1) return '30d';
       return `~${Math.round(interval_days * ease_factor)}d`;
     }
     if (quality === 3) {
-      if (repetition === 0) return '4d';
-      if (repetition === 1) return `~${Math.round(6 * ease_factor)}d`;
-      return `~${Math.round(interval_days * ease_factor * 1.3)}d`;
+      if (repetition === 0) return '21d';
+      if (repetition === 1) return '45d';
+      return `~${Math.round(interval_days * ease_factor * 1.5)}d`;
     }
     return '';
   };

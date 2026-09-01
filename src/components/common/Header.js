@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe, History } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 import AppLogo from './Logo';
@@ -94,6 +94,13 @@ const Header = () => {
           >
             <Globe size={18} />
             Macro
+          </NavItem>
+          <NavItem
+            $active={location.pathname.startsWith('/backtesting')}
+            onClick={() => { navigate('/backtesting'); setIsMobileMenuOpen(false); }}
+          >
+            <History size={18} />
+            Backtesting
           </NavItem>
           <NavItem
             $active={location.pathname === '/alertas'}
