@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { BookOpen, Plus, Search, Trash2, CheckCircle, AlertCircle, RotateCcw, Brain, Edit2 } from 'lucide-react';
@@ -35,50 +35,70 @@ const MentalModelsPage = () => {
 
   const todayStr = getUTC3DateString();
 
+  const [sessionCardIds, setSessionCardIds] = useState(null);
+
+  useEffect(() => {
+    if (!loading && sessionCardIds === null) {
+      const allDue = mentalModels.filter(m => {
+        const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
+        return nextRevStr <= todayStr;
+      });
+
+      const byBook = {};
+      allDue.forEach(m => {
+        const b = m.book_title || 'Desconocido';
+        if (!byBook[b]) byBook[b] = [];
+        byBook[b].push(m);
+      });
+
+      const sortedBooks = Object.entries(byBook)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(entry => entry[0]);
+
+      const selectedBooks = sortedBooks.slice(0, 2);
+
+      let queue = [];
+      selectedBooks.forEach(b => {
+        queue = [...queue, ...byBook[b]];
+      });
+
+      const MAX_CARDS = 60;
+      if (queue.length > MAX_CARDS) {
+        queue = queue.slice(0, MAX_CARDS);
+      }
+
+      setSessionCardIds(queue.map(m => m.id));
+    }
+  }, [loading, mentalModels, sessionCardIds, todayStr]);
+
   const dueModels = useMemo(() => {
+    if (sessionCardIds === null) return [];
+
     // 1. Filtrar las pendientes para hoy
     const allDue = mentalModels.filter(m => {
       const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
       return nextRevStr <= todayStr;
     });
 
-    // 2. Agrupar por libro
-    const byBook = {};
-    allDue.forEach(m => {
-      const b = m.book_title || 'Desconocido';
-      if (!byBook[b]) byBook[b] = [];
-      byBook[b].push(m);
-    });
+    // 2. Solo quedarnos con las que se seleccionaron para la sesión inicial
+    const todayQueue = allDue
+      .filter(m => sessionCardIds.includes(m.id))
+      .sort((a, b) => sessionCardIds.indexOf(a.id) - sessionCardIds.indexOf(b.id));
 
-    // 3. Ordenar libros por cantidad de tarjetas pendientes (mayor a menor)
-    const sortedBooks = Object.entries(byBook)
-      .sort((a, b) => b[1].length - a[1].length)
-      .map(entry => entry[0]);
-
-    // 4. Seleccionar máximo 2 libros
-    const selectedBooks = sortedBooks.slice(0, 2);
-
-    // 5. Armar la cola del día
-    let todayQueue = [];
-    selectedBooks.forEach(b => {
-      todayQueue = [...todayQueue, ...byBook[b]];
-    });
-
-    // 5.5 Limitar a ~60 tarjetas para poder avanzar con la gran colección
-    const MAX_CARDS = 60;
-    if (todayQueue.length > MAX_CARDS) {
-      // Tomamos una mezcla o simplemente los primeros 30.
-      // Como ya está ordenado por libro principal, priorizará llenar con los del primer libro.
-      todayQueue = todayQueue.slice(0, MAX_CARDS);
-    }
-
-    // 6. Aplicar la lógica de "Otra vez" (mandar al final de la cola)
+    // 3. Aplicar la lógica de "Otra vez" (mandar al final de la cola)
     const normal = todayQueue.filter(m => !delayedIds.includes(m.id));
     const delayed = todayQueue.filter(m => delayedIds.includes(m.id));
     return [...normal, ...delayed];
-  }, [mentalModels, todayStr, delayedIds]);
+  }, [mentalModels, todayStr, delayedIds, sessionCardIds]);
 
   const currentModel = dueModels[currentReviewIndex];
+
+  const remainingDueTotal = useMemo(() => {
+    return mentalModels.filter(m => {
+      const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
+      return nextRevStr <= todayStr;
+    }).length;
+  }, [mentalModels, todayStr]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -257,7 +277,12 @@ const MentalModelsPage = () => {
             <AllDoneState>
               <CheckCircle size={48} color="#10b981" />
               <h3>¡Sesión Completada!</h3>
-              <p>No tienes más conceptos pendientes de los libros seleccionados para hoy.</p>
+              <p>No tienes más conceptos pendientes de la sesión actual.</p>
+              {remainingDueTotal > 0 && (
+                <ContinueBtn onClick={() => setSessionCardIds(null)}>
+                  Seguir repasando (+60)
+                </ContinueBtn>
+              )}
             </AllDoneState>
           )}
         </ReviewContainer>
@@ -597,6 +622,24 @@ const AllDoneState = styled.div`
   h3 {
     margin: 1rem 0 0.5rem 0;
     color: #fff;
+  }
+`;
+
+const ContinueBtn = styled.button`
+  background: ${p.primary};
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.9rem;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: ${p.primaryLight};
+    transform: translateY(-2px);
   }
 `;
 

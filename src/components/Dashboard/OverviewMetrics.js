@@ -73,10 +73,15 @@ const OverviewMetrics = () => {
         const symbol = trade.symbol || trade.attributes?.symbol;
         const portfolioPercentage = parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage || 0);
         const quote = quotes[symbol];
+        
+        // Determinar si la operación fue hecha hoy para excluirla del rendimiento diario
+        const createdAt = trade.createdAt || trade.attributes?.createdAt;
+        const isToday = createdAt && new Date(createdAt).toDateString() === new Date().toDateString();
 
-        if (quote && quote.changePercent && portfolioPercentage > 0) {
+        if (quote && quote.changePercent && portfolioPercentage > 0 && !isToday) {
+           const tradeType = trade.type || trade.attributes?.type;
            const weightedPercent = (quote.changePercent * portfolioPercentage) / 100;
-           totalGainPercent += trade.type === 'buy' ? weightedPercent : -weightedPercent;
+           totalGainPercent += tradeType === 'buy' ? weightedPercent : -weightedPercent;
         }
       });
 
