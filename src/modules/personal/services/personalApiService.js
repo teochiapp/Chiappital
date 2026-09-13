@@ -61,6 +61,13 @@ const personalApiService = {
   reviewMentalModel: (id, quality) => request('PUT', `/mental-models/${id}/review`, { quality }),
   deleteMentalModel: (id) => request('DELETE', `/mental-models/${id}`),
 
+  // Cybersecurity
+  getCybersecurityCards: () => request('GET', '/cybersecurity'),
+  createCybersecurityCard: (data) => request('POST', '/cybersecurity', data),
+  updateCybersecurityCard: (id, data) => request('PUT', `/cybersecurity/${id}`, data),
+  reviewCybersecurityCard: (id, quality) => request('PUT', `/cybersecurity/${id}/review`, { quality }),
+  deleteCybersecurityCard: (id) => request('DELETE', `/cybersecurity/${id}`),
+
   // Fitness
   getFitness: () => request('GET', '/fitness'),
   updateFitnessPr: (exercise, record_value) => request('PUT', '/fitness/pr', { exercise, record_value }),

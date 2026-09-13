@@ -87,6 +87,13 @@ class PriceService {
     }
   }
 
+  // Método para obtener el cambio porcentual guardado en caché
+  getChangePercent(symbol) {
+    const cacheKey = symbol.toUpperCase();
+    const cached = this.getPriceFromCache(cacheKey);
+    return cached ? cached.changePercent : null;
+  }
+
   // Método con fallback en cascada: Finnhub -> Yahoo (si se configuró) -> null/mock
   async fetchPriceWithFallback(symbol, cacheKey) {
     let lastError = null;

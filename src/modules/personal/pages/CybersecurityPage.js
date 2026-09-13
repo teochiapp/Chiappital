@@ -1,31 +1,31 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
-import { BookOpen, Plus, Search, Trash2, CheckCircle, AlertCircle, RotateCcw, Brain, Edit2, Tag } from 'lucide-react';
+import { Plus, Search, Trash2, CheckCircle, AlertCircle, RotateCcw, Shield, Edit2, Tag, Terminal } from 'lucide-react';
 import { getUTC3DateString } from '../../../utils/helpers';
 
 const p = {
-  primary: '#8b5cf6', // Violeta por defecto para Mental Models
-  primaryLight: '#a78bfa',
+  primary: '#06b6d4', // Cyan / Azul ciberseguridad
+  primaryLight: '#67e8f9',
   bgDark: '#0f172a',
   bgCard: '#1e293b',
   textMain: '#f8fafc',
   textMuted: '#94a3b8'
 };
 
-// Paletas de color por categoría
-export const CATEGORY_PALETTES = [
+// Paletas de color para Ciberseguridad por tema/categoría
+export const CYBER_PALETTES = [
   {
-    name: 'violet',
-    primary: '#8b5cf6',
-    light: '#a78bfa',
-    bgGlow: 'rgba(139, 92, 246, 0.22)',
-    borderColor: 'rgba(139, 92, 246, 0.45)',
-    badgeBg: 'rgba(139, 92, 246, 0.2)',
-    badgeText: '#c4b5fd'
+    name: 'cyan', // Redes
+    primary: '#06b6d4',
+    light: '#67e8f9',
+    bgGlow: 'rgba(6, 182, 212, 0.22)',
+    borderColor: 'rgba(6, 182, 212, 0.45)',
+    badgeBg: 'rgba(6, 182, 212, 0.2)',
+    badgeText: '#67e8f9'
   },
   {
-    name: 'emerald',
+    name: 'emerald', // Criptografía / Defensivo
     primary: '#10b981',
     light: '#34d399',
     bgGlow: 'rgba(16, 185, 129, 0.22)',
@@ -34,25 +34,7 @@ export const CATEGORY_PALETTES = [
     badgeText: '#6ee7b7'
   },
   {
-    name: 'amber',
-    primary: '#f59e0b',
-    light: '#fbbf24',
-    bgGlow: 'rgba(245, 158, 11, 0.22)',
-    borderColor: 'rgba(245, 158, 11, 0.45)',
-    badgeBg: 'rgba(245, 158, 11, 0.2)',
-    badgeText: '#fde68a'
-  },
-  {
-    name: 'cyan',
-    primary: '#06b6d4',
-    light: '#22d3ee',
-    bgGlow: 'rgba(6, 182, 212, 0.22)',
-    borderColor: 'rgba(6, 182, 212, 0.45)',
-    badgeBg: 'rgba(6, 182, 212, 0.2)',
-    badgeText: '#67e8f9'
-  },
-  {
-    name: 'rose',
+    name: 'rose', // Malware / Offensive
     primary: '#f43f5e',
     light: '#fb7185',
     bgGlow: 'rgba(244, 63, 94, 0.22)',
@@ -61,34 +43,25 @@ export const CATEGORY_PALETTES = [
     badgeText: '#fca5a5'
   },
   {
-    name: 'indigo',
-    primary: '#6366f1',
-    light: '#818cf8',
-    bgGlow: 'rgba(99, 102, 241, 0.22)',
-    borderColor: 'rgba(99, 102, 241, 0.45)',
-    badgeBg: 'rgba(99, 102, 241, 0.2)',
-    badgeText: '#a5b4fc'
+    name: 'amber', // Hacking Ético
+    primary: '#f59e0b',
+    light: '#fbbf24',
+    bgGlow: 'rgba(245, 158, 11, 0.22)',
+    borderColor: 'rgba(245, 158, 11, 0.45)',
+    badgeBg: 'rgba(245, 158, 11, 0.2)',
+    badgeText: '#fde68a'
   },
   {
-    name: 'orange',
-    primary: '#f97316',
-    light: '#fb923c',
-    bgGlow: 'rgba(249, 115, 22, 0.22)',
-    borderColor: 'rgba(249, 115, 22, 0.45)',
-    badgeBg: 'rgba(249, 115, 22, 0.2)',
-    badgeText: '#fdba74'
+    name: 'violet', // Seguridad Web
+    primary: '#8b5cf6',
+    light: '#a78bfa',
+    bgGlow: 'rgba(139, 92, 246, 0.22)',
+    borderColor: 'rgba(139, 92, 246, 0.45)',
+    badgeBg: 'rgba(139, 92, 246, 0.2)',
+    badgeText: '#c4b5fd'
   },
   {
-    name: 'fuchsia',
-    primary: '#d946ef',
-    light: '#e879f9',
-    bgGlow: 'rgba(217, 70, 239, 0.22)',
-    borderColor: 'rgba(217, 70, 239, 0.45)',
-    badgeBg: 'rgba(217, 70, 239, 0.2)',
-    badgeText: '#f0abfc'
-  },
-  {
-    name: 'teal',
+    name: 'teal', // Forense / SIEM
     primary: '#14b8a6',
     light: '#2dd4bf',
     bgGlow: 'rgba(20, 184, 166, 0.22)',
@@ -97,70 +70,108 @@ export const CATEGORY_PALETTES = [
     badgeText: '#5eead4'
   },
   {
-    name: 'blue',
+    name: 'blue', // DevSecOps / Cloud
     primary: '#3b82f6',
     light: '#60a5fa',
     bgGlow: 'rgba(59, 130, 246, 0.22)',
     borderColor: 'rgba(59, 130, 246, 0.45)',
     badgeBg: 'rgba(59, 130, 246, 0.2)',
     badgeText: '#93c5fd'
+  },
+  {
+    name: 'fuchsia', // OSINT & Recon
+    primary: '#d946ef',
+    light: '#e879f9',
+    bgGlow: 'rgba(217, 70, 239, 0.22)',
+    borderColor: 'rgba(217, 70, 239, 0.45)',
+    badgeBg: 'rgba(217, 70, 239, 0.2)',
+    badgeText: '#f0abfc'
   }
 ];
 
+export const CPTS_MODULES = [
+  'Getting Started',
+  'Network Fundamentals',
+  'Linux Fundamentals',
+  'Windows Fundamentals',
+  'Web Requests',
+  'Using Web Proxies',
+  'Information Gathering - Web',
+  'Footprinting',
+  'Network Enumeration (Nmap)',
+  'Vulnerability Assessment',
+  'File Inclusion',
+  'File Upload Attacks',
+  'Command Injections',
+  'SQL Injection (SQLi)',
+  'SQLMap Essentials',
+  'Cross-Site Scripting (XSS)',
+  'Login Attacks',
+  'Password Attacks',
+  'Attacking Common Services',
+  'Pivoting & Tunneling',
+  'Active Directory Attacks',
+  'Metasploit Framework',
+  'Linux PrivEsc',
+  'Windows PrivEsc',
+  'Documentation & Reporting'
+];
+
 const PREDEFINED_CATEGORIES = {
-  inversion: CATEGORY_PALETTES[2], // amber
-  inversión: CATEGORY_PALETTES[2],
-  finanzas: CATEGORY_PALETTES[2],
-  trading: CATEGORY_PALETTES[2],
-  economia: CATEGORY_PALETTES[2],
-  economía: CATEGORY_PALETTES[2],
+  // HTB CPTS Path Modules
+  'getting started': CYBER_PALETTES[4], // violet
+  'network fundamentals': CYBER_PALETTES[0], // cyan
+  redes: CYBER_PALETTES[0],
+  'linux fundamentals': CYBER_PALETTES[3], // amber
+  linux: CYBER_PALETTES[3],
+  'windows fundamentals': CYBER_PALETTES[6], // blue
+  windows: CYBER_PALETTES[6],
+  'web requests': CYBER_PALETTES[7], // fuchsia
+  'using web proxies': CYBER_PALETTES[7],
+  'information gathering - web': CYBER_PALETTES[5], // teal
+  'information gathering': CYBER_PALETTES[5],
+  footprinting: CYBER_PALETTES[5],
+  'network enumeration (nmap)': CYBER_PALETTES[0],
+  nmap: CYBER_PALETTES[0],
+  'vulnerability assessment': CYBER_PALETTES[1], // emerald
+  'file inclusion': CYBER_PALETTES[2], // rose
+  'file upload attacks': CYBER_PALETTES[2],
+  'command injections': CYBER_PALETTES[2],
+  'sql injection (sqli)': CYBER_PALETTES[2],
+  sqli: CYBER_PALETTES[2],
+  'sqlmap essentials': CYBER_PALETTES[2],
+  'cross-site scripting (xss)': CYBER_PALETTES[4],
+  xss: CYBER_PALETTES[4],
+  'login attacks': CYBER_PALETTES[3],
+  'password attacks': CYBER_PALETTES[3],
+  'attacking common services': CYBER_PALETTES[1],
+  'pivoting & tunneling': CYBER_PALETTES[5],
+  'pivoting, tunneling & port forwarding': CYBER_PALETTES[5],
+  'active directory attacks': CYBER_PALETTES[6],
+  'active directory enumeration & attacks': CYBER_PALETTES[6],
+  'active directory': CYBER_PALETTES[6],
+  'metasploit framework': CYBER_PALETTES[7],
+  'using metasploit framework': CYBER_PALETTES[7],
+  'linux privesc': CYBER_PALETTES[3],
+  'linux privilege escalation': CYBER_PALETTES[3],
+  'windows privesc': CYBER_PALETTES[6],
+  'windows privilege escalation': CYBER_PALETTES[6],
+  'documentation & reporting': CYBER_PALETTES[1],
 
-  psicologia: CATEGORY_PALETTES[0], // violet
-  psicología: CATEGORY_PALETTES[0],
-  sesgos: CATEGORY_PALETTES[0],
-  mente: CATEGORY_PALETTES[0],
-
-  negocios: CATEGORY_PALETTES[1], // emerald
-  empresa: CATEGORY_PALETTES[1],
-  management: CATEGORY_PALETTES[1],
-  emprendimiento: CATEGORY_PALETTES[1],
-
-  sistemas: CATEGORY_PALETTES[3], // cyan
-  ciencia: CATEGORY_PALETTES[3],
-  tecnologia: CATEGORY_PALETTES[3],
-  tecnología: CATEGORY_PALETTES[3],
-  fisica: CATEGORY_PALETTES[3],
-  física: CATEGORY_PALETTES[3],
-  matematica: CATEGORY_PALETTES[3],
-  matemática: CATEGORY_PALETTES[3],
-
-  estrategia: CATEGORY_PALETTES[4], // rose
-  'toma de decisiones': CATEGORY_PALETTES[4],
-  decisiones: CATEGORY_PALETTES[4],
-  logica: CATEGORY_PALETTES[4],
-  lógica: CATEGORY_PALETTES[4],
-
-  filosofia: CATEGORY_PALETTES[5], // indigo
-  filosofía: CATEGORY_PALETTES[5],
-  estoicismo: CATEGORY_PALETTES[5],
-  etica: CATEGORY_PALETTES[5],
-  ética: CATEGORY_PALETTES[5],
-
-  productividad: CATEGORY_PALETTES[6], // orange
-  habitos: CATEGORY_PALETTES[6],
-  hábitos: CATEGORY_PALETTES[6],
-  aprendizaje: CATEGORY_PALETTES[6],
-  salud: CATEGORY_PALETTES[6],
-
-  creatividad: CATEGORY_PALETTES[7], // fuchsia
-  arte: CATEGORY_PALETTES[7],
-  innovacion: CATEGORY_PALETTES[7],
-  innovación: CATEGORY_PALETTES[7]
+  // Fallbacks genéricos
+  criptografia: CYBER_PALETTES[1],
+  malware: CYBER_PALETTES[2],
+  pentesting: CYBER_PALETTES[3],
+  web: CYBER_PALETTES[4],
+  forense: CYBER_PALETTES[5],
+  soc: CYBER_PALETTES[5],
+  devsecops: CYBER_PALETTES[6],
+  osint: CYBER_PALETTES[7]
 };
 
-export const getCategoryTheme = (categoryStr) => {
+export const getCyberCategoryTheme = (categoryStr) => {
   if (!categoryStr || !categoryStr.trim()) {
-    return CATEGORY_PALETTES[0]; // violet default
+    return CYBER_PALETTES[0]; // cian por defecto
   }
   const clean = categoryStr.trim().toLowerCase();
   if (PREDEFINED_CATEGORIES[clean]) {
@@ -170,22 +181,22 @@ export const getCategoryTheme = (categoryStr) => {
   for (let i = 0; i < clean.length; i++) {
     hash = clean.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % CATEGORY_PALETTES.length;
-  return CATEGORY_PALETTES[index];
+  const index = Math.abs(hash) % CYBER_PALETTES.length;
+  return CYBER_PALETTES[index];
 };
 
-const MentalModelsPage = () => {
-  const { mentalModels, createMentalModel, updateMentalModel, reviewMentalModel, deleteMentalModel, loading } = usePersonalHub();
+const CybersecurityPage = () => {
+  const { cybersecurityCards, createCybersecurityCard, updateCybersecurityCard, reviewCybersecurityCard, deleteCybersecurityCard, loading } = usePersonalHub();
   const [activeTab, setActiveTab] = useState('review'); // 'review' | 'list'
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingModel, setEditingModel] = useState(null);
+  const [editingCard, setEditingCard] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Form states
   const [conceptName, setConceptName] = useState('');
   const [content, setContent] = useState('');
-  const [bookTitle, setBookTitle] = useState('');
+  const [topic, setTopic] = useState('');
   const [author, setAuthor] = useState('');
   const [category, setCategory] = useState('');
 
@@ -201,7 +212,7 @@ const MentalModelsPage = () => {
   useEffect(() => {
     if (!loading && sessionCardIds === null) {
       try {
-        const savedRaw = localStorage.getItem('chiappital_mental_models_session');
+        const savedRaw = localStorage.getItem('chiappital_cybersecurity_session');
         if (savedRaw) {
           const saved = JSON.parse(savedRaw);
           if (saved && saved.date === todayStr && Array.isArray(saved.cardIds)) {
@@ -213,37 +224,31 @@ const MentalModelsPage = () => {
         console.error('Error loading session from localStorage:', e);
       }
 
-      const allDue = mentalModels.filter(m => {
-        const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
+      const allDue = cybersecurityCards.filter(c => {
+        const nextRevStr = c.next_review ? String(c.next_review).split('T')[0] : todayStr;
         return nextRevStr <= todayStr;
       });
 
-      const byBook = {};
-      allDue.forEach(m => {
-        const b = m.book_title || 'Desconocido';
-        if (!byBook[b]) byBook[b] = [];
-        byBook[b].push(m);
+      const byCategory = {};
+      allDue.forEach(c => {
+        const cat = c.category || 'General';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(c);
       });
-
-      const sortedBooks = Object.entries(byBook)
-        .sort((a, b) => b[1].length - a[1].length)
-        .map(entry => entry[0]);
-
-      const selectedBooks = sortedBooks.slice(0, 2);
 
       let queue = [];
-      selectedBooks.forEach(b => {
-        queue = [...queue, ...byBook[b]];
+      Object.values(byCategory).forEach(list => {
+        queue = [...queue, ...list];
       });
 
-      const MAX_CARDS = 60;
+      const MAX_CARDS = 60; // Límite máximo de 60 por sesión de estudio
       if (queue.length > MAX_CARDS) {
         queue = queue.slice(0, MAX_CARDS);
       }
 
-      const newIds = queue.map(m => m.id);
+      const newIds = queue.map(c => c.id);
       try {
-        localStorage.setItem('chiappital_mental_models_session', JSON.stringify({
+        localStorage.setItem('chiappital_cybersecurity_session', JSON.stringify({
           date: todayStr,
           cardIds: newIds
         }));
@@ -253,107 +258,107 @@ const MentalModelsPage = () => {
 
       setSessionCardIds(newIds);
     }
-  }, [loading, mentalModels, sessionCardIds, todayStr]);
+  }, [loading, cybersecurityCards, sessionCardIds, todayStr]);
 
-  const dueModels = useMemo(() => {
+  const dueCards = useMemo(() => {
     if (sessionCardIds === null) return [];
 
-    const allDue = mentalModels.filter(m => {
-      const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
+    const allDue = cybersecurityCards.filter(c => {
+      const nextRevStr = c.next_review ? String(c.next_review).split('T')[0] : todayStr;
       return nextRevStr <= todayStr;
     });
 
     const todayQueue = allDue
-      .filter(m => sessionCardIds.includes(m.id))
+      .filter(c => sessionCardIds.includes(c.id))
       .sort((a, b) => sessionCardIds.indexOf(a.id) - sessionCardIds.indexOf(b.id));
 
-    const normal = todayQueue.filter(m => !delayedIds.includes(m.id));
-    const delayed = todayQueue.filter(m => delayedIds.includes(m.id));
+    const normal = todayQueue.filter(c => !delayedIds.includes(c.id));
+    const delayed = todayQueue.filter(c => delayedIds.includes(c.id));
     return [...normal, ...delayed];
-  }, [mentalModels, todayStr, delayedIds, sessionCardIds]);
+  }, [cybersecurityCards, todayStr, delayedIds, sessionCardIds]);
 
-  const currentModel = dueModels[currentReviewIndex];
-  const currentTheme = useMemo(() => getCategoryTheme(currentModel?.category), [currentModel]);
+  const currentCard = dueCards[currentReviewIndex];
+  const currentTheme = useMemo(() => getCyberCategoryTheme(currentCard?.category), [currentCard]);
 
-  const filteredMentalModels = useMemo(() => {
-    if (!searchTerm.trim()) return mentalModels;
+  const filteredCards = useMemo(() => {
+    if (!searchTerm.trim()) return cybersecurityCards;
     const term = searchTerm.toLowerCase();
-    return mentalModels.filter(m =>
-      (m.concept_name && m.concept_name.toLowerCase().includes(term)) ||
-      (m.book_title && m.book_title.toLowerCase().includes(term)) ||
-      (m.author && m.author.toLowerCase().includes(term)) ||
-      (m.category && m.category.toLowerCase().includes(term))
+    return cybersecurityCards.filter(c =>
+      (c.concept_name && c.concept_name.toLowerCase().includes(term)) ||
+      (c.content && c.content.toLowerCase().includes(term)) ||
+      (c.topic && c.topic.toLowerCase().includes(term)) ||
+      (c.category && c.category.toLowerCase().includes(term))
     );
-  }, [mentalModels, searchTerm]);
+  }, [cybersecurityCards, searchTerm]);
 
   const remainingDueTotal = useMemo(() => {
-    return mentalModels.filter(m => {
-      const nextRevStr = m.next_review ? String(m.next_review).split('T')[0] : todayStr;
+    return cybersecurityCards.filter(c => {
+      const nextRevStr = c.next_review ? String(c.next_review).split('T')[0] : todayStr;
       return nextRevStr <= todayStr;
     }).length;
-  }, [mentalModels, todayStr]);
+  }, [cybersecurityCards, todayStr]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!conceptName.trim() || !content.trim() || !bookTitle.trim()) return;
-    await createMentalModel({
+    if (!conceptName.trim() || !content.trim()) return;
+    await createCybersecurityCard({
       concept_name: conceptName,
       content,
-      book_title: bookTitle,
+      topic,
       author,
       category
     });
     setConceptName('');
     setContent('');
-    setBookTitle('');
+    setTopic('');
     setAuthor('');
     setCategory('');
     setShowAddModal(false);
   };
 
-  const handleEditClick = (model) => {
-    setEditingModel(model);
-    setConceptName(model.concept_name);
-    setContent(model.content);
-    setBookTitle(model.book_title);
-    setAuthor(model.author || '');
-    setCategory(model.category || '');
+  const handleEditClick = (card) => {
+    setEditingCard(card);
+    setConceptName(card.concept_name);
+    setContent(card.content);
+    setTopic(card.topic || '');
+    setAuthor(card.author || '');
+    setCategory(card.category || '');
     setShowEditModal(true);
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!conceptName.trim() || !content.trim() || !bookTitle.trim()) return;
-    await updateMentalModel(editingModel.id, {
+    if (!conceptName.trim() || !content.trim()) return;
+    await updateCybersecurityCard(editingCard.id, {
       concept_name: conceptName,
       content,
-      book_title: bookTitle,
+      topic,
       author,
       category
     });
     setShowEditModal(false);
-    setEditingModel(null);
+    setEditingCard(null);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar este concepto?')) {
-      await deleteMentalModel(id);
+    if (window.confirm('¿Eliminar este concepto de ciberseguridad?')) {
+      await deleteCybersecurityCard(id);
     }
   };
 
   const handleReview = async (quality) => {
-    if (!currentModel || isProcessing) return;
+    if (!currentCard || isProcessing) return;
 
     setIsProcessing(true);
     setIsFlipped(false);
 
-    const modelId = currentModel.id;
-    const queueLength = dueModels.length;
+    const cardId = currentCard.id;
+    const queueLength = dueCards.length;
 
     setTimeout(async () => {
-      if (quality === 0 || (quality === 1 && currentModel.repetition === 0)) {
+      if (quality === 0 || (quality === 1 && currentCard.repetition === 0)) {
         setDelayedIds(prev => {
-          if (!prev.includes(modelId)) return [...prev, modelId];
+          if (!prev.includes(cardId)) return [...prev, cardId];
           return prev;
         });
         setCurrentReviewIndex(prev => {
@@ -367,31 +372,29 @@ const MentalModelsPage = () => {
           return prev >= nextQueue ? 0 : prev;
         });
       }
-      await reviewMentalModel(modelId, quality);
+      await reviewCybersecurityCard(cardId, quality);
       setIsProcessing(false);
     }, 300);
   };
 
-  const getIntervalLabel = (quality, model) => {
-    if (!model) return '';
-    let { repetition, interval_days, ease_factor } = model;
+  // Cooldowns de menor duración base para Ciberseguridad
+  const getIntervalLabel = (quality, card) => {
+    if (!card) return '';
+    let { repetition, interval_days, ease_factor } = card;
     interval_days = interval_days || 0;
     ease_factor = ease_factor || 2.5;
 
     if (quality === 0) return 'Hoy';
-    if (quality === 1) {
-      if (repetition === 0) return 'Hoy';
-      return `~${Math.max(1, Math.round(interval_days * 1.2))}d`;
-    }
+    if (quality === 1) return '1d';
     if (quality === 2) {
-      if (repetition === 0) return '14d';
-      if (repetition === 1) return '30d';
-      return `~${Math.round(interval_days * ease_factor)}d`;
+      if (repetition === 0) return '3d';
+      if (repetition === 1) return '7d';
+      return `~${Math.round(interval_days * 1.8)}d`;
     }
     if (quality === 3) {
-      if (repetition === 0) return '21d';
-      if (repetition === 1) return '45d';
-      return `~${Math.round(interval_days * ease_factor * 1.5)}d`;
+      if (repetition === 0) return '7d';
+      if (repetition === 1) return '15d';
+      return `~${Math.round(interval_days * ease_factor * 1.1)}d`;
     }
     return '';
   };
@@ -399,7 +402,7 @@ const MentalModelsPage = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showAddModal || showEditModal) return;
-      if (activeTab !== 'review' || !isFlipped || isProcessing || !currentModel) return;
+      if (activeTab !== 'review' || !isFlipped || isProcessing || !currentCard) return;
 
       if (e.key === '0') handleReview(0);
       else if (e.key === '1') handleReview(1);
@@ -410,64 +413,64 @@ const MentalModelsPage = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, isFlipped, isProcessing, currentModel, showAddModal, showEditModal]);
+  }, [activeTab, isFlipped, isProcessing, currentCard, showAddModal, showEditModal]);
 
   if (loading) {
-    return <Container><p>Cargando Mental Models...</p></Container>;
+    return <Container><p>Cargando Ciberseguridad...</p></Container>;
   }
-
-  const SUGGESTED_CATEGORIES = ['Inversión', 'Psicología', 'Negocios', 'Sistemas', 'Estrategia', 'Filosofía', 'Productividad', 'Creatividad'];
 
   return (
     <Container>
       <TopSection>
         <PageTitle>
-          <Brain size={28} color={p.primaryLight} /> Mental Models
+          <Shield size={30} color={p.primaryLight} /> Ciberseguridad
         </PageTitle>
-        <PageSubtitle>Ideas, conceptos y modelos mentales extraídos de libros</PageSubtitle>
+        <PageSubtitle>Estudio de vulnerabilidades, protocolos, comandos y conceptos de seguridad</PageSubtitle>
       </TopSection>
 
       <Tabs>
         <Tab $active={activeTab === 'review'} onClick={() => { setActiveTab('review'); setIsFlipped(false); }}>
-          Sesión de Estudio ({dueModels.length})
+          Sesión de Estudio ({dueCards.length})
         </Tab>
         <Tab $active={activeTab === 'list'} onClick={() => setActiveTab('list')}>
-          Biblioteca ({mentalModels.length})
+          Biblioteca ({cybersecurityCards.length})
         </Tab>
       </Tabs>
 
       {activeTab === 'review' && (
         <ReviewContainer>
-          {dueModels.length > 0 ? (
+          {dueCards.length > 0 ? (
             <FlashcardWrapper>
               <Flashcard $flipped={isFlipped} onClick={() => {
                 if (!isProcessing) setIsFlipped(true);
               }}>
                 <CardFront $theme={currentTheme}>
                   <CardTopAccent $theme={currentTheme} />
-                  {currentModel.category && (
+                  {currentCard.category && (
                     <CategoryBadge $theme={currentTheme}>
-                      <Tag size={12} /> {currentModel.category}
+                      <Tag size={12} /> {currentCard.category}
                     </CategoryBadge>
                   )}
-                  <CardLabel>Concepto</CardLabel>
-                  <CardWord $theme={currentTheme}>{currentModel.concept_name}</CardWord>
-                  <CardHint>Toca para ver el contenido</CardHint>
+                  <CardLabel>Concepto / Comando</CardLabel>
+                  <CardWord $theme={currentTheme}>{currentCard.concept_name}</CardWord>
+                  <CardHint>Toca para ver la explicación / solución</CardHint>
                 </CardFront>
                 <CardBack $theme={currentTheme}>
                   <CardTopAccent $theme={currentTheme} />
                   <CardContentContainer>
-                    {currentModel.category && (
+                    {currentCard.category && (
                       <CategoryBadge $theme={currentTheme} style={{ marginBottom: '1rem' }}>
-                        <Tag size={12} /> {currentModel.category}
+                        <Tag size={12} /> {currentCard.category}
                       </CategoryBadge>
                     )}
-                    <CardTranslation $theme={currentTheme}>{currentModel.content}</CardTranslation>
-                    <BookReference>
-                      <BookOpen size={14} style={{ marginRight: '6px', opacity: 0.7 }} />
-                      <span>{currentModel.book_title}</span>
-                      {currentModel.author && <span> - {currentModel.author}</span>}
-                    </BookReference>
+                    <CardTranslation $theme={currentTheme}>{currentCard.content}</CardTranslation>
+                    {currentCard.topic && (
+                      <BookReference>
+                        <Terminal size={15} style={{ marginRight: '6px', opacity: 0.7 }} />
+                        <span>Módulo: {currentCard.topic}</span>
+                        {currentCard.author && <span> - {currentCard.author}</span>}
+                      </BookReference>
+                    )}
                   </CardContentContainer>
                 </CardBack>
               </Flashcard>
@@ -476,19 +479,19 @@ const MentalModelsPage = () => {
                 <ActionButtons>
                   <EvalBtn $color="#ef4444" onClick={(e) => { e.stopPropagation(); handleReview(0); }}>
                     <RotateCcw size={18} />
-                    <span>[0] Otra vez<br /><small>({getIntervalLabel(0, currentModel)})</small></span>
+                    <span>[0] Otra vez<br /><small>({getIntervalLabel(0, currentCard)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#f59e0b" onClick={(e) => { e.stopPropagation(); handleReview(1); }}>
                     <AlertCircle size={18} />
-                    <span>[1] Difícil<br /><small>({getIntervalLabel(1, currentModel)})</small></span>
+                    <span>[1] Difícil<br /><small>({getIntervalLabel(1, currentCard)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#10b981" onClick={(e) => { e.stopPropagation(); handleReview(2); }}>
                     <CheckCircle size={18} />
-                    <span>[2] Bien<br /><small>({getIntervalLabel(2, currentModel)})</small></span>
+                    <span>[2] Bien<br /><small>({getIntervalLabel(2, currentCard)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color={currentTheme.primary} onClick={(e) => { e.stopPropagation(); handleReview(3); }}>
                     <CheckCircle size={18} />
-                    <span>[3] Fácil<br /><small>({getIntervalLabel(3, currentModel)})</small></span>
+                    <span>[3] Fácil<br /><small>({getIntervalLabel(3, currentCard)})</small></span>
                   </EvalBtn>
                 </ActionButtons>
               )}
@@ -497,11 +500,11 @@ const MentalModelsPage = () => {
             <AllDoneState>
               <CheckCircle size={48} color="#10b981" />
               <h3>¡Sesión Completada!</h3>
-              <p>No tienes más conceptos pendientes de la sesión actual.</p>
+              <p>No tienes más conceptos pendientes de ciberseguridad para repasar hoy.</p>
               {remainingDueTotal > 0 && (
                 <ContinueBtn onClick={() => {
                   try {
-                    localStorage.removeItem('chiappital_mental_models_session');
+                    localStorage.removeItem('chiappital_cybersecurity_session');
                   } catch (e) {}
                   setSessionCardIds(null);
                 }}>
@@ -520,7 +523,7 @@ const MentalModelsPage = () => {
               <Search size={16} />
               <input 
                 type="text" 
-                placeholder="Buscar por concepto, categoría, libro..." 
+                placeholder="Buscar por concepto, categoría, tema..." 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
@@ -528,10 +531,10 @@ const MentalModelsPage = () => {
             <AddBtn onClick={() => {
               setConceptName('');
               setContent('');
-              setBookTitle('');
+              setTopic('');
               setAuthor('');
               setCategory('');
-              setEditingModel(null);
+              setEditingCard(null);
               setShowAddModal(true);
             }}>
               <Plus size={16} /> Nueva Tarjeta
@@ -542,42 +545,42 @@ const MentalModelsPage = () => {
             <Table>
               <thead>
                 <tr>
-                  <th>Concepto</th>
+                  <th>Concepto / Comando</th>
                   <th>Categoría</th>
-                  <th>Libro</th>
+                  <th>Módulo / Tema</th>
                   <th>Próximo Repaso</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredMentalModels.map(model => {
-                  const modelTheme = getCategoryTheme(model.category);
+                {filteredCards.map(card => {
+                  const cardTheme = getCyberCategoryTheme(card.category);
                   return (
-                    <tr key={model.id}>
-                      <td><strong>{model.concept_name}</strong></td>
+                    <tr key={card.id}>
+                      <td><strong>{card.concept_name}</strong></td>
                       <td>
-                        {model.category ? (
-                          <CategoryBadge $theme={modelTheme} style={{ margin: 0 }}>
-                            <Tag size={11} /> {model.category}
+                        {card.category ? (
+                          <CategoryBadge $theme={cardTheme} style={{ margin: 0 }}>
+                            <Tag size={11} /> {card.category}
                           </CategoryBadge>
                         ) : (
                           <span style={{ color: p.textMuted, fontSize: '0.85rem' }}>-</span>
                         )}
                       </td>
-                      <td>{model.book_title}</td>
-                      <td>{model.next_review ? String(model.next_review).split('T')[0].split('-').reverse().join('/') : ''}</td>
+                      <td>{card.topic || '-'}</td>
+                      <td>{card.next_review ? String(card.next_review).split('T')[0].split('-').reverse().join('/') : ''}</td>
                       <td>
                         <ActionButtonsRow>
-                          <EditBtn onClick={() => handleEditClick(model)}><Edit2 size={16} /></EditBtn>
-                          <DelBtn onClick={() => handleDelete(model.id)}><Trash2 size={16} /></DelBtn>
+                          <EditBtn onClick={() => handleEditClick(card)}><Edit2 size={16} /></EditBtn>
+                          <DelBtn onClick={() => handleDelete(card.id)}><Trash2 size={16} /></DelBtn>
                         </ActionButtonsRow>
                       </td>
                     </tr>
                   );
                 })}
-                {filteredMentalModels.length === 0 && (
+                {filteredCards.length === 0 && (
                   <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>No se encontraron conceptos.</td>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>No se encontraron tarjetas.</td>
                   </tr>
                 )}
               </tbody>
@@ -589,32 +592,32 @@ const MentalModelsPage = () => {
       {(showAddModal || showEditModal) && (
         <ModalOverlay onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>
           <ModalContent onClick={e => e.stopPropagation()}>
-            <ModalTitle>{showEditModal ? 'Editar Concepto' : 'Nueva Tarjeta'}</ModalTitle>
+            <ModalTitle>{showEditModal ? 'Editar Tarjeta' : 'Nueva Tarjeta'}</ModalTitle>
             <form onSubmit={showEditModal ? handleEditSubmit : handleAdd}>
               <FormGroup>
-                <label>Concepto / Título *</label>
-                <Input value={conceptName} onChange={e => setConceptName(e.target.value)} required autoFocus placeholder="Ej. Circle of Competence" />
+                <label>Concepto / Comando / Vulnerabilidad *</label>
+                <Input value={conceptName} onChange={e => setConceptName(e.target.value)} required autoFocus placeholder="Ej. SQL Injection (SQLi) / nmap -sV" />
               </FormGroup>
               <FormGroup>
-                <label>Contenido (Cita, idea, frase) *</label>
-                <Input as="textarea" rows="4" value={content} onChange={e => setContent(e.target.value)} required placeholder="Know what you know and know what you don't know..." />
+                <label>Explicación / Sintaxis / Mitigación *</label>
+                <Input as="textarea" rows="4" value={content} onChange={e => setContent(e.target.value)} required placeholder="Inyección de código SQL por falta de sanitización..." />
               </FormGroup>
               <FormRow>
                 <FormGroup style={{ flex: 1 }}>
-                  <label>Libro *</label>
-                  <Input value={bookTitle} onChange={e => setBookTitle(e.target.value)} required placeholder="Ej. Poor Charlie's Almanack" />
+                  <label>Módulo / Referencia</label>
+                  <Input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Ej. OWASP Top 10" />
                 </FormGroup>
                 <FormGroup style={{ flex: 1 }}>
-                  <label>Autor</label>
-                  <Input value={author} onChange={e => setAuthor(e.target.value)} placeholder="Ej. Charlie Munger" />
+                  <label>Herramienta / Autor</label>
+                  <Input value={author} onChange={e => setAuthor(e.target.value)} placeholder="Ej. Nmap, Metasploit, PortSwigger" />
                 </FormGroup>
               </FormRow>
               <FormGroup>
-                <label>Categoría Temática</label>
-                <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="Ej. Inversión, Psicología, Negocios..." />
+                <label>Módulo / Categoría HTB CPTS *</label>
+                <Input value={category} onChange={e => setCategory(e.target.value)} placeholder="Ej. Network Enumeration (Nmap), SQL Injection (SQLi)..." />
                 <ChipContainer>
-                  {SUGGESTED_CATEGORIES.map(cat => {
-                    const catTheme = getCategoryTheme(cat);
+                  {CPTS_MODULES.map(cat => {
+                    const catTheme = getCyberCategoryTheme(cat);
                     const isSelected = category.trim().toLowerCase() === cat.toLowerCase();
                     return (
                       <CategoryChip
@@ -671,7 +674,7 @@ const PageTitle = styled.h1`
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 `;
 
 const PageSubtitle = styled.p`
@@ -749,7 +752,7 @@ const CardFace = styled.div`
   justify-content: center;
   padding: 3rem 2.5rem;
   text-align: center;
-  background: radial-gradient(circle at 50% 0%, ${props => props.$theme?.bgGlow || 'rgba(139,92,246,0.2)'}, transparent 75%), ${p.bgCard};
+  background: radial-gradient(circle at 50% 0%, ${props => props.$theme?.bgGlow || 'rgba(6,182,212,0.2)'}, transparent 75%), ${p.bgCard};
   border: 1px solid ${props => props.$theme?.borderColor || 'rgba(255,255,255,0.08)'};
   box-shadow: 0 14px 36px rgba(0,0,0,0.4), 0 0 28px ${props => props.$theme?.bgGlow || 'transparent'};
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -834,9 +837,9 @@ const CategoryBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: ${props => props.$theme?.badgeBg || 'rgba(139, 92, 246, 0.2)'};
+  background: ${props => props.$theme?.badgeBg || 'rgba(6, 182, 212, 0.2)'};
   color: ${props => props.$theme?.badgeText || p.primaryLight};
-  border: 1px solid ${props => props.$theme?.borderColor || 'rgba(139, 92, 246, 0.3)'};
+  border: 1px solid ${props => props.$theme?.borderColor || 'rgba(6, 182, 212, 0.3)'};
   padding: 0.4rem 0.85rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -1026,7 +1029,7 @@ const EditBtn = styled.button`
   border-radius: 4px;
   
   &:hover {
-    background: rgba(167, 139, 250, 0.1);
+    background: rgba(103, 232, 249, 0.1);
   }
 `;
 
@@ -1165,4 +1168,4 @@ const SaveBtn = styled.button`
   }
 `;
 
-export default MentalModelsPage;
+export default CybersecurityPage;

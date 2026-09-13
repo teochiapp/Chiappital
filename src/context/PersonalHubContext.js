@@ -12,6 +12,7 @@ export const PersonalHubProvider = ({ children }) => {
   const [goals, setGoals] = useState([]);
   const [vocabulary, setVocabulary] = useState([]);
   const [mentalModels, setMentalModels] = useState([]);
+  const [cybersecurityCards, setCybersecurityCards] = useState([]);
   const [fitness, setFitness] = useState({ prs: [], weekly_workouts: 0 });
   const [journals, setJournals] = useState([]);
   const [focusSessions, setFocusSessions] = useState([]);
@@ -22,7 +23,7 @@ export const PersonalHubProvider = ({ children }) => {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
-      const [featData, habitsData, goalsData, vocabData, fitnessData, journalsData, focusData, mentalModelsData] = await Promise.all([
+      const [featData, habitsData, goalsData, vocabData, fitnessData, journalsData, focusData, mentalModelsData, cybersecurityData] = await Promise.all([
         personalApiService.getFeatures(),
         personalApiService.getHabits(),
         personalApiService.getGoals(),
@@ -31,12 +32,14 @@ export const PersonalHubProvider = ({ children }) => {
         personalApiService.getJournals().catch(() => ({ journals: [] })), // Fallback si no existe
         personalApiService.getFocusSessions().catch(() => ({ sessions: [] })),
         personalApiService.getMentalModels().catch(() => ({ models: [] })),
+        personalApiService.getCybersecurityCards().catch(() => ({ cards: [] })),
       ]);
       setFeatures(featData.features || { personal_hub: false, investment_hub: true });
       setHabits(habitsData.habits || []);
       setGoals(goalsData.goals || []);
       setVocabulary(vocabData.vocabulary || []);
       setMentalModels(mentalModelsData.models || []);
+      setCybersecurityCards(cybersecurityData.cards || []);
       setFitness(fitnessData || { prs: [], weekly_workouts: 0 });
       setJournals(journalsData.journals || []);
       setFocusSessions(focusData.sessions || []);
@@ -177,6 +180,31 @@ export const PersonalHubProvider = ({ children }) => {
     setMentalModels(prev => prev.filter(m => m.id !== id));
   };
 
+  // ─── Cybersecurity ─────────────────────────────────────────────────────────
+
+  const createCybersecurityCard = async (cardData) => {
+    const data = await personalApiService.createCybersecurityCard(cardData);
+    setCybersecurityCards(prev => [data.card, ...prev]);
+    return data.card;
+  };
+
+  const updateCybersecurityCard = async (id, cardData) => {
+    const data = await personalApiService.updateCybersecurityCard(id, cardData);
+    setCybersecurityCards(prev => prev.map(c => c.id === id ? data.card : c));
+    return data.card;
+  };
+
+  const reviewCybersecurityCard = async (id, quality) => {
+    const data = await personalApiService.reviewCybersecurityCard(id, quality);
+    setCybersecurityCards(prev => prev.map(c => c.id === id ? data.card : c));
+    return data.card;
+  };
+
+  const deleteCybersecurityCard = async (id) => {
+    await personalApiService.deleteCybersecurityCard(id);
+    setCybersecurityCards(prev => prev.filter(c => c.id !== id));
+  };
+
   // ─── Fitness ───────────────────────────────────────────────────────────────
 
   const updateFitnessPr = async (exercise, record_value) => {
@@ -272,6 +300,11 @@ export const PersonalHubProvider = ({ children }) => {
         updateMentalModel,
         reviewMentalModel,
         deleteMentalModel,
+        cybersecurityCards,
+        createCybersecurityCard,
+        updateCybersecurityCard,
+        reviewCybersecurityCard,
+        deleteCybersecurityCard,
         updateFitnessPr,
         logWorkout,
         createJournal,

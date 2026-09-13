@@ -523,7 +523,7 @@ const ScreenerPage = () => {
   const regions = useMemo(() => {
     const data = stockData.filter(s => s.type !== 'ETF' && s.sector !== 'ETF');
     const unique = [...new Set(data.map(s => s.region).filter(Boolean))];
-    return unique.sort();
+    return unique.filter(reg => reg !== 'KR').sort();
   }, [stockData]);
 
   const sectors = useMemo(() => {

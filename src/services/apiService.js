@@ -207,8 +207,60 @@ class ApiService {
     return true;
   }
 
-  // Cerrar trade (actualizar con precio de salida y resultado)
-  async closeTrade(tradeId, exitPrice, result, notes = '') {
+  // Cerrar trade (apoyo para venta total o venta parcial)
+  async closeTrade(tradeId, exitPrice, result, notes = '', partialData = null) {
+    if (partialData && partialData.isPartial && partialData.originalTrade) {
+      const origTrade = partialData.originalTrade;
+      const getAttr = (attr) => (origTrade.attributes ? origTrade.attributes[attr] : origTrade[attr]);
+
+      const origPctVal = getAttr('portfolio_percentage');
+      const origPct = origPctVal !== null && origPctVal !== undefined && !isNaN(parseFloat(origPctVal))
+        ? parseFloat(origPctVal)
+        : null;
+
+      const soldPositionPercent = parseFloat(partialData.soldPositionPercent) || 100;
+      
+      let soldPct = null;
+      let remPct = null;
+
+      if (origPct !== null) {
+        soldPct = parseFloat((origPct * (soldPositionPercent / 100)).toFixed(4));
+        remPct = parseFloat((origPct - soldPct).toFixed(4));
+      }
+
+      // 1. Actualizar la posición abierta existente con el % de cartera remanente
+      await this.updateTrade(tradeId, {
+        portfolio_percentage: remPct,
+      });
+
+      // 2. Registrar el nuevo trade cerrado por la porción vendida
+      const closedNotes = notes 
+        ? `${notes} (Venta parcial ${soldPositionPercent}% de la posición)`
+        : `Venta parcial (${soldPositionPercent}% de la posición)`;
+
+      const closedTradeData = {
+        symbol: getAttr('symbol'),
+        type: getAttr('type'),
+        account_type: getAttr('account_type') || 'propia',
+        entry_price: parseFloat(getAttr('entry_price')),
+        entry_price_ars: getAttr('entry_price_ars') ? parseFloat(getAttr('entry_price_ars')) : null,
+        exit_price: parseFloat(exitPrice),
+        portfolio_percentage: soldPct,
+        stop_loss: getAttr('stop_loss') ? parseFloat(getAttr('stop_loss')) : null,
+        take_profit: getAttr('take_profit') ? parseFloat(getAttr('take_profit')) : null,
+        strategy: getAttr('strategy') || null,
+        emotions: getAttr('emotions') || null,
+        custom_country: getAttr('custom_country') || null,
+        custom_sector: getAttr('custom_sector') || null,
+        status: 'closed',
+        result: parseFloat(result),
+        closed_at: new Date().toISOString(),
+        notes: closedNotes,
+      };
+
+      return await this.createTrade(closedTradeData, getAttr('account_type') || 'propia');
+    }
+
     return this.updateTrade(tradeId, {
       exit_price: exitPrice,
       result: result,

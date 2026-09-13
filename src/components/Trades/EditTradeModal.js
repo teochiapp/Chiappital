@@ -388,7 +388,7 @@ const EditTradeModal = ({ isOpen, onClose, trade, onTradeUpdated }) => {
                     value={formData.portfolio_percentage}
                     onChange={handleChange}
                     placeholder="0"
-                    step="0.1"
+                    step="any"
                     min="0"
                     max="100"
                   />

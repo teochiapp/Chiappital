@@ -93,6 +93,12 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     return priceService.calculateUnrealizedPnL(entryPrice, currentPrice, tradeType);
   }, [getPrice]);
 
+  // Obtener el cambio diario porcentual de un símbolo
+  const getDailyVariation = useCallback((symbol) => {
+    if (!symbol) return null;
+    return priceService.getChangePercent(symbol);
+  }, [prices]); // dependemos de prices para que re-renderice cuando se actualizan
+
   // Obtener precios inicialmente con delay
   useEffect(() => {
     if (symbols.length === 0) return;
@@ -139,6 +145,7 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     lastUpdate,
     getPrice,
     getUnrealizedPnL,
+    getDailyVariation,
     refreshPrices,
     symbols
   };

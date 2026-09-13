@@ -135,6 +135,17 @@ async function initializeDatabase() {
     }
   }
 
+  // Migración: Modificar portfolio_percentage para mayor precisión decimal (DECIMAL(10, 4))
+  try {
+    await db.execute(`
+      ALTER TABLE trades 
+      MODIFY COLUMN portfolio_percentage DECIMAL(10, 4) DEFAULT NULL;
+    `);
+    console.log('✅ Migración: Columna portfolio_percentage modificada a DECIMAL(10, 4)');
+  } catch (error) {
+    console.error('⚠️ Error al intentar modificar portfolio_percentage:', error.message);
+  }
+
   // Migración: Agregar custom_country y custom_sector
   try {
     await db.execute(`
@@ -366,6 +377,27 @@ async function initializeDatabase() {
       updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       INDEX idx_user_mental_models (user_id, next_review)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Tarjetas de Ciberseguridad
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS cybersecurity_cards (
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      user_id       INT NOT NULL,
+      concept_name  VARCHAR(255) NOT NULL,
+      content       TEXT NOT NULL,
+      topic         VARCHAR(255) DEFAULT NULL,
+      author        VARCHAR(255) DEFAULT NULL,
+      category      VARCHAR(100) DEFAULT NULL,
+      repetition    INT DEFAULT 0,
+      ease_factor   FLOAT DEFAULT 2.5,
+      interval_days INT DEFAULT 0,
+      next_review   DATE,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_user_cybersecurity (user_id, next_review)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 

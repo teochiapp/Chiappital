@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
   Flame, Target, CheckCircle2, Circle, TrendingUp, BookOpen,
-  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock, Brain
+  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock, Brain, Shield
 } from 'lucide-react';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { colors } from '../../../styles/colors';
@@ -264,6 +264,12 @@ const PersonalHub = () => {
           <ModuleIcon color="#8b5cf6"><Brain size={28} /></ModuleIcon>
           <ModuleName>Mental Models</ModuleName>
           <ModuleDesc>Ideas, conceptos y modelos de estudio</ModuleDesc>
+          <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
+        </ModuleCard>
+        <ModuleCard onClick={() => navigate('/personal/cybersecurity')}>
+          <ModuleIcon color="#06b6d4"><Shield size={28} /></ModuleIcon>
+          <ModuleName>Ciberseguridad</ModuleName>
+          <ModuleDesc>Vulnerabilidades, redes, comandos y hacking ético</ModuleDesc>
           <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
         </ModuleCard>
         <ModuleCard onClick={() => navigate('/personal/mediterranean')}>

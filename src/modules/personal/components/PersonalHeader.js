@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
 
 const PersonalHeader = () => {
@@ -57,6 +57,13 @@ const PersonalHeader = () => {
         >
           <Brain size={18} />
           Mental Models
+        </NavItem>
+        <NavItem
+          $active={location.pathname === '/personal/cybersecurity'}
+          onClick={() => navigate('/personal/cybersecurity')}
+        >
+          <Shield size={18} />
+          Ciberseguridad
         </NavItem>
         <NavItem
           $active={location.pathname.startsWith('/personal/mediterranean')}

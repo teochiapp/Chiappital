@@ -140,9 +140,9 @@ const TradeLogs = () => {
     navigate('/');
   };
 
-  const handleCloseTrade = async (tradeId, exitPrice, result, notes) => {
+  const handleCloseTrade = async (tradeId, exitPrice, result, notes, partialData) => {
     try {
-      await closeTrade(tradeId, exitPrice, result, notes);
+      await closeTrade(tradeId, exitPrice, result, notes, partialData);
     } catch (err) {
       console.error('Error closing trade:', err);
     }
@@ -174,6 +174,7 @@ const TradeLogs = () => {
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         const parsedTrades = [];
+        let ignoredCount = 0;
 
         // Mapeo común de Cedears a tickers de NYSE/NASDAQ
         const cedearToNyseMap = {
@@ -196,6 +197,12 @@ const TradeLogs = () => {
           const pct = row[4]; // % del total
           if (typeof pct !== 'number') continue;
 
+          // Filtrar posiciones con <= 0.5% de la cartera
+          if (pct <= 0.5) {
+            ignoredCount++;
+            continue;
+          }
+
           parsedTrades.push({
             symbol: symbol,
             portfolio_percentage: pct,
@@ -203,11 +210,12 @@ const TradeLogs = () => {
         }
 
         if (parsedTrades.length === 0) {
-          alert('No se encontraron trades válidos en el archivo Excel.');
+          alert(`No se encontraron trades válidos con más de 0.5% de cartera en el archivo Excel.${ignoredCount > 0 ? ` (Se omitieron ${ignoredCount} posiciones con <= 0.5%)` : ''}`);
           return;
         }
 
-        if (window.confirm(`¿Seguro que querés procesar ${parsedTrades.length} activos del portafolio IEB?\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
+        const ignoredMsg = ignoredCount > 0 ? `\n(Se omitieron ${ignoredCount} activo(s) con 0,5% o menos del total)` : '';
+        if (window.confirm(`¿Seguro que querés procesar ${parsedTrades.length} activos del portafolio IEB?${ignoredMsg}\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
           const token = localStorage.getItem('st_token');
           if (!token) throw new Error('No hay sesión iniciada');
           

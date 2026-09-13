@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { BookOpen, Plus, Search, Trash2, CheckCircle, HelpCircle, AlertCircle, RotateCcw, Globe, Edit2 } from 'lucide-react';
@@ -152,6 +152,22 @@ const LanguagesPage = () => {
     return '';
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (showAddModal || showEditModal) return;
+      if (activeTab !== 'review' || !isFlipped || isProcessing || !currentWord) return;
+
+      if (e.key === '0') handleReview(0);
+      else if (e.key === '1') handleReview(1);
+      else if (e.key === '2') handleReview(2);
+      else if (e.key === '3') handleReview(3);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isFlipped, isProcessing, currentWord, showAddModal, showEditModal]);
+
   if (loading) {
     return <Container><p>Cargando idiomas...</p></Container>;
   }
@@ -209,19 +225,19 @@ const LanguagesPage = () => {
                 <ActionButtons>
                   <EvalBtn $color="#ef4444" onClick={(e) => { e.stopPropagation(); handleReview(0); }}>
                     <RotateCcw size={18} />
-                    <span>Otra vez<br /><small>({getIntervalLabel(0, currentWord)})</small></span>
+                    <span>[0] Otra vez<br /><small>({getIntervalLabel(0, currentWord)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#f59e0b" onClick={(e) => { e.stopPropagation(); handleReview(1); }}>
                     <AlertCircle size={18} />
-                    <span>Difícil<br /><small>({getIntervalLabel(1, currentWord)})</small></span>
+                    <span>[1] Difícil<br /><small>({getIntervalLabel(1, currentWord)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#10b981" onClick={(e) => { e.stopPropagation(); handleReview(2); }}>
                     <CheckCircle size={18} />
-                    <span>Bien<br /><small>({getIntervalLabel(2, currentWord)})</small></span>
+                    <span>[2] Bien<br /><small>({getIntervalLabel(2, currentWord)})</small></span>
                   </EvalBtn>
                   <EvalBtn $color="#3b82f6" onClick={(e) => { e.stopPropagation(); handleReview(3); }}>
                     <CheckCircle size={18} />
-                    <span>Fácil<br /><small>({getIntervalLabel(3, currentWord)})</small></span>
+                    <span>[3] Fácil<br /><small>({getIntervalLabel(3, currentWord)})</small></span>
                   </EvalBtn>
                 </ActionButtons>
               )}
@@ -539,6 +555,7 @@ const CardTranslation = styled.h2`
   font-family: 'Unbounded', sans-serif;
   margin: 0 0 1rem 0;
   color: ${p.primaryLight};
+  white-space: pre-wrap;
 
   @media (max-width: 480px) {
     font-size: 1.4rem;

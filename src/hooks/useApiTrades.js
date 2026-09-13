@@ -96,9 +96,9 @@ export const useStrapiTrades = () => {
     }
   }, [loadTrades]);
 
-  const closeTrade = useCallback(async (tradeId, exitPrice, result, notes = '') => {
+  const closeTrade = useCallback(async (tradeId, exitPrice, result, notes = '', partialData = null) => {
     try {
-      const closedTrade = await apiService.closeTrade(tradeId, exitPrice, result, notes);
+      const closedTrade = await apiService.closeTrade(tradeId, exitPrice, result, notes, partialData);
       await loadTrades(true);
       return closedTrade;
     } catch (err) {

@@ -574,6 +574,163 @@ router.delete('/mental-models/:id', async (req, res) => {
   }
 });
 
+// ─── Cybersecurity ────────────────────────────────────────────────────────────
+
+// GET /api/personal/cybersecurity
+router.get('/cybersecurity', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const [cards] = await db.execute(
+      'SELECT * FROM cybersecurity_cards WHERE user_id = ? ORDER BY id ASC',
+      [userId]
+    );
+    res.json({ cards });
+  } catch (error) {
+    console.error('Error obteniendo tarjetas de ciberseguridad:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// POST /api/personal/cybersecurity
+router.post('/cybersecurity', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { concept_name, content, topic, author, category } = req.body;
+    
+    if (!concept_name || !content) {
+      return res.status(400).json({ error: { message: 'concept_name y content son requeridos.' } });
+    }
+
+    const today = getUTC3DateString();
+
+    const [result] = await db.execute(
+      'INSERT INTO cybersecurity_cards (user_id, concept_name, content, topic, author, category, next_review) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, concept_name, content, topic || null, author || null, category || null, today]
+    );
+    const [rows] = await db.execute('SELECT * FROM cybersecurity_cards WHERE id = ?', [result.insertId]);
+    res.status(201).json({ card: rows[0] });
+  } catch (error) {
+    console.error('Error creando tarjeta de ciberseguridad:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/cybersecurity/:id/review
+router.put('/cybersecurity/:id/review', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { quality } = req.body; // 0=Again, 1=Hard, 2=Good, 3=Easy
+    
+    const [rows] = await db.execute('SELECT * FROM cybersecurity_cards WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    if (rows.length === 0) return res.status(404).json({ error: { message: 'Tarjeta no encontrada.' } });
+    
+    const card = rows[0];
+    let { repetition, ease_factor, interval_days } = card;
+
+    ease_factor = ease_factor || 2.5;
+    interval_days = interval_days || 0;
+
+    // Algoritmo SRS con tiempos de enfriamiento base más cortos para Ciberseguridad
+    if (quality === 0) {
+      repetition = 0;
+      interval_days = 0;
+    } else if (quality === 1) {
+      interval_days = 1; // Repaso al día siguiente
+      repetition += 1;
+    } else if (quality === 2) {
+      if (repetition === 0) {
+        interval_days = 3;
+      } else if (repetition === 1) {
+        interval_days = 7;
+      } else {
+        interval_days = Math.max(1, Math.round(interval_days * 1.8));
+      }
+      repetition += 1;
+    } else if (quality === 3) {
+      if (repetition === 0) {
+        interval_days = 7;
+      } else if (repetition === 1) {
+        interval_days = 15;
+      } else {
+        interval_days = Math.max(1, Math.round(interval_days * ease_factor * 1.1));
+      }
+      repetition += 1;
+    }
+
+    ease_factor = ease_factor + (0.1 - (3 - quality) * (0.08 + (3 - quality) * 0.02));
+    if (ease_factor < 1.3) ease_factor = 1.3;
+
+    const nextReviewDate = new Date();
+    nextReviewDate.setDate(nextReviewDate.getDate() + interval_days);
+    const nextReviewStr = getUTC3DateString(nextReviewDate);
+
+    await db.execute(
+      `UPDATE cybersecurity_cards SET 
+        repetition = ?, ease_factor = ?, interval_days = ?, next_review = ?
+       WHERE id = ?`,
+      [repetition, ease_factor, interval_days, nextReviewStr, req.params.id]
+    );
+
+    const [updatedRows] = await db.execute('SELECT * FROM cybersecurity_cards WHERE id = ?', [req.params.id]);
+    res.json({ card: updatedRows[0] });
+  } catch (error) {
+    console.error('Error actualizando revisión de ciberseguridad:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/cybersecurity/:id
+router.put('/cybersecurity/:id', async (req, res) => {
+  try {
+    const { concept_name, content, topic, author, category } = req.body;
+    const db = getPool();
+    const userId = req.user.id;
+
+    await db.execute(
+      `UPDATE cybersecurity_cards SET 
+        concept_name = COALESCE(?, concept_name), 
+        content = COALESCE(?, content), 
+        topic = COALESCE(?, topic), 
+        author = COALESCE(?, author), 
+        category = COALESCE(?, category) 
+       WHERE id = ? AND user_id = ?`,
+      [
+        concept_name !== undefined ? concept_name : null, 
+        content !== undefined ? content : null, 
+        topic !== undefined ? topic : null, 
+        author !== undefined ? author : null, 
+        category !== undefined ? category : null, 
+        req.params.id, 
+        userId
+      ]
+    );
+
+    const [updatedRows] = await db.execute('SELECT * FROM cybersecurity_cards WHERE id = ? AND user_id = ?', [req.params.id, userId]);
+    if (updatedRows.length === 0) {
+      return res.status(404).json({ error: { message: 'Tarjeta no encontrada.' } });
+    }
+    res.json({ card: updatedRows[0] });
+  } catch (error) {
+    console.error('Error actualizando tarjeta de ciberseguridad:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// DELETE /api/personal/cybersecurity/:id
+router.delete('/cybersecurity/:id', async (req, res) => {
+  try {
+    const db = getPool();
+    await db.execute('DELETE FROM cybersecurity_cards WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando tarjeta de ciberseguridad:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
 // ─── Journals ──────────────────────────────────────────────────────────────────
 
 // GET /api/personal/journals

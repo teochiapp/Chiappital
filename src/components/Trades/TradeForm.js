@@ -463,7 +463,7 @@ const TradeForm = ({ onTradeAdded }) => {
                 value={formData.portfolioPercentage}
                 onChange={handleInputChange}
                 placeholder="Ej: 5"
-                step="0.1"
+                step="any"
                 min="0"
                 max="100"
               />

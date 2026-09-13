@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw, Activity } from 'lucide-react';
+import { SiTradingview } from 'react-icons/si';
 import CloseTradeModal from './CloseTradeModal';
 import EditTradeModal from './EditTradeModal';
 import { useRealTimePrices } from '../../hooks/useRealTimePrices';
@@ -10,6 +11,7 @@ import companyLogoService from '../../services/companyLogoService';
 import priceService from '../../services/priceService';
 import { getStrategyDisplayName } from './TradeForm';
 import { colors, componentColors, getTradingColor, withOpacity } from '../../styles/colors';
+import { getTVSymbol } from '../Screener/ScreenerPage';
 
 const PositionsContainer = styled.div`
   background: #1e293b;
@@ -116,6 +118,10 @@ const SymbolName = styled.div`
   color: white;
   text-align: center;
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 `;
 
 const TradeTypeContainer = styled.div`
@@ -424,7 +430,8 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
     error: pricesError, 
     lastUpdate, 
     getPrice, 
-    getUnrealizedPnL, 
+    getUnrealizedPnL,
+    getDailyVariation, 
     refreshPrices 
   } = useRealTimePrices(openTrades || []);
 
@@ -574,9 +581,9 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
     setSelectedTrade(null);
   };
 
-  const handleTradeClosed = async (tradeId, exitPrice, result, notes) => {
+  const handleTradeClosed = async (tradeId, exitPrice, result, notes, partialData) => {
     try {
-      await onCloseTrade(tradeId, exitPrice, result, notes);
+      await onCloseTrade(tradeId, exitPrice, result, notes, partialData);
       handleCloseModal();
     } catch (err) {
       console.error('Error closing trade:', err);
@@ -753,8 +760,21 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                   </LogoFallback>
                 </CompanyLogo>
 
-                {/* Nombre del símbolo */}
-                <SymbolName>{getTradeAttr(trade, 'symbol')}</SymbolName>
+                {/* Nombre del símbolo y Link a TradingView */}
+                <SymbolName>
+                  {getTradeAttr(trade, 'symbol')}
+                  <a 
+                    href={`https://es.tradingview.com/chart/iI2KiaxW/?symbol=${getTVSymbol(getTradeAttr(trade, 'symbol'))}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    title="Ver en TradingView"
+                    style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', transition: 'color 0.2s', padding: '4px', borderRadius: '4px' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#38bdf8'; e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <SiTradingview size={18} />
+                  </a>
+                </SymbolName>
 
                 {/* Tipo de trade con icono */}
                 <TradeTypeContainer>
@@ -788,6 +808,24 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                       return currentPrice ? formatCurrency(currentPrice) : 'Cargando...';
                     })()}
                   </CurrentPrice>
+                </DetailItem>
+                <DetailItem>
+                  <DetailLabel>Var. Diaria</DetailLabel>
+                  {(() => {
+                    const symbol = getTradeAttr(trade, 'symbol');
+                    const variation = getDailyVariation(symbol);
+                    if (variation === null || variation === undefined) {
+                      return <span style={{ color: '#64748b', fontSize: '0.9rem' }}>No disponible</span>;
+                    }
+                    return (
+                      <UnrealizedPnL $pnl={variation}>
+                        <PnLIcon>
+                          {variation > 0 ? <TrendingUp size={14} /> : variation < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
+                        </PnLIcon>
+                        {`${variation > 0 ? '+' : ''}${variation.toFixed(2)}%`}
+                      </UnrealizedPnL>
+                    );
+                  })()}
                 </DetailItem>
                 <DetailItem>
                   <DetailLabel>PnL No Realizado</DetailLabel>
