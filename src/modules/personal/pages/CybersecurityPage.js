@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { Plus, Search, Trash2, CheckCircle, AlertCircle, RotateCcw, Shield, Edit2, Tag, Terminal } from 'lucide-react';
-import { getUTC3DateString } from '../../../utils/helpers';
+import { getUTC3DateString, parseHabitDays } from '../../../utils/helpers';
 
 const p = {
   primary: '#06b6d4', // Cyan / Azul ciberseguridad
@@ -186,7 +186,7 @@ export const getCyberCategoryTheme = (categoryStr) => {
 };
 
 const CybersecurityPage = () => {
-  const { cybersecurityCards, createCybersecurityCard, updateCybersecurityCard, reviewCybersecurityCard, deleteCybersecurityCard, loading } = usePersonalHub();
+  const { cybersecurityCards, createCybersecurityCard, updateCybersecurityCard, reviewCybersecurityCard, deleteCybersecurityCard, loading, habits, toggleHabit } = usePersonalHub();
   const [activeTab, setActiveTab] = useState('review'); // 'review' | 'list'
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -205,6 +205,7 @@ const CybersecurityPage = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [delayedIds, setDelayedIds] = useState([]);
+  const [habitToast, setHabitToast] = useState(null);
 
   const todayStr = getUTC3DateString();
   const [sessionCardIds, setSessionCardIds] = useState(null);
@@ -373,6 +374,25 @@ const CybersecurityPage = () => {
         });
       }
       await reviewCybersecurityCard(cardId, quality);
+
+      // ── Auto-completar hábito al completar con éxito ──
+      if (quality >= 2 && habits && habits.length > 0) {
+        const today = getUTC3DateString();
+        const todayDow = new Date().getDay();
+        const TARGET_NAME = 'tarjetas de ciberseguridad';
+        const linked = habits.find(h => {
+          const name = (h.name || '').toLowerCase().trim();
+          const isScheduled = parseHabitDays(h.days_of_week).includes(todayDow);
+          const notDone = !(h.completions || []).includes(today);
+          return name === TARGET_NAME && isScheduled && notDone;
+        });
+        if (linked) {
+          await toggleHabit(linked.id, today);
+          setHabitToast({ name: linked.name });
+          setTimeout(() => setHabitToast(null), 3500);
+        }
+      }
+
       setIsProcessing(false);
     }, 300);
   };
@@ -402,7 +422,15 @@ const CybersecurityPage = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showAddModal || showEditModal) return;
-      if (activeTab !== 'review' || !isFlipped || isProcessing || !currentCard) return;
+      if (activeTab !== 'review' || isProcessing || !currentCard) return;
+
+      if (!isFlipped) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          setIsFlipped(true);
+        }
+        return;
+      }
 
       if (e.key === '0') handleReview(0);
       else if (e.key === '1') handleReview(1);
@@ -421,6 +449,11 @@ const CybersecurityPage = () => {
 
   return (
     <Container>
+      {habitToast && (
+        <HabitToast>
+          ✅ Hábito <strong>&ldquo;{habitToast.name}&rdquo;</strong> completado automáticamente
+        </HabitToast>
+      )}
       <TopSection>
         <PageTitle>
           <Shield size={30} color={p.primaryLight} /> Ciberseguridad
@@ -1165,6 +1198,25 @@ const SaveBtn = styled.button`
   
   &:hover {
     background: ${p.primaryLight};
+  }
+`;
+
+const HabitToast = styled.div`
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, rgba(52,211,153,0.95), rgba(16,185,129,0.95));
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 9999;
+  animation: slideInUp 0.3s ease-out;
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;
 

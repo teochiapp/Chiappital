@@ -399,6 +399,18 @@ class ApiService {
     if (!response.ok) throw new Error('Error updating lab preferences');
     return response.json();
   }
+
+  // ─── MARKET DATA ────────────────────────────────────────────────────────
+
+  async getRiskMetrics(symbols) {
+    if (!this.token) throw new Error('Usuario no autenticado.');
+    const symbolStr = Array.isArray(symbols) ? symbols.join(',') : symbols;
+    const response = await fetch(`${this.baseURL}/market/risk-metrics?symbols=${encodeURIComponent(symbolStr)}`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Error fetching risk metrics');
+    return response.json();
+  }
 }
 
 // Singleton

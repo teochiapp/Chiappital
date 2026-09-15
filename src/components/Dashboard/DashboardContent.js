@@ -5,6 +5,7 @@ import MarketStrategy from './MarketStrategy';
 import PortfolioComposition from './PortfolioComposition';
 import HistoricalMetrics from './HistoricalMetrics';
 import PerformanceChart from './PerformanceChart';
+import PortfolioPlanner from './PortfolioPlanner';
 import {
   DashboardContentStyled,
   DashboardSplitLayout
@@ -23,6 +24,7 @@ const DashboardContent = () => {
         </DashboardSplitLayout>
         <HistoricalMetrics />
         <PerformanceChart />
+        <PortfolioPlanner />
       </StyledContainer>
     </DashboardContentStyled>
   );

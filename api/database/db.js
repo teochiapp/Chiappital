@@ -772,6 +772,39 @@ async function initializeDatabase() {
     }
   }
 
+  // ─── Portfolio Planner ─────────────────────────────────────────────────────
+
+  // Planes de cartera hipotéticos
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS portfolio_plans (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      user_id     INT NOT NULL,
+      title       VARCHAR(255) NOT NULL,
+      target_date DATE DEFAULT NULL,
+      notes       TEXT DEFAULT NULL,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_user_plans (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Items dentro de cada plan (instrumentos con % asignado)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS portfolio_plan_items (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      plan_id    INT NOT NULL,
+      symbol     VARCHAR(50) NOT NULL,
+      label      VARCHAR(100) DEFAULT NULL,
+      percentage DECIMAL(5,2) NOT NULL DEFAULT 0,
+      color      VARCHAR(10) DEFAULT '#3b82f6',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (plan_id) REFERENCES portfolio_plans(id) ON DELETE CASCADE,
+      INDEX idx_plan_items (plan_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   console.log('✅ Base de datos inicializada correctamente');
 }
 

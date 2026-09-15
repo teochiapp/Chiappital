@@ -111,6 +111,15 @@ const personalApiService = {
   // Mediterranean Weekly Goals
   getMedWeeklyGoals: () => request('GET', '/mediterranean/weekly-goals'),
   updateMedWeeklyGoals: (data) => request('PUT', '/mediterranean/weekly-goals', data),
+
+  // ─── Portfolio Planner ─────────────────────────────────────────────────────
+  getPortfolioPlans: () => request('GET', '/portfolio-plans'),
+  createPortfolioPlan: (data) => request('POST', '/portfolio-plans', data),
+  updatePortfolioPlan: (id, data) => request('PUT', `/portfolio-plans/${id}`, data),
+  deletePortfolioPlan: (id) => request('DELETE', `/portfolio-plans/${id}`),
+  addPortfolioPlanItem: (planId, data) => request('POST', `/portfolio-plans/${planId}/items`, data),
+  updatePortfolioPlanItem: (planId, itemId, data) => request('PUT', `/portfolio-plans/${planId}/items/${itemId}`, data),
+  deletePortfolioPlanItem: (planId, itemId) => request('DELETE', `/portfolio-plans/${planId}/items/${itemId}`),
 };
 
 export default personalApiService;

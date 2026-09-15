@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { BookOpen, Plus, Search, Trash2, CheckCircle, HelpCircle, AlertCircle, RotateCcw, Globe, Edit2 } from 'lucide-react';
-import { getUTC3DateString } from '../../../utils/helpers';
+import { getUTC3DateString, parseHabitDays } from '../../../utils/helpers';
 
 const p = {
   primary: '#3b82f6',
@@ -14,7 +14,7 @@ const p = {
 };
 
 const LanguagesPage = () => {
-  const { vocabulary, createVocabulary, updateVocabulary, reviewVocabulary, deleteVocabulary, loading } = usePersonalHub();
+  const { vocabulary, createVocabulary, updateVocabulary, reviewVocabulary, deleteVocabulary, loading, habits, toggleHabit } = usePersonalHub();
   const [activeTab, setActiveTab] = useState('review'); // 'review' | 'list'
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -33,6 +33,7 @@ const LanguagesPage = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [delayedIds, setDelayedIds] = useState([]);
+  const [habitToast, setHabitToast] = useState(null); // { name: string }
 
   const todayStr = getUTC3DateString();
 
@@ -107,23 +108,38 @@ const LanguagesPage = () => {
           if (!prev.includes(wordId)) return [...prev, wordId];
           return prev;
         });
-        // Siempre avanzar al siguiente: la tarjeta actual va al final,
-        // entonces el siguiente índice muestra la próxima tarjeta.
-        // Si era la última (o solo quedaba 1), volvemos al 0.
         setCurrentReviewIndex(prev => {
           if (queueLength <= 1) return 0;
-          // Si estamos en la última posición antes del reordenamiento, volver al inicio
           return (prev + 1) >= queueLength ? 0 : prev;
         });
       } else {
         // quality 2 o 3: la tarjeta sale de la cola para hoy, avanzar índice
         setCurrentReviewIndex(prev => {
-          const nextQueue = queueLength - 1; // la tarjeta va a salir
+          const nextQueue = queueLength - 1;
           if (nextQueue <= 0) return 0;
           return prev >= nextQueue ? 0 : prev;
         });
       }
       await reviewVocabulary(wordId, quality);
+
+      // ── Auto-completar hábito al completar con éxito ──
+      if (quality >= 2 && habits && habits.length > 0) {
+        const today = getUTC3DateString();
+        const todayDow = new Date().getDay();
+        const TARGET_NAME = 'tarjetas de idioma';
+        const linked = habits.find(h => {
+          const name = (h.name || '').toLowerCase().trim();
+          const isScheduled = parseHabitDays(h.days_of_week).includes(todayDow);
+          const notDone = !(h.completions || []).includes(today);
+          return name === TARGET_NAME && isScheduled && notDone;
+        });
+        if (linked) {
+          await toggleHabit(linked.id, today);
+          setHabitToast({ name: linked.name });
+          setTimeout(() => setHabitToast(null), 3500);
+        }
+      }
+
       setIsProcessing(false);
     }, 300);
   };
@@ -155,7 +171,15 @@ const LanguagesPage = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (showAddModal || showEditModal) return;
-      if (activeTab !== 'review' || !isFlipped || isProcessing || !currentWord) return;
+      if (activeTab !== 'review' || isProcessing || !currentWord) return;
+
+      if (!isFlipped) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          setIsFlipped(true);
+        }
+        return;
+      }
 
       if (e.key === '0') handleReview(0);
       else if (e.key === '1') handleReview(1);
@@ -174,6 +198,11 @@ const LanguagesPage = () => {
 
   return (
     <Container>
+      {habitToast && (
+        <HabitToast>
+          ✅ Hábito <strong>&ldquo;{habitToast.name}&rdquo;</strong> completado automáticamente
+        </HabitToast>
+      )}
       <TopSection>
         <PageTitle>
           <Globe size={28} color={p.primaryLight} /> Idiomas
@@ -846,6 +875,25 @@ const SaveBtn = styled.button`
   
   &:hover {
     background: ${p.primaryLight};
+  }
+`;
+
+const HabitToast = styled.div`
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, rgba(52,211,153,0.95), rgba(16,185,129,0.95));
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 9999;
+  animation: slideInUp 0.3s ease-out;
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;
 

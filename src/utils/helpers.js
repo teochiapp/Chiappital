@@ -23,3 +23,12 @@ export const getUTC3DateString = (date = new Date()) => {
   const tzOffset = 3 * 60 * 60 * 1000;
   return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
 };
+
+// Parsea el campo days_of_week que puede venir como string JSON anidado
+export const parseHabitDays = (days) => {
+  let parsed = days;
+  while (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch(e) { break; }
+  }
+  return Array.isArray(parsed) ? parsed : [0,1,2,3,4,5,6];
+};

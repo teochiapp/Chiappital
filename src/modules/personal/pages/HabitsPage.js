@@ -3,11 +3,12 @@ import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {
   CheckCircle2, Circle, Plus, Trash2, Edit3, X, Flame,
-  Calendar, BarChart2, ChevronLeft, ChevronRight, Save
+  Calendar, BarChart2, ChevronLeft, ChevronRight, Save,
+  Clock, CheckCircle, Play
 } from 'lucide-react';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { colors } from '../../../styles/colors';
-import { getUTC3DateString } from '../../../utils/helpers';
+import { getUTC3DateString, parseHabitDays } from '../../../utils/helpers';
 
 const p = colors.personal;
 
@@ -22,16 +23,10 @@ const WEEKDAYS = [
   { val: 0, label: 'D' },
 ];
 
-const parseHabitDays = (days) => {
-  let parsed = days;
-  while (typeof parsed === 'string') {
-    try { parsed = JSON.parse(parsed); } catch(e) { break; }
-  }
-  return Array.isArray(parsed) ? parsed : [0,1,2,3,4,5,6];
-};
+// parseHabitDays is now imported from utils/helpers
 
 const HabitsPage = () => {
-  const { habits, loading, createHabit, updateHabit, deleteHabit, toggleHabit } = usePersonalHub();
+  const { habits, loading, createHabit, updateHabit, deleteHabit, toggleHabit, focusSessions, updateFocusSession } = usePersonalHub();
   const [showForm, setShowForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6] });
@@ -265,6 +260,66 @@ const HabitsPage = () => {
             </DateNavLabel>
             <DateNavBtn onClick={nextDay} disabled={selectedDateStr >= today}><ChevronRight size={20} /></DateNavBtn>
           </DateNav>
+
+          {/* ── Focus Sessions del día (prioridades) ── */}
+          {(() => {
+            const dayFocusSessions = focusSessions
+              ? focusSessions.filter(s => {
+                  const dateStr = s.session_date
+                    ? String(s.session_date).split('T')[0].split(' ')[0]
+                    : null;
+                  return dateStr === selectedDateStr;
+                }).sort((a, b) => new Date(a.session_date) - new Date(b.session_date))
+              : [];
+
+            if (dayFocusSessions.length === 0) return null;
+
+            const formatTime = (sd) => {
+              try { return new Date(sd).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
+              catch { return ''; }
+            };
+
+            return (
+              <FocusPrioritySection>
+                <FocusSectionTitle>
+                  <Clock size={14} />
+                  Sesiones de enfoque
+                </FocusSectionTitle>
+                {dayFocusSessions.map(session => (
+                  <FocusSessionItem key={session.id} $status={session.status}>
+                    <FocusSessionLeft>
+                      <FocusTimeChip $status={session.status}>
+                        <Clock size={11} />
+                        {formatTime(session.session_date)}
+                      </FocusTimeChip>
+                      <FocusSessionInfo>
+                        <FocusSessionName $status={session.status}>
+                          {session.description}
+                        </FocusSessionName>
+                        <FocusSessionMeta>
+                          <Play size={10} /> {session.duration} min
+                        </FocusSessionMeta>
+                      </FocusSessionInfo>
+                    </FocusSessionLeft>
+                    <FocusSessionRight>
+                      {session.status === 'completed' ? (
+                        <FocusStatusBadge $done>
+                          <CheckCircle size={13} /> Completada
+                        </FocusStatusBadge>
+                      ) : (
+                        <FocusCompleteBtn
+                          onClick={() => updateFocusSession(session.id, { status: 'completed' })}
+                          title="Marcar como completada"
+                        >
+                          <CheckCircle size={15} /> Completar
+                        </FocusCompleteBtn>
+                      )}
+                    </FocusSessionRight>
+                  </FocusSessionItem>
+                ))}
+              </FocusPrioritySection>
+            );
+          })()}
 
           {(() => {
             const selectedDayOfWeek = selectedDateObj.getDay();
@@ -932,3 +987,133 @@ const DateNavLabel = styled.div`
 `;
 
 export default HabitsPage;
+
+// ─── Focus Sessions Priority Styles ───────────────────────────────────────────
+
+const FocusPrioritySection = styled.div`
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+`;
+
+const FocusSectionTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #52B788;
+  margin-bottom: 0.25rem;
+`;
+
+const FocusSessionItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: ${props =>
+    props.$status === 'completed'
+      ? 'rgba(52,211,153,0.04)'
+      : 'rgba(251,191,36,0.05)'};
+  border: 1px solid ${props =>
+    props.$status === 'completed'
+      ? 'rgba(52,211,153,0.18)'
+      : 'rgba(251,191,36,0.2)'};
+  border-left: 3px solid ${props =>
+    props.$status === 'completed' ? '#34d399' : '#fbbf24'};
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  opacity: ${props => props.$status === 'cancelled' ? 0.5 : 1};
+  transition: all 0.2s;
+  gap: 0.75rem;
+
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+  }
+`;
+
+const FocusSessionLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+`;
+
+const FocusTimeChip = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: ${props =>
+    props.$status === 'completed'
+      ? 'rgba(52,211,153,0.12)'
+      : 'rgba(251,191,36,0.12)'};
+  color: ${props =>
+    props.$status === 'completed' ? '#34d399' : '#fbbf24'};
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+`;
+
+const FocusSessionInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+`;
+
+const FocusSessionName = styled.div`
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: ${props => props.$status === 'completed' ? '#64748b' : 'white'};
+  text-decoration: ${props => props.$status === 'completed' ? 'line-through' : 'none'};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FocusSessionMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #64748b;
+`;
+
+const FocusSessionRight = styled.div`
+  flex-shrink: 0;
+`;
+
+const FocusStatusBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #34d399;
+  font-weight: 600;
+`;
+
+const FocusCompleteBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.3);
+  color: #34d399;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(52,211,153,0.2);
+    border-color: #34d399;
+  }
+`;
+

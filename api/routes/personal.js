@@ -1383,5 +1383,217 @@ router.put('/mediterranean/weekly-goals', async (req, res) => {
   }
 });
 
+// ─── Portfolio Planner ─────────────────────────────────────────────────────────
+
+// GET /api/personal/portfolio-plans
+router.get('/portfolio-plans', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+
+    const [plans] = await db.execute(
+      'SELECT * FROM portfolio_plans WHERE user_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
+
+    // Para cada plan, traer sus items
+    const [items] = await db.execute(
+      `SELECT ppi.* FROM portfolio_plan_items ppi
+       INNER JOIN portfolio_plans pp ON ppi.plan_id = pp.id
+       WHERE pp.user_id = ?
+       ORDER BY ppi.percentage DESC`,
+      [userId]
+    );
+
+    const plansWithItems = plans.map(plan => ({
+      ...plan,
+      items: items.filter(i => i.plan_id === plan.id)
+    }));
+
+    res.json({ plans: plansWithItems });
+  } catch (error) {
+    console.error('Error obteniendo portfolio plans:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// POST /api/personal/portfolio-plans
+router.post('/portfolio-plans', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { title, target_date, notes } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: { message: 'El título es requerido.' } });
+    }
+
+    const [result] = await db.execute(
+      'INSERT INTO portfolio_plans (user_id, title, target_date, notes) VALUES (?, ?, ?, ?)',
+      [userId, title.trim(), target_date || null, notes || null]
+    );
+
+    const [rows] = await db.execute(
+      'SELECT * FROM portfolio_plans WHERE id = ?', [result.insertId]
+    );
+
+    res.status(201).json({ plan: { ...rows[0], items: [] } });
+  } catch (error) {
+    console.error('Error creando portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/portfolio-plans/:id
+router.put('/portfolio-plans/:id', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { title, target_date, notes } = req.body;
+
+    await db.execute(
+      `UPDATE portfolio_plans SET
+         title = COALESCE(?, title),
+         target_date = ?,
+         notes = ?
+       WHERE id = ? AND user_id = ?`,
+      [title || null, target_date || null, notes || null, id, userId]
+    );
+
+    const [rows] = await db.execute(
+      'SELECT * FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+    if (!rows.length) return res.status(404).json({ error: { message: 'Plan no encontrado.' } });
+
+    const [items] = await db.execute(
+      'SELECT * FROM portfolio_plan_items WHERE plan_id = ? ORDER BY percentage DESC', [id]
+    );
+
+    res.json({ plan: { ...rows[0], items } });
+  } catch (error) {
+    console.error('Error actualizando portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// DELETE /api/personal/portfolio-plans/:id
+router.delete('/portfolio-plans/:id', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    // Los items se borran por CASCADE
+    await db.execute(
+      'DELETE FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// POST /api/personal/portfolio-plans/:id/items
+router.post('/portfolio-plans/:id/items', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { symbol, label, percentage, color } = req.body;
+
+    // Verify ownership
+    const [plans] = await db.execute(
+      'SELECT id FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+    if (!plans.length) return res.status(404).json({ error: { message: 'Plan no encontrado.' } });
+
+    if (!symbol || !symbol.trim()) {
+      return res.status(400).json({ error: { message: 'El símbolo es requerido.' } });
+    }
+
+    const [result] = await db.execute(
+      'INSERT INTO portfolio_plan_items (plan_id, symbol, label, percentage, color) VALUES (?, ?, ?, ?, ?)',
+      [id, symbol.trim().toUpperCase(), label || null, parseFloat(percentage) || 0, color || '#3b82f6']
+    );
+
+    const [rows] = await db.execute(
+      'SELECT * FROM portfolio_plan_items WHERE id = ?', [result.insertId]
+    );
+
+    res.status(201).json({ item: rows[0] });
+  } catch (error) {
+    console.error('Error agregando item al portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// PUT /api/personal/portfolio-plans/:id/items/:itemId
+router.put('/portfolio-plans/:id/items/:itemId', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id, itemId } = req.params;
+    const { symbol, label, percentage, color } = req.body;
+
+    // Verify ownership
+    const [plans] = await db.execute(
+      'SELECT id FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+    if (!plans.length) return res.status(404).json({ error: { message: 'Plan no encontrado.' } });
+
+    await db.execute(
+      `UPDATE portfolio_plan_items SET
+         symbol = COALESCE(?, symbol),
+         label = ?,
+         percentage = COALESCE(?, percentage),
+         color = COALESCE(?, color)
+       WHERE id = ? AND plan_id = ?`,
+      [
+        symbol ? symbol.trim().toUpperCase() : null,
+        label !== undefined ? label : null,
+        percentage !== undefined ? parseFloat(percentage) : null,
+        color || null,
+        itemId, id
+      ]
+    );
+
+    const [rows] = await db.execute(
+      'SELECT * FROM portfolio_plan_items WHERE id = ? AND plan_id = ?', [itemId, id]
+    );
+
+    res.json({ item: rows[0] });
+  } catch (error) {
+    console.error('Error actualizando item del portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
+// DELETE /api/personal/portfolio-plans/:id/items/:itemId
+router.delete('/portfolio-plans/:id/items/:itemId', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id, itemId } = req.params;
+
+    // Verify ownership
+    const [plans] = await db.execute(
+      'SELECT id FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+    if (!plans.length) return res.status(404).json({ error: { message: 'Plan no encontrado.' } });
+
+    await db.execute(
+      'DELETE FROM portfolio_plan_items WHERE id = ? AND plan_id = ?', [itemId, id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando item del portfolio plan:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
 module.exports = router;
 

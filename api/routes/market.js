@@ -86,5 +86,65 @@ router.post('/truncate-snapshot', async (req, res) => {
     res.status(500).json({ error: 'Error truncating table' });
   }
 });
+// GET /api/market/risk-metrics?symbols=AAPL,MSFT
+router.get('/risk-metrics', async (req, res) => {
+  try {
+    const { symbols } = req.query;
+    if (!symbols) return res.json({ metrics: {} });
+
+    const symbolList = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+    if (!symbolList.length) return res.json({ metrics: {} });
+
+    const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+    const db = getPool();
+    
+    // 1. Fetch drawdown_52w from market_snapshot
+    const placeholders = symbolList.map(() => '?').join(',');
+    const [rows] = await db.query(
+      `SELECT symbol, drawdown_52w FROM market_snapshot WHERE symbol IN (${placeholders})`, 
+      symbolList
+    );
+    const dbMetrics = {};
+    rows.forEach(r => { 
+      dbMetrics[r.symbol] = { 
+        drawdown_52w: r.drawdown_52w !== null ? parseFloat(r.drawdown_52w) : null 
+      }; 
+    });
+
+    const metrics = {};
+    
+    // 2. Fetch Beta from Finnhub Basic Financials
+    for (const sym of symbolList) {
+      metrics[sym] = { drawdown_52w: dbMetrics[sym]?.drawdown_52w || null, beta: null };
+      
+      if (FINNHUB_API_KEY) {
+        try {
+          // Utiliza fetch nativo (Node 18+)
+          const response = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${sym}&metric=all&token=${FINNHUB_API_KEY}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.metric && data.metric.beta !== undefined) {
+              metrics[sym].beta = data.metric.beta;
+            }
+          }
+        } catch (err) {
+          console.error(`Error fetching beta for ${sym} from Finnhub:`, err.message);
+        }
+      }
+      
+      // Default to Beta = 1 if not found or crypto (so it doesn't skew to 0)
+      if (metrics[sym].beta === null || isNaN(metrics[sym].beta)) {
+        // Crypto or missing Beta -> Assume 1.0 (neutral) or 2.0 (aggressive). Let's use 1.0 for neutral fallback, or 1.5 for crypto? 
+        // For now, if no beta is found, we don't assign it, and frontend will handle it (e.g. assume 1.0).
+        metrics[sym].beta = null;
+      }
+    }
+
+    res.json({ metrics });
+  } catch (error) {
+    console.error('❌ Error obteniendo risk metrics:', error);
+    res.status(500).json({ error: 'Error obteniendo risk metrics' });
+  }
+});
 
 module.exports = router;
