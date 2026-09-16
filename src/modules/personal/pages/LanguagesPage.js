@@ -122,8 +122,11 @@ const LanguagesPage = () => {
       }
       await reviewVocabulary(wordId, quality);
 
-      // ── Auto-completar hábito al completar con éxito ──
-      if (quality >= 2 && habits && habits.length > 0) {
+      const isLeavingQueue = !(quality === 0 || (quality === 1 && currentWord.repetition === 0));
+      const willBeEmpty = isLeavingQueue && queueLength <= 1;
+
+      // ── Auto-completar hábito al terminar la sesión del día ──
+      if (willBeEmpty && habits && habits.length > 0) {
         const today = getUTC3DateString();
         const todayDow = new Date().getDay();
         const TARGET_NAME = 'tarjetas de idioma';
