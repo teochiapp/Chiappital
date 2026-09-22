@@ -30,5 +30,5 @@ export const parseHabitDays = (days) => {
   while (typeof parsed === 'string') {
     try { parsed = JSON.parse(parsed); } catch(e) { break; }
   }
-  return Array.isArray(parsed) ? parsed : [0,1,2,3,4,5,6];
+  return Array.isArray(parsed) ? parsed.map(Number) : [0,1,2,3,4,5,6];
 };

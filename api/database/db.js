@@ -229,6 +229,7 @@ async function initializeDatabase() {
       description TEXT DEFAULT NULL,
       frequency   ENUM('daily','weekly') NOT NULL DEFAULT 'daily',
       days_of_week JSON DEFAULT NULL,
+      target_time VARCHAR(5) DEFAULT NULL,
       color       VARCHAR(7) DEFAULT '#52B788',
       icon        VARCHAR(50) DEFAULT NULL,
       active      TINYINT(1) NOT NULL DEFAULT 1,
@@ -437,6 +438,16 @@ async function initializeDatabase() {
   } catch (error) {
     if (error.code !== 'ER_DUP_FIELDNAME') {
       console.error('⚠️ Error al agregar days_of_week:', error.message);
+    }
+  }
+
+  // Migración: Agregar target_time a habits
+  try {
+    await db.execute(`ALTER TABLE habits ADD COLUMN target_time VARCHAR(5) DEFAULT NULL;`);
+    console.log('✅ Migración: Columna target_time agregada a habits');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') {
+      console.error('⚠️ Error al agregar target_time:', error.message);
     }
   }
 

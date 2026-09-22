@@ -29,7 +29,7 @@ const HabitsPage = () => {
   const { habits, loading, createHabit, updateHabit, deleteHabit, toggleHabit, focusSessions, updateFocusSession } = usePersonalHub();
   const [showForm, setShowForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6] });
+  const [formData, setFormData] = useState({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6], target_time: '' });
   const [calendarOffset, setCalendarOffset] = useState(0); // months back
 
   const [selectedDateObj, setSelectedDateObj] = useState(new Date());
@@ -56,32 +56,30 @@ const HabitsPage = () => {
     });
   };
 
-  // Calcular racha para un hábito
+  // Calcular racha para un hábito — con for loop acotado (máx 400 días)
   const getStreak = (habit) => {
-    let streak = 0;
-    const d = new Date();
     const days = parseHabitDays(habit.days_of_week);
-    // Fecha de creación (solo la parte de fecha)
+    if (!days || days.length === 0) return 0;
+
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
-    
-    while (true) {
-      if (!days.includes(d.getDay())) {
-        d.setDate(d.getDate() - 1);
-        continue;
-      }
+    const completions = habit.completions || [];
+    let streak = 0;
+    const base = new Date();
+
+    for (let i = 0; i < 400; i++) {
+      const d = new Date(base);
+      d.setDate(d.getDate() - i);
+      const dayOfWeek = d.getDay();
+      if (!days.includes(dayOfWeek)) continue; // día no programado, saltar
       const ds = getUTC3DateString(d);
-      // No contar días anteriores a la creación del hábito
-      if (createdAt && ds < createdAt) break;
-      if ((habit.completions || []).includes(ds)) {
+      if (createdAt && ds < createdAt) break;  // antes de la creación, parar
+      if (completions.includes(ds)) {
         streak++;
-        d.setDate(d.getDate() - 1);
       } else if (ds === today) {
-        // Hoy aún no completado, no rompe racha
-        d.setDate(d.getDate() - 1);
+        continue; // hoy aún no completado, no rompe racha
       } else {
-        break;
+        break; // día programado no completado → racha rota
       }
-      if (streak > 365) break;
     }
     return streak;
   };
@@ -91,6 +89,7 @@ const HabitsPage = () => {
     let completed = 0;
     let scheduled = 0;
     const days = parseHabitDays(habit.days_of_week);
+    if (!days || days.length === 0) return 0;
     const createdAt = habit.created_at ? habit.created_at.split('T')[0] : null;
     for (let i = 0; i < 30; i++) {
       const d = new Date();
@@ -135,7 +134,7 @@ const HabitsPage = () => {
     }
     setShowForm(false);
     setEditingHabit(null);
-    setFormData({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6] });
+    setFormData({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6], target_time: '' });
   };
 
   const handleEdit = (habit) => {
@@ -148,7 +147,8 @@ const HabitsPage = () => {
       description: habit.description || '', 
       color: habit.color || '#52B788', 
       frequency: habit.frequency || 'daily',
-      days_of_week: parsedDays || [0,1,2,3,4,5,6]
+      days_of_week: parsedDays || [0,1,2,3,4,5,6],
+      target_time: habit.target_time || ''
     });
     setShowForm(true);
   };
@@ -172,7 +172,7 @@ const HabitsPage = () => {
           <PageTitle>Hábitos</PageTitle>
           <PageSubtitle>Construye tu mejor versión, un día a la vez</PageSubtitle>
         </div>
-        <AddButton onClick={() => { setEditingHabit(null); setFormData({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6] }); setShowForm(true); }}>
+        <AddButton onClick={() => { setEditingHabit(null); setFormData({ name: '', description: '', color: '#52B788', frequency: 'daily', days_of_week: [0,1,2,3,4,5,6], target_time: '' }); setShowForm(true); }}>
           <Plus size={18} /> Nuevo hábito
         </AddButton>
       </TopBar>
@@ -203,6 +203,14 @@ const HabitsPage = () => {
                   placeholder="Opcional..."
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Hora (Opcional)</Label>
+                <Input
+                  type="time"
+                  value={formData.target_time}
+                  onChange={e => setFormData({ ...formData, target_time: e.target.value })}
                 />
               </FormGroup>
               <FormGroup>
@@ -332,8 +340,16 @@ const HabitsPage = () => {
               return parseHabitDays(h.days_of_week);
             };
 
-            const habitsToday = filteredHabits.filter(h => getHabitDays(h).includes(selectedDayOfWeek));
-            const habitsOther = filteredHabits.filter(h => !getHabitDays(h).includes(selectedDayOfWeek));
+            const sortHabits = (a, b) => {
+              const timeA = a.target_time || '24:00';
+              const timeB = b.target_time || '24:00';
+              if (timeA < timeB) return -1;
+              if (timeA > timeB) return 1;
+              return 0;
+            };
+
+            const habitsToday = filteredHabits.filter(h => getHabitDays(h).includes(selectedDayOfWeek)).sort(sortHabits);
+            const habitsOther = filteredHabits.filter(h => !getHabitDays(h).includes(selectedDayOfWeek)).sort(sortHabits);
             
             const renderHabitCard = (habit, isOther = false) => {
               const completedToday = (habit.completions || []).includes(selectedDateStr);
@@ -351,6 +367,12 @@ const HabitsPage = () => {
                     </HabitInfo>
                   </HabitCardLeft>
                   <HabitCardRight>
+                    {habit.target_time && (
+                      <HabitStat>
+                        <Clock size={14} color={isOther ? "#64748b" : "#94a3b8"} />
+                        <span>{habit.target_time}</span>
+                      </HabitStat>
+                    )}
                     <HabitStat>
                       <Flame size={14} color={isOther ? "#64748b" : "#fb923c"} />
                       <span>{streak}d</span>

@@ -100,12 +100,12 @@ router.post('/habits', async (req, res) => {
   try {
     const db = getPool();
     const userId = req.user.id;
-    const { name, description, frequency, color, icon, days_of_week } = req.body;
+    const { name, description, frequency, color, icon, days_of_week, target_time } = req.body;
     if (!name) return res.status(400).json({ error: { message: 'name requerido.' } });
 
     const [result] = await db.execute(
-      'INSERT INTO habits (user_id, name, description, frequency, days_of_week, color, icon) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, name, description || null, frequency || 'daily', days_of_week ? JSON.stringify(days_of_week) : null, color || '#52B788', icon || null]
+      'INSERT INTO habits (user_id, name, description, frequency, days_of_week, target_time, color, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, name, description || null, frequency || 'daily', days_of_week ? JSON.stringify(days_of_week) : null, target_time || null, color || '#52B788', icon || null]
     );
     const [rows] = await db.execute('SELECT * FROM habits WHERE id = ?', [result.insertId]);
     res.status(201).json({ habit: { ...rows[0], completions: [] } });
@@ -120,16 +120,17 @@ router.put('/habits/:id', async (req, res) => {
   try {
     const db = getPool();
     const userId = req.user.id;
-    const { name, description, frequency, color, icon, active, days_of_week } = req.body;
+    const { name, description, frequency, color, icon, active, days_of_week, target_time } = req.body;
     await db.execute(
       `UPDATE habits SET name=COALESCE(?,name), description=COALESCE(?,description),
-       frequency=COALESCE(?,frequency), days_of_week=COALESCE(?,days_of_week), color=COALESCE(?,color), icon=COALESCE(?,icon),
+       frequency=COALESCE(?,frequency), days_of_week=COALESCE(?,days_of_week), target_time=COALESCE(?,target_time), color=COALESCE(?,color), icon=COALESCE(?,icon),
        active=COALESCE(?,active) WHERE id=? AND user_id=?`,
       [
         name !== undefined ? name : null,
         description !== undefined ? description : null,
         frequency !== undefined ? frequency : null,
         days_of_week !== undefined ? (days_of_week ? JSON.stringify(days_of_week) : null) : null,
+        target_time !== undefined ? target_time : null,
         color !== undefined ? color : null,
         icon !== undefined ? icon : null,
         active !== undefined ? (active ? 1 : 0) : null,

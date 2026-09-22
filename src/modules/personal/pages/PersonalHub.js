@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { colors } from '../../../styles/colors';
-import { getUTC3DateString } from '../../../utils/helpers';
+import { getUTC3DateString, parseHabitDays } from '../../../utils/helpers';
 
 const p = colors.personal;
 
@@ -22,7 +22,7 @@ const PersonalHub = () => {
 
   const todayHabits = useMemo(() => {
     return habits
-      .filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(todayDayOfWeek))
+      .filter(h => parseHabitDays(h.days_of_week).includes(todayDayOfWeek))
       .map(h => ({
         ...h,
         completedToday: (h.completions || []).includes(today),
@@ -36,14 +36,21 @@ const PersonalHub = () => {
   const currentStreak = useMemo(() => {
     if (!habits.length) return 0;
     let streak = 0;
-    const date = new Date();
-    while (true) {
-      const dateStr = getUTC3DateString(date);
+    const base = new Date();
+    let hitToday = false;
+    for (let i = 0; i < 400; i++) {
+      const d = new Date(base);
+      d.setDate(d.getDate() - i);
+      const dateStr = getUTC3DateString(d);
       const anyDone = habits.some(h => (h.completions || []).includes(dateStr));
-      if (!anyDone && dateStr !== today) break;
+      if (dateStr === today) {
+        hitToday = true;
+        if (anyDone) streak++;
+        continue;
+      }
+      if (!hitToday) continue; // still in the future somehow, skip
       if (anyDone) streak++;
-      date.setDate(date.getDate() - 1);
-      if (streak > 365) break;
+      else break;
     }
     return streak;
   }, [habits, today]);
@@ -70,7 +77,7 @@ const PersonalHub = () => {
       const dateStr = getUTC3DateString(d);
       const dayOfWeek = d.getDay();
       
-      const scheduledHabits = habits.filter(h => (h.days_of_week || [0,1,2,3,4,5,6]).includes(dayOfWeek));
+      const scheduledHabits = habits.filter(h => parseHabitDays(h.days_of_week).includes(dayOfWeek));
       const scheduledCount = scheduledHabits.length;
       const completedCount = scheduledHabits.filter(h => (h.completions || []).includes(dateStr)).length;
       
