@@ -1,20 +1,32 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
-import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Activity } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Activity, Info } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import { useApiMetrics } from '../../hooks/useApiMetrics';
 import { useStrapiTrades } from '../../hooks/useApiTrades';
 import priceService from '../../services/priceService';
+import apiService from '../../services/apiService';
 
 const OverviewMetrics = () => {
   const { metrics, loading: balanceLoading } = useApiMetrics();
   const { openTrades } = useStrapiTrades();
-  const [dolarMep, setDolarMep] = useState(null);
-  const [loadingDolar, setLoadingDolar] = useState(true);
   
   const [dailyGainUSD, setDailyGainUSD] = useState(0);
   const [dailyGainPercent, setDailyGainPercent] = useState(0);
   const [loadingDailyGain, setLoadingDailyGain] = useState(true);
+
+  // Beta Ponderado State
+  const [metricsCache, setMetricsCache] = useState(() => {
+    try {
+      const cached = localStorage.getItem('st_risk_metrics');
+      return cached ? JSON.parse(cached) : {};
+    } catch { return {}; }
+  });
+  const [loadingBeta, setLoadingBeta] = useState(false);
+
+  // Drawdown State
+  const [drawdownData, setDrawdownData] = useState(null);
+  const [loadingDrawdown, setLoadingDrawdown] = useState(true);
 
   const balance = useMemo(() => {
     if (!metrics || metrics.length === 0) return 0;
@@ -33,26 +45,91 @@ const OverviewMetrics = () => {
     return parseFloat(lastMetric.usd_end) || 0;
   }, [metrics]);
 
-  const fetchDolar = async () => {
+  const fetchRiskMetrics = useCallback(async () => {
+    if (!openTrades || openTrades.length === 0) return;
+    setLoadingBeta(true);
     try {
-      setLoadingDolar(true);
-      // Bluelytics is a very stable API for Dolar Blue/Oficial
-      const res = await fetch('https://api.bluelytics.com.ar/v2/latest');
-      const data = await res.json();
-      setDolarMep(data.blue.value_sell); // Usamos Dólar Blue como referencia
+      const symbols = openTrades.map(t => (t.symbol || t.attributes?.symbol).toUpperCase());
+      const missing = symbols.filter(s => {
+        const cached = metricsCache[s];
+        if (!cached) return true;
+        return Date.now() - (cached.timestamp || 0) > 86400000;
+      });
+
+      if (missing.length > 0) {
+        const data = await apiService.getRiskMetrics(missing);
+        setMetricsCache(prev => {
+          const newMetrics = { ...prev };
+          const now = Date.now();
+          for (const [sym, metric] of Object.entries(data.metrics || {})) {
+            newMetrics[sym] = { ...metric, timestamp: now };
+          }
+          localStorage.setItem('st_risk_metrics', JSON.stringify(newMetrics));
+          return newMetrics;
+        });
+      }
     } catch (err) {
-      console.error('Error fetching dolar MEP:', err);
+      console.error('Error fetching risk metrics:', err);
     } finally {
-      setLoadingDolar(false);
+      setLoadingBeta(false);
     }
-  };
+  }, [openTrades, metricsCache]);
 
   useEffect(() => {
-    fetchDolar();
-    // Refresh exchange rate every 5 minutes
-    const interval = setInterval(fetchDolar, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    fetchRiskMetrics();
+  }, [fetchRiskMetrics]);
+
+  const weightedBeta = useMemo(() => {
+    if (!openTrades || openTrades.length === 0) return 0;
+    let totalBeta = 0;
+    let betaWeightSum = 0;
+    let rawTotalPct = 0;
+
+    openTrades.forEach(trade => {
+      const sym = trade.symbol || trade.attributes?.symbol;
+      if (!sym) return;
+      
+      const metric = metricsCache[sym.toUpperCase()] || {};
+      const pct = parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage) || 0;
+      
+      if (pct === 0) return;
+      rawTotalPct += pct;
+
+      let itemBeta = 1.0; 
+      if (metric.beta !== undefined && metric.beta !== null) {
+        itemBeta = metric.beta;
+      } else if (sym.toUpperCase() === 'PSQ' || sym.toUpperCase() === 'SH' || sym.toUpperCase() === 'DOG') {
+        itemBeta = -1.0;
+      }
+
+      totalBeta += itemBeta * pct;
+      betaWeightSum += pct;
+    });
+
+    const cashPct = Math.max(0, 100 - rawTotalPct);
+    if (cashPct > 0) {
+      totalBeta += 0 * cashPct; 
+      betaWeightSum += cashPct;
+    }
+
+    return betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
+  }, [openTrades, metricsCache]);
+
+  const fetchDrawdown = useCallback(async () => {
+    try {
+      setLoadingDrawdown(true);
+      const res = await apiService.getDrawdown('propia');
+      setDrawdownData(res.data);
+    } catch (err) {
+      console.error('Error fetching drawdown:', err);
+    } finally {
+      setLoadingDrawdown(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDrawdown();
+  }, [balance, fetchDrawdown]);
 
   const fetchDailyGain = useCallback(async () => {
     if (!openTrades || openTrades.length === 0 || !balance) {
@@ -102,7 +179,11 @@ const OverviewMetrics = () => {
     return () => clearInterval(interval);
   }, [fetchDailyGain]);
 
-  const balanceARS = balance && dolarMep ? balance * dolarMep : 0;
+  const getBetaColor = (b) => {
+    if (b > 1.2) return '#f87171'; // Red
+    if (b < 0.8) return '#34d399'; // Green
+    return '#fbbf24'; // Yellow
+  };
 
   return (
     <OverviewContainer>
@@ -140,26 +221,37 @@ const OverviewMetrics = () => {
 
         <MetricCard className="narrow">
           <MetricHeader>
-            <span>Dólar Blue (Ref.)</span>
-            <button onClick={fetchDolar} title="Actualizar cotización" className="refresh-btn">
-              <RefreshCw size={14} className={loadingDolar ? 'spin' : ''} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Beta Ponderado
+              <Info size={12} color="#64748b" title="Mide la volatilidad respecto al mercado" />
+            </span>
+            <button onClick={fetchRiskMetrics} title="Actualizar Beta" className="refresh-btn">
+              <RefreshCw size={14} className={loadingBeta ? 'spin' : ''} />
             </button>
           </MetricHeader>
-          <MetricValue>
-            ${loadingDolar ? '...' : dolarMep?.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+          <MetricValue style={{ color: getBetaColor(weightedBeta) }}>
+            {loadingBeta && Object.keys(metricsCache).length === 0 ? '...' : weightedBeta.toFixed(2)}
           </MetricValue>
-          <MetricSub>api.bluelytics.com.ar</MetricSub>
+          <MetricSub>
+            {weightedBeta > 1.2 ? 'Agresiva' : weightedBeta < 0.8 ? 'Conservadora' : 'Neutral / Mercado'}
+          </MetricSub>
         </MetricCard>
 
         <MetricCard className="highlight wide">
           <MetricHeader>
-            <span>Equivalente ARS</span>
-            <Activity size={16} color={colors.secondary} />
+            <span>Drawdown Cartera</span>
+            <button onClick={fetchDrawdown} title="Actualizar Drawdown" className="refresh-btn">
+              <RefreshCw size={14} className={loadingDrawdown ? 'spin' : ''} />
+            </button>
           </MetricHeader>
-          <MetricValue className="gold">
-            ${balanceLoading || loadingDolar ? '...' : balanceARS.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+          <MetricValue className={drawdownData && drawdownData.drawdown < 0 ? 'negative' : 'gold'}>
+            {loadingDrawdown || !drawdownData ? '...' : 
+              (drawdownData.is_ath ? 'MÁXIMO HISTÓRICO' : `${drawdownData.drawdown.toFixed(2)}%`)}
           </MetricValue>
-          <MetricSub>ARS Totales</MetricSub>
+          <MetricSub>
+            {loadingDrawdown || !drawdownData ? 'Calculando...' : 
+              (drawdownData.is_ath ? 'ATH Alcanzado' : `Desde ATH: $${drawdownData.ath.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`)}
+          </MetricSub>
         </MetricCard>
       </MetricsGrid>
     </OverviewContainer>

@@ -88,6 +88,20 @@ async function initializeDatabase() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  // Tabla de snapshots de capital
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+      id           INT AUTO_INCREMENT PRIMARY KEY,
+      user_id      INT NOT NULL,
+      account_type ENUM('propia', 'compartida') NOT NULL,
+      total_usd    DECIMAL(15, 2) NOT NULL DEFAULT 0,
+      snapshot_date DATE NOT NULL,
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY idx_user_account_date (user_id, account_type, snapshot_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   // Tabla de métricas históricas
   await db.execute(`
     CREATE TABLE IF NOT EXISTS historical_metrics (

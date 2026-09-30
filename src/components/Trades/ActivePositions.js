@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw, Activity } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw, Activity, PlusCircle, XCircle } from 'lucide-react';
 import { SiTradingview } from 'react-icons/si';
 import CloseTradeModal from './CloseTradeModal';
 import EditTradeModal from './EditTradeModal';
+import AddCapitalModal from './AddCapitalModal';
 import { useRealTimePrices } from '../../hooks/useRealTimePrices';
 import companyLogoService from '../../services/companyLogoService';
 import priceService from '../../services/priceService';
@@ -146,7 +147,7 @@ const TradeType = styled.div`
 
 const CloseButtonContainer = styled.div`
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -159,6 +160,7 @@ const CloseButtonContainer = styled.div`
 
 const CloseButton = styled.button`
   flex: 1;
+  min-width: 40%;
   padding: 0.75rem;
   border: none;
   border-radius: 8px;
@@ -176,6 +178,7 @@ const CloseButton = styled.button`
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.2);
+    flex-basis: 100%;
     
     &:hover {
       background: rgba(239, 68, 68, 0.2);
@@ -418,6 +421,7 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddCapitalModal, setShowAddCapitalModal] = useState(false);
   const [companyLogos, setCompanyLogos] = useState(new Map());
   // EMA 21: { [symbol]: { value: number|null, loading: boolean } }
   const [ema21Map, setEma21Map] = useState({});
@@ -578,6 +582,16 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
 
   const handleCloseEditModal = () => {
     setShowEditModal(false);
+    setSelectedTrade(null);
+  };
+
+  const handleAddCapital = (trade) => {
+    setSelectedTrade(trade);
+    setShowAddCapitalModal(true);
+  };
+
+  const handleCloseAddCapitalModal = () => {
+    setShowAddCapitalModal(false);
     setSelectedTrade(null);
   };
 
@@ -915,6 +929,15 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
 
               {/* Botones de acción */}
               <CloseButtonContainer>
+                {getTradeAttr(trade, 'type') === 'buy' && (
+                  <CloseButton 
+                    className="secondary"
+                    onClick={() => handleAddCapital(trade)}
+                  >
+                    <PlusCircle size={16} />
+                    Agregar Capital
+                  </CloseButton>
+                )}
                 <CloseButton 
                   className="secondary"
                   onClick={() => handleEditTrade(trade)}
@@ -926,6 +949,7 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                   className="danger"
                   onClick={() => handleCloseTrade(trade)}
                 >
+                  <XCircle size={16} />
                   Cerrar Posición
                 </CloseButton>
               </CloseButtonContainer>
@@ -949,6 +973,16 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
         <EditTradeModal
           isOpen={showEditModal}
           onClose={handleCloseEditModal}
+          trade={selectedTrade}
+          onTradeUpdated={handleTradeUpdated}
+        />
+      )}
+
+      {/* Modal para agregar capital */}
+      {showAddCapitalModal && (
+        <AddCapitalModal
+          isOpen={showAddCapitalModal}
+          onClose={handleCloseAddCapitalModal}
           trade={selectedTrade}
           onTradeUpdated={handleTradeUpdated}
         />

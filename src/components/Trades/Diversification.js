@@ -1,11 +1,12 @@
 // components/Trades/Diversification.js - Componente para análisis de diversificación
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { BarChart3, Building2, Globe, Factory, Wallet, PieChart as PieChartIcon, AlertTriangle } from 'lucide-react';
+import { BarChart3, Building2, Globe, Factory, Wallet, PieChart as PieChartIcon, AlertTriangle, Activity, Info } from 'lucide-react';
 import { getSymbolData, CHART_COLORS } from '../../config/marketData';
 import { colors, componentColors, getTradingColor, withOpacity } from '../../styles/colors';
+import apiService from '../../services/apiService';
 
 const DiversificationContainer = styled.div`
   background: #1e293b;
@@ -182,8 +183,104 @@ const EmptyText = styled.p`
   color: #94a3b8;
 `;
 
+const RiskSection = styled.div`
+  padding: 1.5rem 2rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1.5rem 2rem;
+  }
+`;
+
+const RiskHeader = styled.h3`
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Unbounded', sans-serif;
+`;
+
+const RiskGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+`;
+
+const RiskCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-left: 4px solid ${props => props.$color || '#94a3b8'};
+`;
+
+const RiskLabel = styled.div`
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Unbounded', sans-serif;
+`;
+
+const RiskValue = styled.div`
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: ${props => props.$color || 'white'};
+  font-family: 'Unbounded', sans-serif;
+`;
+
+const RiskDesc = styled.div`
+  font-size: 0.75rem;
+  color: ${props => props.$color || '#cbd5e1'};
+  font-family: 'Unbounded', sans-serif;
+`;
+
 const Diversification = ({ openTrades, loading, error }) => {
   const [activeTab, setActiveTab] = useState('companies');
+
+  // Risk metrics cache
+  const [metricsCache, setMetricsCache] = useState(() => {
+    try {
+      const cached = localStorage.getItem('st_risk_metrics');
+      return cached ? JSON.parse(cached) : {};
+    } catch { return {}; }
+  });
+
+  // Fetch missing risk metrics
+  useEffect(() => {
+    if (!openTrades || openTrades.length === 0) return;
+
+    const symbols = openTrades.map(t => getTradeAttr(t, 'symbol').toUpperCase());
+    const missing = symbols.filter(s => {
+      const cached = metricsCache[s];
+      if (!cached) return true;
+      return Date.now() - (cached.timestamp || 0) > 86400000;
+    });
+
+    if (missing.length > 0) {
+      apiService.getRiskMetrics(missing)
+        .then(data => {
+          setMetricsCache(prev => {
+            const newMetrics = { ...prev };
+            const now = Date.now();
+            for (const [sym, metric] of Object.entries(data.metrics || {})) {
+              newMetrics[sym] = { ...metric, timestamp: now };
+            }
+            localStorage.setItem('st_risk_metrics', JSON.stringify(newMetrics));
+            return newMetrics;
+          });
+        })
+        .catch(err => console.error('Error fetching risk metrics:', err));
+    }
+  }, [openTrades, metricsCache]);
 
   // Función para adaptar estructura de Strapi
   const getTradeAttr = (trade, attr) => {
@@ -307,6 +404,77 @@ const Diversification = ({ openTrades, loading, error }) => {
       }
     };
   }, [openTrades]);
+
+  // Procesar riesgo de la cartera
+  const riskMetrics = useMemo(() => {
+    if (!openTrades || openTrades.length === 0) return null;
+
+    let totalBeta = 0;
+    let totalDrawdown = 0;
+    let betaWeightSum = 0;
+    let drawdownWeightSum = 0;
+    let rawTotalPct = 0;
+
+    openTrades.forEach(trade => {
+      const sym = getTradeAttr(trade, 'symbol');
+      if (!sym) return;
+      
+      const metric = metricsCache[sym.toUpperCase()] || {};
+      const pct = parseFloat(getTradeAttr(trade, 'portfolio_percentage')) || 0;
+      
+      if (pct === 0) return;
+      rawTotalPct += pct;
+
+      // Calcular Beta (Considerar explícitamente PSQ o inversos comunes si la API no lo trae negativo)
+      let itemBeta = 1.0; // Default neutral
+      if (metric.beta !== undefined && metric.beta !== null) {
+        itemBeta = metric.beta;
+      } else if (sym.toUpperCase() === 'PSQ' || sym.toUpperCase() === 'SH' || sym.toUpperCase() === 'DOG') {
+        itemBeta = -1.0; // ETFs inversos 1x comunes si no hay dato
+      }
+
+      totalBeta += itemBeta * pct;
+      betaWeightSum += pct;
+
+      if (metric.drawdown_52w !== undefined && metric.drawdown_52w !== null) {
+        totalDrawdown += metric.drawdown_52w * pct;
+        drawdownWeightSum += pct;
+      }
+    });
+
+    // Agregar Tasa de Efectivo (Liquidez)
+    // El efectivo tiene 0 Beta y 0% Drawdown
+    const cashPct = Math.max(0, 100 - rawTotalPct);
+    if (cashPct > 0) {
+      totalBeta += 0 * cashPct; // Beta del cash es 0
+      betaWeightSum += cashPct;
+
+      totalDrawdown += 0 * cashPct; // Drawdown del cash es 0
+      drawdownWeightSum += cashPct;
+    }
+
+    const weightedBeta = betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
+    const weightedDrawdown = drawdownWeightSum > 0 ? totalDrawdown / drawdownWeightSum : 0;
+
+    return { weightedBeta, weightedDrawdown };
+  }, [openTrades, metricsCache]);
+
+  const getBetaColor = (b) => {
+    if (b > 1.2) return '#f87171'; // Red
+    if (b < 0.8) return '#34d399'; // Green
+    return '#fbbf24'; // Yellow
+  };
+  const getBetaDesc = (b) => {
+    if (b > 1.2) return 'Agresiva / Alta volatilidad';
+    if (b < 0.8) return 'Conservadora / Baja volatilidad';
+    return 'Neutral / Mercado';
+  };
+  const getDrawdownColor = (d) => {
+    if (d < -20) return '#f87171';
+    if (d < -10) return '#fbbf24';
+    if (d < 0) return '#34d399';
+    return '#94a3b8';
+  };
 
   // Tooltip personalizado
   const CustomTooltip = ({ active, payload, label }) => {
@@ -586,6 +754,32 @@ const Diversification = ({ openTrades, loading, error }) => {
           {activeTab === 'sectors' && renderSectorsTab()}
         </motion.div>
       </TabContent>
+
+      {riskMetrics && diversificationData.totalPortfolio > 0 && (
+        <RiskSection>
+          <RiskHeader>
+            <Activity size={18} /> Análisis de Riesgo Estimado de la Cartera
+          </RiskHeader>
+          <RiskGrid>
+            <RiskCard $color={getBetaColor(riskMetrics.weightedBeta)}>
+              <RiskLabel>Beta Ponderado <Info size={14} color="#64748b" title="Mide la volatilidad de la cartera respecto al mercado (S&P 500 = 1.0)" style={{ cursor: 'help' }}/></RiskLabel>
+              <RiskValue $color={getBetaColor(riskMetrics.weightedBeta)}>
+                {riskMetrics.weightedBeta.toFixed(2)}
+              </RiskValue>
+              <RiskDesc $color={getBetaColor(riskMetrics.weightedBeta)}>{getBetaDesc(riskMetrics.weightedBeta)}</RiskDesc>
+            </RiskCard>
+            <RiskCard $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
+              <RiskLabel>Caída Máxima Estimada (1 Año) <Info size={14} color="#64748b" title="Peor caída estimada basada en el drawdown de 52 semanas de los componentes" style={{ cursor: 'help' }}/></RiskLabel>
+              <RiskValue $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
+                {riskMetrics.weightedDrawdown < 0 ? riskMetrics.weightedDrawdown.toFixed(1) : 0}%
+              </RiskValue>
+              <RiskDesc $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
+                Riesgo de pérdida profunda histórica
+              </RiskDesc>
+            </RiskCard>
+          </RiskGrid>
+        </RiskSection>
+      )}
     </DiversificationContainer>
   );
 };

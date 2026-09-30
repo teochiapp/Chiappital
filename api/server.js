@@ -140,12 +140,15 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
           lastResetDate = currentDateString;
           const { resetDailyData } = require('./services/marketSyncService');
           const { runEarningsSync } = require('./services/earningsSyncService');
+          const { takeDailySnapshots } = require('./services/portfolioSnapshotService');
           
           resetDailyData().then(() => {
             runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
           });
           
           runEarningsSync().catch(e => logger.error('EarningsSync', `Error in scheduled earnings sync: ${e.message}`));
+          
+          takeDailySnapshots().catch(e => logger.error('PortfolioSnapshot', `Error in daily snapshots: ${e.message}`));
           
           return; // Esperamos al siguiente tick para normalidad
         }

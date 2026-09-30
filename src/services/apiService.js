@@ -367,6 +367,15 @@ class ApiService {
     return response.json();
   }
 
+  async getDrawdown(accountType = 'propia') {
+    if (!this.token) throw new Error('Usuario no autenticado.');
+    const response = await fetch(`${this.baseURL}/balances/drawdown?account_type=${accountType}`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Error fetching drawdown');
+    return response.json();
+  }
+
   async updateBalance(accountType, totalUsd) {
     if (!this.token) throw new Error('Usuario no autenticado.');
     const response = await fetch(`${this.baseURL}/balances`, {

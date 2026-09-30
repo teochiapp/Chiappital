@@ -345,25 +345,41 @@ const PortfolioPlanner = () => {
             let totalDrawdown = 0;
             let betaWeightSum = 0;
             let drawdownWeightSum = 0;
+            let rawTotalPct = 0;
 
             plan.items.forEach(item => {
               const sym = item.symbol.toUpperCase();
               const metric = metricsCache[sym] || {};
               const pct = parseFloat(item.percentage) || 0;
               
+              if (pct === 0) return;
+              rawTotalPct += pct;
+
+              let itemBeta = 1.0;
               if (metric.beta !== undefined && metric.beta !== null) {
-                totalBeta += metric.beta * pct;
-                betaWeightSum += pct;
-              } else {
-                totalBeta += 1.0 * pct; // Default neutral 1.0
-                betaWeightSum += pct;
+                itemBeta = metric.beta;
+              } else if (sym === 'PSQ' || sym === 'SH' || sym === 'DOG') {
+                itemBeta = -1.0;
               }
+
+              totalBeta += itemBeta * pct;
+              betaWeightSum += pct;
 
               if (metric.drawdown_52w !== undefined && metric.drawdown_52w !== null) {
                 totalDrawdown += metric.drawdown_52w * pct;
                 drawdownWeightSum += pct;
               }
             });
+
+            // Consider cash for risk
+            const cashPct = Math.max(0, 100 - rawTotalPct);
+            if (cashPct > 0) {
+              totalBeta += 0 * cashPct;
+              betaWeightSum += cashPct;
+
+              totalDrawdown += 0 * cashPct;
+              drawdownWeightSum += cashPct;
+            }
 
             const weightedBeta = betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
             const weightedDrawdown = drawdownWeightSum > 0 ? totalDrawdown / drawdownWeightSum : 0;
