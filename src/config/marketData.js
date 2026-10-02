@@ -167,6 +167,8 @@ export const symbolMapping = {
   // 🆕 Nuevos CEDEARs (Acciones)
   'KLAC': { country: 'USA', sector: 'SEMICONDUCTORS', company: 'KLA Corporation' },
   'SKHY': { country: 'KOR', sector: 'SEMICONDUCTORS', company: 'SK Hynix' },
+  'AMAT': { country: 'USA', sector: 'SEMICONDUCTORS', company: 'Applied Materials Inc.' },
+  'LRCX': { country: 'USA', sector: 'SEMICONDUCTORS', company: 'Lam Research Corp' },
   'DELL': { country: 'USA', sector: 'SOFTWARE', company: 'Dell Technologies' },
   'WDC': { country: 'USA', sector: 'SOFTWARE', company: 'Western Digital' },
   'GEV': { country: 'USA', sector: 'UTILITIES', company: 'GE Vernova' },

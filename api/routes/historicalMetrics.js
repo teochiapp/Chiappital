@@ -128,7 +128,7 @@ router.post('/', async (req, res) => {
 // Enviar resumen por correo
 router.post('/send-summary', async (req, res) => {
   try {
-    const { recipient, customMessage, monthData, accountName } = req.body;
+    const { recipient, customMessage, monthData, accountName, composition } = req.body;
 
     if (!recipient) {
       return res.status(400).json({ error: { message: 'Se requiere al menos un destinatario' } });
@@ -191,6 +191,17 @@ router.post('/send-summary', async (req, res) => {
                 <tr><td class="td-label">Diferencia vs SPY</td><td class="td-value" style="color: ${diffColor}">${formatPercent(monthData.difference)}</td></tr>
               </table>
             </div>
+
+            ${composition && composition.length > 0 ? `
+            <div class="stats-box">
+              <h3 class="stats-title">Composición de la Cartera Actual</h3>
+              <table>
+                ${composition.map(item => `
+                  <tr><td class="td-label">${item.symbol}</td><td class="td-value">${formatPercent(item.percentage)}</td></tr>
+                `).join('')}
+              </table>
+            </div>
+            ` : ''}
           </div>
         </div>
         <div class="footer">

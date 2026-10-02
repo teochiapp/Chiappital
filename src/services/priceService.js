@@ -339,6 +339,16 @@ class PriceService {
     } catch (e) {}
   }
 
+  // Invalidar caché para un símbolo específico
+  invalidatePriceCache(symbol) {
+    if (!symbol) return;
+    const cacheKey = symbol.toUpperCase();
+    this.cache.delete(cacheKey);
+    try {
+      localStorage.removeItem(`price_${cacheKey}`);
+    } catch (e) {}
+  }
+
   // Helpers para caché persistente de precios
   getPriceFromCache(cacheKey) {
     let cached = this.cache.get(cacheKey);

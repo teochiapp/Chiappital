@@ -103,7 +103,10 @@ const MonthlyMovements = ({ trades = [], loading, error }) => {
         return d.getFullYear() === viewYear && d.getMonth() === viewMonth;
       })();
 
-      if (openInMonth) {
+      const noteStr = trade.notes || (trade.attributes && trade.attributes.notes) || '';
+      const isPartialSale = noteStr.toLowerCase().includes('venta parcial');
+
+      if (openInMonth && !isPartialSale) {
         compras.push({ ...trade, _movDate: openDate });
       }
       if (closeInMonth && trade.status === 'closed') {

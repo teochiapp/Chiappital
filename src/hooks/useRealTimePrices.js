@@ -133,10 +133,32 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     };
   }, [symbols.join(','), updateInterval, fetchPrices]);
 
-  // Función manual para refrescar
+  // Función manual para refrescar todos los precios
   const refreshPrices = useCallback(() => {
     fetchPrices();
   }, [fetchPrices]);
+
+  // Función manual para refrescar un único precio (ignorando caché)
+  const refreshSinglePrice = useCallback(async (symbol) => {
+    if (!symbol) return;
+    setLoading(true);
+    try {
+      console.log(`🔄 Refrescando precio individual para ${symbol}`);
+      priceService.invalidatePriceCache(symbol); // Limpiar caché
+      
+      const newPrice = await priceService.getCurrentPrice(symbol);
+      
+      setPrices(prevPrices => ({
+        ...prevPrices,
+        [symbol.toUpperCase()]: newPrice
+      }));
+      setLastUpdate(new Date());
+    } catch (err) {
+      console.error(`❌ Error refrescando precio para ${symbol}:`, err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     prices,
@@ -147,6 +169,7 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     getUnrealizedPnL,
     getDailyVariation,
     refreshPrices,
+    refreshSinglePrice,
     symbols
   };
 };

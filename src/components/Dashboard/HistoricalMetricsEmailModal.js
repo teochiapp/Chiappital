@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Mail, X, RefreshCw, Send } from 'lucide-react';
+import { useStrapiTrades } from '../../hooks/useApiTrades';
 
 const FREQUENT_EMAILS = [
   'cirochiappero@gmail.com',
@@ -13,6 +14,19 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
   const [customMessage, setCustomMessage] = useState('Adjunto el resumen de rendimiento del mes. ¡Saludos!');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ show: false, msg: '', type: '' });
+
+  const { openTrades } = useStrapiTrades();
+  
+  const composition = React.useMemo(() => {
+    if (!openTrades) return [];
+    return openTrades
+      .map(trade => ({
+        symbol: trade.symbol || trade.attributes?.symbol,
+        percentage: parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage || 0)
+      }))
+      .filter(item => item.percentage > 0)
+      .sort((a, b) => b.percentage - a.percentage);
+  }, [openTrades]);
 
   const accountName = accountType === 'compartida' ? 'Cuenta Compartida' : 'Cuenta Teo';
 
@@ -46,7 +60,8 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
         customMessage,
         monthData,
         ytdData,
-        accountName
+        accountName,
+        composition
       });
       showFeedback('Resumen enviado correctamente');
       setTimeout(onClose, 1500);
@@ -133,6 +148,17 @@ const HistoricalMetricsEmailModal = ({ isOpen, onClose, monthData, ytdData, onSe
                   <li>Var. SPY: <strong>{formatPercent(monthData.var_spy)}</strong></li>
                   <li>Diferencia: <strong style={{ color: parseFloat(monthData.difference) >= 0 ? '#10b981' : '#ef4444' }}>{formatPercent(monthData.difference)}</strong></li>
                 </ul>
+
+                {composition && composition.length > 0 && (
+                  <>
+                    <h4 style={{ margin: '16px 0 8px 0', color: '#1e293b' }}>Composición de la Cartera Actual</h4>
+                    <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.85rem' }}>
+                      {composition.map(item => (
+                        <li key={item.symbol}>{item.symbol}: <strong>{formatPercent(item.percentage)}</strong></li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </PreviewBody>
             </PreviewCard>
 

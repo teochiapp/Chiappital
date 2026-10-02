@@ -214,15 +214,30 @@ const TradeLogs = () => {
           return;
         }
 
+        // Consolidar por símbolo sumando los porcentajes (p. ej. GOOG y GOOGL se suman)
+        const consolidatedTradesMap = {};
+        for (const pt of parsedTrades) {
+          if (consolidatedTradesMap[pt.symbol]) {
+            consolidatedTradesMap[pt.symbol] += pt.portfolio_percentage;
+          } else {
+            consolidatedTradesMap[pt.symbol] = pt.portfolio_percentage;
+          }
+        }
+        
+        const consolidatedTrades = Object.keys(consolidatedTradesMap).map(sym => ({
+          symbol: sym,
+          portfolio_percentage: consolidatedTradesMap[sym]
+        }));
+
         const ignoredMsg = ignoredCount > 0 ? `\n(Se omitieron ${ignoredCount} activo(s) con 0,5% o menos del total)` : '';
-        if (window.confirm(`¿Seguro que querés procesar ${parsedTrades.length} activos del portafolio IEB?${ignoredMsg}\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
+        if (window.confirm(`¿Seguro que querés procesar ${consolidatedTrades.length} activos consolidados del portafolio IEB?${ignoredMsg}\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
           const token = localStorage.getItem('st_token');
           if (!token) throw new Error('No hay sesión iniciada');
           
           let updated = 0;
           let created = 0;
 
-          for (const pt of parsedTrades) {
+          for (const pt of consolidatedTrades) {
             const existingTrade = openTrades.find(t => (t.symbol || t.attributes?.symbol) === pt.symbol);
 
             if (existingTrade) {

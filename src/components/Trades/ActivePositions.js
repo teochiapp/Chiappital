@@ -90,15 +90,19 @@ const CompanyLogo = styled.div`
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: transparent;
-  padding: 4px;
+  background: #ffffff;
+  padding: 5px;
   flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
 `;
 
 const LogoImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 6px;
 `;
 
 const LogoFallback = styled.div`
@@ -107,8 +111,8 @@ const LogoFallback = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
-  background: #f1f5f9;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 8px;
 `;
 
@@ -436,7 +440,8 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
     getPrice, 
     getUnrealizedPnL,
     getDailyVariation, 
-    refreshPrices 
+    refreshPrices,
+    refreshSinglePrice 
   } = useRealTimePrices(openTrades || []);
 
   // Cargar logos de empresas
@@ -790,21 +795,16 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                   </a>
                 </SymbolName>
 
-                {/* Tipo de trade con icono */}
+                {/* Botón para recalcular precio individual */}
                 <TradeTypeContainer>
-                  <TradeType type={getTradeAttr(trade, 'type')}>
-                    {getTradeAttr(trade, 'type') === 'buy' ? (
-                      <>
-                        <ArrowUpCircle size={16} />
-                        LONG
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDownCircle size={16} />
-                        SHORT
-                      </>
-                    )}
-                  </TradeType>
+                  <RefreshButton 
+                    onClick={() => refreshSinglePrice(getTradeAttr(trade, 'symbol'))}
+                    disabled={pricesLoading}
+                    style={{ padding: '0.4rem', border: '1px solid rgba(255, 255, 255, 0.2)', minWidth: 'auto', display: 'flex', justifyContent: 'center' }}
+                    title="Recalcular Precio Actual"
+                  >
+                    <RefreshCw size={16} className={pricesLoading ? "animate-spin" : ""} />
+                  </RefreshButton>
                 </TradeTypeContainer>
               </PositionHeader>
 

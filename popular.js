@@ -137,6 +137,8 @@ module.exports = [// 🌾 Commodities
       { symbol: 'KLAC', name: 'KLA Corporation', sector: 'Semiconductores', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'ON', name: 'ON Semiconductor Corp', sector: 'Semiconductores', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'TSM', name: 'Taiwan Semiconductor', sector: 'Semiconductores', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'AMAT', name: 'Applied Materials Inc.', sector: 'Semiconductores', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
+      { symbol: 'LRCX', name: 'Lam Research Corp', sector: 'Semiconductores', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'TSLA', name: 'Tesla Inc', sector: 'Consumo Discrecional', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'UBER', name: 'Uber Technologies', sector: 'Software', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
       { symbol: 'SPOT', name: 'Spotify Technology S.A.', sector: 'Comunicaciones', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },

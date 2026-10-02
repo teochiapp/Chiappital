@@ -134,24 +134,27 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       const nyTime = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
       const currentDateString = nyTime.toDateString();
       
-      // A medianoche (NY time), resetear los OP Scores y Setups
-      if (nyTime.getHours() === 0 && nyTime.getMinutes() === 0) {
-        if (lastResetDate !== currentDateString) {
-          lastResetDate = currentDateString;
-          const { resetDailyData } = require('./services/marketSyncService');
-          const { runEarningsSync } = require('./services/earningsSyncService');
-          const { takeDailySnapshots } = require('./services/portfolioSnapshotService');
-          
-          resetDailyData().then(() => {
-            runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
-          });
-          
-          runEarningsSync().catch(e => logger.error('EarningsSync', `Error in scheduled earnings sync: ${e.message}`));
-          
-          takeDailySnapshots().catch(e => logger.error('PortfolioSnapshot', `Error in daily snapshots: ${e.message}`));
-          
-          return; // Esperamos al siguiente tick para normalidad
-        }
+      // Inicializar lastResetDate en el arranque para no ejecutar inmediatamente
+      if (lastResetDate === null) {
+        lastResetDate = currentDateString;
+      }
+      
+      // Si cambió el día (ya pasó la medianoche NY), ejecutamos las tareas diarias
+      if (lastResetDate !== currentDateString) {
+        lastResetDate = currentDateString;
+        const { resetDailyData } = require('./services/marketSyncService');
+        const { runEarningsSync } = require('./services/earningsSyncService');
+        const { takeDailySnapshots } = require('./services/portfolioSnapshotService');
+        
+        resetDailyData().then(() => {
+          runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
+        });
+        
+        runEarningsSync().catch(e => logger.error('EarningsSync', `Error in scheduled earnings sync: ${e.message}`));
+        
+        takeDailySnapshots().catch(e => logger.error('PortfolioSnapshot', `Error in daily snapshots: ${e.message}`));
+        
+        return; // Esperamos al siguiente tick para normalidad
       }
 
       runSync('scheduled').catch(e => logger.error('MarketSync', `Error in scheduled sync: ${e.message}`));
