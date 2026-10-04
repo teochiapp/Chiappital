@@ -18,7 +18,7 @@ class RsiService {
     }
 
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/market/snapshot`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();

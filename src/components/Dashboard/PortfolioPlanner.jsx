@@ -385,14 +385,19 @@ const PortfolioPlanner = () => {
             const weightedDrawdown = drawdownWeightSum > 0 ? totalDrawdown / drawdownWeightSum : 0;
 
             const getBetaColor = (b) => {
-              if (b > 1.2) return '#f87171'; // Red
-              if (b < 0.8) return '#34d399'; // Green
-              return '#fbbf24'; // Yellow
+              if (b < 0.50) return '#34d399';
+              if (b < 0.90) return '#fbbf24';
+              if (b < 1.50) return '#fb923c';
+              return '#f87171';
             };
             const getBetaDesc = (b) => {
-              if (b > 1.2) return 'Agresiva / Alta volatilidad';
-              if (b < 0.8) return 'Conservadora / Baja volatilidad';
-              return 'Neutral / Mercado';
+              if (b < 0.25) return '🟢 Muy conservadora';
+              if (b < 0.50) return '🟢 Conservadora';
+              if (b < 0.70) return '🟡 Moderada-conservadora';
+              if (b < 0.90) return '🟡 Moderada';
+              if (b < 1.10) return '🟠 Moderada-agresiva';
+              if (b < 1.50) return '🟠 Agresiva';
+              return '🔴 Muy agresiva';
             };
             const getDrawdownColor = (d) => {
               if (d < -20) return '#f87171';

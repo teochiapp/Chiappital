@@ -190,7 +190,7 @@ class PriceService {
   // Consume el snapshot del Backend
   async getMultipleQuotes(symbols) {
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/market/snapshot`);
       if (!response.ok) throw new Error('Error al obtener market snapshot');
       
@@ -415,7 +415,7 @@ class PriceService {
     // y dejar que la UI use el valor.
     // O hacer request al backend
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/market/snapshot`);
       const data = await response.json();
       if (data.snapshot && data.snapshot[safeSymbol] && data.snapshot[safeSymbol].ema21Distance !== null) {

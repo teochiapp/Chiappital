@@ -9,8 +9,8 @@ export const PRICE_PROVIDERS = {
 
 export const priceConfig = {
   // Configuración por defecto
-  provider: process.env.REACT_APP_PRICE_API_PROVIDER || PRICE_PROVIDERS.FINNHUB, // Finnhub primero, luego Stooq
-  apiKey: process.env.REACT_APP_PRICE_API_KEY || 'd3t6mg9r01qqdgfufaggd3t6mg9r01qqdgfufah0', // Finnhub API key
+  provider: import.meta.env.VITE_PRICE_API_PROVIDER || PRICE_PROVIDERS.FINNHUB, // Finnhub primero, luego Stooq
+  apiKey: import.meta.env.VITE_PRICE_API_KEY || 'd3t6mg9r01qqdgfufaggd3t6mg9r01qqdgfufah0', // Finnhub API key
   demoMode: false, // DESACTIVADO: Usa precios reales con fallback a Stooq
   gracefulDegradation: true, // Si falla la API, mostrar dashboard sin precios en lugar de error
   

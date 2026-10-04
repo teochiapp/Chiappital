@@ -74,11 +74,15 @@ router.get('/drawdown', async (req, res) => {
     const db = getPool();
     
     // 1. Obtener balance actual
-    const [balRows] = await db.execute(
-      'SELECT total_usd FROM portfolio_balances WHERE user_id = ? AND account_type = ?',
-      [req.user.id, accountType]
-    );
-    const currentCapital = balRows.length > 0 ? parseFloat(balRows[0].total_usd) : 0;
+    let currentCapital = req.query.current_capital ? parseFloat(req.query.current_capital) : null;
+    
+    if (currentCapital === null || isNaN(currentCapital)) {
+      const [balRows] = await db.execute(
+        'SELECT total_usd FROM portfolio_balances WHERE user_id = ? AND account_type = ?',
+        [req.user.id, accountType]
+      );
+      currentCapital = balRows.length > 0 ? parseFloat(balRows[0].total_usd) : 0;
+    }
 
     // 2. Obtener máximo histórico de snapshots
     const [snapRows] = await db.execute(

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X, CalendarDays } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
 
 const PersonalHeader = () => {
@@ -93,6 +93,13 @@ const PersonalHeader = () => {
           >
             <ChefHat size={18} />
             Recetario
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/personal/meal-planner'}
+            onClick={() => { navigate('/personal/meal-planner'); setIsMobileMenuOpen(false); }}
+          >
+            <CalendarDays size={18} />
+            Meal Planner
           </NavItem>
         </HeaderNav>
       </HeaderBottom>

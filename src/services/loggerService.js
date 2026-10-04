@@ -138,7 +138,7 @@ class LoggerService {
   // --- Backend Sync ---
   async fetchBackendLogs() {
     try {
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const response = await fetch(`${baseUrl}/api/market/logs`);
       if (response.ok) {
         const data = await response.json();

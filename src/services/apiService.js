@@ -367,9 +367,11 @@ class ApiService {
     return response.json();
   }
 
-  async getDrawdown(accountType = 'propia') {
+  async getDrawdown(accountType = 'propia', currentCapital = null) {
     if (!this.token) throw new Error('Usuario no autenticado.');
-    const response = await fetch(`${this.baseURL}/balances/drawdown?account_type=${accountType}`, {
+    let url = `${this.baseURL}/balances/drawdown?account_type=${accountType}`;
+    if (currentCapital !== null) url += `&current_capital=${currentCapital}`;
+    const response = await fetch(url, {
       headers: this.getHeaders(),
     });
     if (!response.ok) throw new Error('Error fetching drawdown');

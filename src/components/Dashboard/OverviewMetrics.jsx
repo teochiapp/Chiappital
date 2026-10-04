@@ -6,8 +6,10 @@ import { useApiMetrics } from '../../hooks/useApiMetrics';
 import { useStrapiTrades } from '../../hooks/useApiTrades';
 import priceService from '../../services/priceService';
 import apiService from '../../services/apiService';
+import { useAccount } from '../../context/AccountContext';
 
 const OverviewMetrics = () => {
+  const { accountType } = useAccount();
   const { metrics, loading: balanceLoading } = useApiMetrics();
   const { openTrades } = useStrapiTrades();
   
@@ -118,14 +120,14 @@ const OverviewMetrics = () => {
   const fetchDrawdown = useCallback(async () => {
     try {
       setLoadingDrawdown(true);
-      const res = await apiService.getDrawdown('propia');
+      const res = await apiService.getDrawdown(accountType, balance);
       setDrawdownData(res.data);
     } catch (err) {
       console.error('Error fetching drawdown:', err);
     } finally {
       setLoadingDrawdown(false);
     }
-  }, []);
+  }, [accountType, balance]);
 
   useEffect(() => {
     fetchDrawdown();
@@ -180,9 +182,20 @@ const OverviewMetrics = () => {
   }, [fetchDailyGain]);
 
   const getBetaColor = (b) => {
-    if (b > 1.2) return '#f87171'; // Red
-    if (b < 0.8) return '#34d399'; // Green
-    return '#fbbf24'; // Yellow
+    if (b < 0.50) return '#34d399'; // Green
+    if (b < 0.90) return '#fbbf24'; // Yellow
+    if (b < 1.50) return '#fb923c'; // Orange
+    return '#f87171'; // Red
+  };
+
+  const getBetaDesc = (b) => {
+    if (b < 0.25) return '🟢 Muy conservadora';
+    if (b < 0.50) return '🟢 Conservadora';
+    if (b < 0.70) return '🟡 Moderada-conservadora';
+    if (b < 0.90) return '🟡 Moderada';
+    if (b < 1.10) return '🟠 Moderada-agresiva';
+    if (b < 1.50) return '🟠 Agresiva';
+    return '🔴 Muy agresiva';
   };
 
   return (
@@ -233,7 +246,7 @@ const OverviewMetrics = () => {
             {loadingBeta && Object.keys(metricsCache).length === 0 ? '...' : weightedBeta.toFixed(2)}
           </MetricValue>
           <MetricSub>
-            {weightedBeta > 1.2 ? 'Agresiva' : weightedBeta < 0.8 ? 'Conservadora' : 'Neutral / Mercado'}
+            {getBetaDesc(weightedBeta)}
           </MetricSub>
         </MetricCard>
 

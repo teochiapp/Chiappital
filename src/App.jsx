@@ -24,6 +24,7 @@ import JournalPage from './modules/personal/pages/JournalPage';
 import FocusSessionsPage from './modules/personal/pages/FocusSessionsPage';
 import MentalModelsPage from './modules/personal/pages/MentalModelsPage';
 import CybersecurityPage from './modules/personal/pages/CybersecurityPage';
+import MealPlannerPage from './modules/personal/pages/MealPlannerPage';
 import { PersonalHubProvider } from './context/PersonalHubContext';
 
 // Mediterranean Hub
@@ -171,6 +172,7 @@ function App() {
                                 <Route path="focus" element={<FocusSessionsPage />} />
                                 <Route path="mental-models" element={<MentalModelsPage />} />
                                 <Route path="cybersecurity" element={<CybersecurityPage />} />
+                                <Route path="meal-planner" element={<MealPlannerPage />} />
 
                                 {/* ─── Subrutas de Recetario Mediterráneo ─── */}
                                 <Route path="mediterranean" element={<MediterraneanPage />} />
