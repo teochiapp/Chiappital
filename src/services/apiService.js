@@ -389,6 +389,21 @@ class ApiService {
     return response.json();
   }
 
+  async updateAth(accountType, ath) {
+    if (!this.token) throw new Error('Usuario no autenticado.');
+    const response = await fetch(`${this.baseURL}/balances/ath`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ account_type: accountType, ath: parseFloat(ath) })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || 'Error al actualizar el ATH');
+    }
+    return response.json();
+  }
+
+
   // ─── LAB PREFERENCES ──────────────────────────────────────────────────────
 
   async getLabPreferences() {

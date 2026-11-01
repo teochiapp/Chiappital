@@ -3,8 +3,18 @@ const logger = require('../utils/logger');
 const opScoreService = require('./opScoreService');
 require('dotenv').config();
 
-const { default: YahooFinance } = require('yahoo-finance2');
-const yahooFinance = new YahooFinance({ validation: { logErrors: false } });
+let yahooFinance = null;
+try {
+  const yfModule = require('yahoo-finance2');
+  const YahooFinance = yfModule.default || yfModule;
+  if (typeof YahooFinance === 'function') {
+    yahooFinance = new YahooFinance({ validation: { logErrors: false } });
+  } else {
+    yahooFinance = YahooFinance;
+  }
+} catch (e) {
+  logger.error('MarketSync', `Aviso: No se pudo instanciar yahoo-finance2: ${e.message}`);
+}
 
 let isSyncing = false;
 let finnhubRateLimited = false;

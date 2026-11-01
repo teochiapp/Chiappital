@@ -134,7 +134,7 @@ const ScreenerPage = () => {
   const [selectedScanRs, setSelectedScanRs] = useState([]);
   const [selectedScanOpScore, setSelectedScanOpScore] = useState([]);
   const [groupMode, setGroupMode] = useState('general'); // 'region' | 'sector' | 'general'
-  const [symbolsList] = useState(() => symbolSearchService.getPopularSymbols());
+  const [symbolsList, setSymbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
   const toggleFilter = (setState, value) => {
     setState(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
@@ -235,14 +235,37 @@ const ScreenerPage = () => {
     setError(null);
     try {
       if (forceRefresh) priceService.clearCache();
-      const tickers = symbolsList.map(s => s.symbol);
-      const quotesMap = await priceService.getMultipleQuotes(tickers);
+      
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/snapshot`);
+      const data = await response.json();
+      const snapshot = data.snapshot || {};
+
+      const localSymbolsMap = {};
+      symbolSearchService.getPopularSymbols().forEach(s => {
+        localSymbolsMap[s.symbol.toUpperCase()] = s;
+      });
+
+      const dynamicSymbolsList = Object.keys(snapshot).map(sym => {
+        const dbName = snapshot[sym].name;
+        return localSymbolsMap[sym] || {
+          symbol: sym,
+          name: dbName || sym,
+          sector: 'General',
+          macroCategory: 'Empresas',
+          region: 'US',
+          currency: 'USD',
+          type: 'Equity'
+        };
+      });
+
+      setSymbolsList(dynamicSymbolsList);
 
       let latestUpdate = null;
 
-      const combined = symbolsList.map(item => {
+      const combined = dynamicSymbolsList.map(item => {
         const symbolStr = item.symbol.toUpperCase();
-        const quoteData = quotesMap[symbolStr];
+        const quoteData = snapshot[symbolStr];
         const price = quoteData?.price || 0;
         const changePercent = (quoteData && typeof quoteData.changePercent === 'number' && !isNaN(quoteData.changePercent))
           ? quoteData.changePercent
@@ -259,15 +282,15 @@ const ScreenerPage = () => {
           changePercent,
           change: (price && changePercent !== null) ? (price * changePercent / 100) : null,
           emaDistance: quoteData?.ema21Distance ?? null,
-          weeklyRsi: quoteData?.weeklyRsi ?? null,
-          weeklyRsiPrevious: quoteData?.weeklyRsiPrevious ?? null,
-          weeklyRsiDelta: quoteData?.weeklyRsiDelta ?? null,
-          weeklyMacd: quoteData?.weeklyMacd ?? null,
-          weeklyMacdSignal: quoteData?.weeklyMacdSignal ?? null,
-          weeklyMacdHist: quoteData?.weeklyMacdHist ?? null,
-          weeklyMacdPrev: quoteData?.weeklyMacdPrev ?? null,
-          weeklyMacdPrevSignal: quoteData?.weeklyMacdPrevSignal ?? null,
-          weeklyMacdPrevHist: quoteData?.weeklyMacdPrevHist ?? null,
+          weeklyRsi: quoteData?.rsiWeekly ?? null,
+          weeklyRsiPrevious: quoteData?.rsiPrevious ?? null,
+          weeklyRsiDelta: quoteData?.rsiDelta ?? null,
+          weeklyMacd: quoteData?.macdWeekly ?? null,
+          weeklyMacdSignal: quoteData?.macdSignal ?? null,
+          weeklyMacdHist: quoteData?.macdHist ?? null,
+          weeklyMacdPrev: quoteData?.macdPrevWeekly ?? null,
+          weeklyMacdPrevSignal: quoteData?.macdPrevSignal ?? null,
+          weeklyMacdPrevHist: quoteData?.macdPrevHist ?? null,
           drawdown52w: quoteData?.drawdown52w ?? null,
           rsValue: quoteData?.rsValue ?? null,
           rsPrevious: quoteData?.rsPrevious ?? null,

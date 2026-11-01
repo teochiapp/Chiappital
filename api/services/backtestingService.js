@@ -38,10 +38,19 @@
 
 'use strict';
 
-const { default: YahooFinance } = require('yahoo-finance2');
+let yahooFinance = null;
+try {
+  const yfModule = require('yahoo-finance2');
+  const YahooFinance = yfModule.default || yfModule;
+  if (typeof YahooFinance === 'function') {
+    yahooFinance = new YahooFinance({ validation: { logErrors: false } });
+  } else {
+    yahooFinance = YahooFinance;
+  }
+} catch (e) {
+  console.error('[Backtesting] Aviso: No se pudo instanciar yahoo-finance2:', e.message);
+}
 const { calculateOpScore } = require('./opScoreService');
-
-const yahooFinance = new YahooFinance({ validation: { logErrors: false } });
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const SLOPE_THRESHOLD_PCT = 0.20;     // Mismo que calculateDailySetup

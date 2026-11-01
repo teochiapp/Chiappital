@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
-import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Activity, Info } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Activity, Info, Pencil, Check, X } from 'lucide-react';
 import { colors } from '../../styles/colors';
 import { useApiMetrics } from '../../hooks/useApiMetrics';
 import { useStrapiTrades } from '../../hooks/useApiTrades';
@@ -29,6 +29,42 @@ const OverviewMetrics = () => {
   // Drawdown State
   const [drawdownData, setDrawdownData] = useState(null);
   const [loadingDrawdown, setLoadingDrawdown] = useState(true);
+
+  // Manual ATH Edit State
+  const [isEditingAth, setIsEditingAth] = useState(false);
+  const [athInput, setAthInput] = useState('');
+  const [savingAth, setSavingAth] = useState(false);
+
+  const handleStartEditAth = () => {
+    if (drawdownData?.ath !== undefined && drawdownData?.ath !== null) {
+      setAthInput(drawdownData.ath.toString());
+    } else {
+      setAthInput('');
+    }
+    setIsEditingAth(true);
+  };
+
+  const handleSaveAth = async (e) => {
+    if (e) e.preventDefault();
+    const val = parseFloat(athInput);
+    if (isNaN(val) || val < 0) {
+      alert('Por favor ingresá un monto válido para el ATH.');
+      return;
+    }
+
+    try {
+      setSavingAth(true);
+      await apiService.updateAth(accountType, val);
+      setIsEditingAth(false);
+      await fetchDrawdown();
+    } catch (err) {
+      console.error('Error al actualizar ATH:', err);
+      alert(err.message || 'Error al actualizar el ATH');
+    } finally {
+      setSavingAth(false);
+    }
+  };
+
 
   const balance = useMemo(() => {
     if (!metrics || metrics.length === 0) return 0;
@@ -253,17 +289,64 @@ const OverviewMetrics = () => {
         <MetricCard className="highlight wide">
           <MetricHeader>
             <span>Drawdown Cartera</span>
-            <button onClick={fetchDrawdown} title="Actualizar Drawdown" className="refresh-btn">
-              <RefreshCw size={14} className={loadingDrawdown ? 'spin' : ''} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button 
+                type="button" 
+                onClick={handleStartEditAth} 
+                title="Modificar ATH manualmente" 
+                className="action-icon-btn"
+              >
+                <Pencil size={12} />
+              </button>
+              <button onClick={fetchDrawdown} title="Actualizar Drawdown" className="refresh-btn">
+                <RefreshCw size={14} className={loadingDrawdown ? 'spin' : ''} />
+              </button>
+            </div>
           </MetricHeader>
           <MetricValue className={drawdownData && drawdownData.drawdown < 0 ? 'negative' : 'gold'}>
             {loadingDrawdown || !drawdownData ? '...' : 
               (drawdownData.is_ath ? 'MÁXIMO HISTÓRICO' : `${drawdownData.drawdown.toFixed(2)}%`)}
           </MetricValue>
           <MetricSub>
-            {loadingDrawdown || !drawdownData ? 'Calculando...' : 
-              (drawdownData.is_ath ? 'ATH Alcanzado' : `Desde ATH: $${drawdownData.ath.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`)}
+            {loadingDrawdown || !drawdownData ? (
+              'Calculando...'
+            ) : isEditingAth ? (
+              <InlineAthForm onSubmit={handleSaveAth}>
+                <span className="ath-currency">$</span>
+                <InlineAthInput
+                  type="number"
+                  step="any"
+                  value={athInput}
+                  onChange={(e) => setAthInput(e.target.value)}
+                  placeholder="25000"
+                  autoFocus
+                  disabled={savingAth}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsEditingAth(false);
+                  }}
+                />
+                <ActionIconButton type="submit" disabled={savingAth} title="Guardar ATH" className="save">
+                  <Check size={12} />
+                </ActionIconButton>
+                <ActionIconButton type="button" onClick={() => setIsEditingAth(false)} disabled={savingAth} title="Cancelar" className="cancel">
+                  <X size={12} />
+                </ActionIconButton>
+              </InlineAthForm>
+            ) : (
+              <AthRow>
+                <span>
+                  {drawdownData.is_ath ? 'ATH: ' : 'Desde ATH: '}
+                  ${drawdownData.ath.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                </span>
+                <ActionIconButton 
+                  type="button" 
+                  onClick={handleStartEditAth} 
+                  title="Modificar ATH"
+                >
+                  <Pencil size={11} />
+                </ActionIconButton>
+              </AthRow>
+            )}
           </MetricSub>
         </MetricCard>
       </MetricsGrid>
@@ -434,6 +517,24 @@ const MetricHeader = styled.div`
     }
   }
 
+  .action-icon-btn {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+
+    &:hover { 
+      color: ${colors.secondary};
+      background: rgba(212, 175, 55, 0.12);
+    }
+  }
+
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -483,4 +584,79 @@ const MetricSub = styled.div`
   }
 `;
 
+const AthRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const InlineAthForm = styled.form`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+
+  .ath-currency {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+`;
+
+const InlineAthInput = styled.input`
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 600;
+  width: 75px;
+  outline: none;
+  padding: 0;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+`;
+
+const ActionIconButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &.save:hover {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.15);
+  }
+
+  &.cancel:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 export default OverviewMetrics;
+

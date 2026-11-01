@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X, CalendarDays, BrainCircuit } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
 
 const PersonalHeader = () => {
@@ -85,6 +85,13 @@ const PersonalHeader = () => {
           >
             <Shield size={18} />
             Ciberseguridad
+          </NavItem>
+          <NavItem
+            $active={location.pathname.startsWith('/personal/knowledge')}
+            onClick={() => { navigate('/personal/knowledge'); setIsMobileMenuOpen(false); }}
+          >
+            <BrainCircuit size={18} color={location.pathname.startsWith('/personal/knowledge') ? '#a78bfa' : undefined} />
+            Knowledge Hub
           </NavItem>
           <NavItem
             $active={location.pathname.startsWith('/personal/mediterranean')}

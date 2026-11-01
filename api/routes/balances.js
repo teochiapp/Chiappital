@@ -114,4 +114,62 @@ router.get('/drawdown', async (req, res) => {
   }
 });
 
+// ─── PUT /api/balances/ath ─────────────────────────────────────────────────────────
+router.put('/ath', async (req, res) => {
+  try {
+    const accountType = req.body.account_type || 'propia';
+    const ath = parseFloat(req.body.ath);
+
+    if (!['propia', 'compartida'].includes(accountType)) {
+      return res.status(400).json({ error: { message: 'account_type debe ser propia o compartida.' } });
+    }
+
+    if (isNaN(ath) || ath < 0) {
+      return res.status(400).json({ error: { message: 'ath debe ser un número válido mayor o igual a 0.' } });
+    }
+
+    const db = getPool();
+
+    // 1. Obtener snapshots existentes ordenados por total_usd DESC
+    const [existing] = await db.execute(
+      'SELECT id, total_usd FROM portfolio_snapshots WHERE user_id = ? AND account_type = ? ORDER BY total_usd DESC',
+      [req.user.id, accountType]
+    );
+
+    if (existing.length === 0) {
+      const today = new Date().toISOString().split('T')[0];
+      await db.execute(
+        'INSERT INTO portfolio_snapshots (user_id, account_type, total_usd, snapshot_date) VALUES (?, ?, ?, ?)',
+        [req.user.id, accountType, ath, today]
+      );
+    } else {
+      // Actualizar el snapshot más alto al nuevo ATH
+      const topSnapshot = existing[0];
+      await db.execute(
+        'UPDATE portfolio_snapshots SET total_usd = ? WHERE id = ?',
+        [ath, topSnapshot.id]
+      );
+
+      // Si hubiese algún otro snapshot mayor al nuevo ATH, ajustarlo para que el máximo no lo supere
+      await db.execute(
+        'UPDATE portfolio_snapshots SET total_usd = ? WHERE user_id = ? AND account_type = ? AND total_usd > ?',
+        [ath, req.user.id, accountType, ath]
+      );
+    }
+
+    console.log(`✅ ATH actualizado para user ${req.user.id} (${accountType}): $${ath}`);
+
+    return res.json({
+      data: {
+        account_type: accountType,
+        ath: ath
+      }
+    });
+  } catch (error) {
+    console.error('Error en PUT /balances/ath:', error);
+    return res.status(500).json({ error: { message: 'Error al actualizar ATH.' } });
+  }
+});
+
 module.exports = router;
+

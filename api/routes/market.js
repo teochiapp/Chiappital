@@ -8,18 +8,23 @@ router.get('/snapshot', async (req, res) => {
   try {
     const db = getPool();
     const [rows] = await db.query(`
-      SELECT symbol, price, change_amount, change_percent, ema21_distance, 
-             rsi_weekly, rsi_previous, rsi_delta, rsi_updated_at,
-             macd_weekly, macd_signal, macd_hist, macd_prev_weekly, macd_prev_signal, macd_prev_hist,
-             drawdown_52w, rs_value, rs_previous, rs_state, rs_updated_at,
-             setup_state, setup_verdict, setup_factors, op_score, op_score_conclusions, source, updated_at, status 
-      FROM market_snapshot
+      SELECT ms.symbol, ms.price, ms.change_amount, ms.change_percent, ms.ema21_distance, 
+             ms.rsi_weekly, ms.rsi_previous, ms.rsi_delta, ms.rsi_updated_at,
+             ms.macd_weekly, ms.macd_signal, ms.macd_hist, ms.macd_prev_weekly, ms.macd_prev_signal, ms.macd_prev_hist,
+             ms.drawdown_52w, ms.rs_value, ms.rs_previous, ms.rs_state, ms.rs_updated_at,
+             ms.setup_state, ms.setup_verdict, ms.setup_factors, ms.op_score, ms.op_score_conclusions, ms.source, ms.updated_at, ms.status,
+             ts.name, ts.market, ts.exchange
+      FROM market_snapshot ms
+      LEFT JOIN tracked_symbols ts ON ms.symbol = ts.symbol
     `);
 
     // Transformamos el array en un objeto indexado por symbol para facilidad del frontend
     const snapshot = {};
     rows.forEach(row => {
       snapshot[row.symbol] = {
+        name: row.name || row.symbol,
+        market: row.market || 'Equity',
+        exchange: row.exchange || 'US',
         price: row.price !== null ? parseFloat(row.price) : null,
         changeAmount: row.change_amount !== null ? parseFloat(row.change_amount) : null,
         changePercent: row.change_percent !== null ? parseFloat(row.change_percent) : null,

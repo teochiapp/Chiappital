@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe, History } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe, History, PieChart } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
 import AppLogo from './Logo';
@@ -73,6 +73,13 @@ const Header = () => {
           >
             <FlaskConical size={18} />
             Lab
+          </NavItem>
+          <NavItem
+            $active={location.pathname === '/sectorial'}
+            onClick={() => { navigate('/sectorial'); setIsMobileMenuOpen(false); }}
+          >
+            <PieChart size={18} />
+            Sectorial
           </NavItem>
           <NavItem
             $active={location.pathname === '/metodologia'}

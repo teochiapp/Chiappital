@@ -8,7 +8,7 @@ import {
 import {
   Plus, Trash2, Edit2, X, ChevronDown, ChevronUp,
   Calendar, Target, AlertTriangle, CheckCircle,
-  BarChart3, Layers, Save, Activity, Info
+  BarChart3, Layers, Save, Activity, Info, Check
 } from 'lucide-react';
 import personalApiService from '../../modules/personal/services/personalApiService';
 import apiService from '../../services/apiService';
@@ -84,7 +84,22 @@ const PortfolioPlanner = () => {
     try {
       setLoading(true);
       const data = await personalApiService.getPortfolioPlans();
-      setPlans(data.plans || []);
+      let storedBought = {};
+      try {
+        const stored = localStorage.getItem('st_plan_items_bought');
+        if (stored) storedBought = JSON.parse(stored);
+      } catch {}
+
+      const loadedPlans = (data.plans || []).map(plan => ({
+        ...plan,
+        items: (plan.items || []).map(item => ({
+          ...item,
+          is_bought: (item.is_bought !== undefined && item.is_bought !== null)
+            ? Boolean(Number(item.is_bought))
+            : Boolean(storedBought[item.id])
+        }))
+      }));
+      setPlans(loadedPlans);
     } catch (err) {
       console.error('Error cargando planes:', err);
     } finally {
@@ -155,8 +170,8 @@ const PortfolioPlanner = () => {
     setItemForm(prev => ({
       ...prev,
       [planId]: item
-        ? { symbol: item.symbol, label: item.label || '', percentage: item.percentage, color: item.color }
-        : { symbol: '', label: '', percentage: '', color: nextColor }
+        ? { symbol: item.symbol, label: item.label || '', percentage: item.percentage, color: item.color, is_bought: Boolean(item.is_bought) }
+        : { symbol: '', label: '', percentage: '', color: nextColor, is_bought: false }
     }));
     setShowItemForm(planId);
   };
@@ -177,22 +192,30 @@ const PortfolioPlanner = () => {
           symbol: form.symbol,
           label: form.label,
           percentage: parseFloat(form.percentage),
-          color: form.color
+          color: form.color,
+          is_bought: form.is_bought ? 1 : 0
         });
         setPlans(prev => prev.map(p => {
           if (p.id !== planId) return p;
-          return { ...p, items: p.items.map(i => i.id === editingItem.item.id ? res.item : i) };
+          return {
+            ...p,
+            items: p.items.map(i => i.id === editingItem.item.id ? { ...res.item, is_bought: Boolean(Number(res.item.is_bought ?? form.is_bought)) } : i)
+          };
         }));
       } else {
         const res = await personalApiService.addPortfolioPlanItem(planId, {
           symbol: form.symbol,
           label: form.label,
           percentage: parseFloat(form.percentage),
-          color: form.color
+          color: form.color,
+          is_bought: form.is_bought ? 1 : 0
         });
         setPlans(prev => prev.map(p => {
           if (p.id !== planId) return p;
-          return { ...p, items: [...p.items, res.item] };
+          return {
+            ...p,
+            items: [...p.items, { ...res.item, is_bought: Boolean(Number(res.item.is_bought ?? form.is_bought)) }]
+          };
         }));
       }
       closeItemForm();
@@ -200,6 +223,43 @@ const PortfolioPlanner = () => {
       console.error('Error guardando instrumento:', err);
     } finally {
       setItemSaving(false);
+    }
+  };
+
+  const toggleItemBought = async (planId, itemId) => {
+    let nextBoughtState = false;
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      return {
+        ...p,
+        items: p.items.map(i => {
+          if (i.id === itemId) {
+            nextBoughtState = !i.is_bought;
+            return { ...i, is_bought: nextBoughtState };
+          }
+          return i;
+        })
+      };
+    }));
+
+    try {
+      const stored = localStorage.getItem('st_plan_items_bought');
+      const cache = stored ? JSON.parse(stored) : {};
+      cache[itemId] = nextBoughtState;
+      localStorage.setItem('st_plan_items_bought', JSON.stringify(cache));
+    } catch (e) {
+      console.warn('Could not save to localStorage', e);
+    }
+
+    try {
+      await personalApiService.togglePortfolioPlanItem(planId, itemId);
+    } catch (err) {
+      console.warn('Toggle API error, falling back:', err);
+      try {
+        await personalApiService.updatePortfolioPlanItem(planId, itemId, { is_bought: nextBoughtState ? 1 : 0 });
+      } catch (err2) {
+        console.warn('Fallback update failed:', err2);
+      }
     }
   };
 
@@ -521,7 +581,14 @@ const PortfolioPlanner = () => {
                           {/* ── Instruments List ── */}
                           <ItemsSection>
                             <ItemsSectionHeader>
-                              <ItemsSectionTitle>Instrumentos</ItemsSectionTitle>
+                              <div>
+                                <ItemsSectionTitle>Instrumentos</ItemsSectionTitle>
+                                {plan.items.length > 0 && (
+                                  <ItemsSubCount>
+                                    {plan.items.filter(i => Boolean(i.is_bought)).length} de {plan.items.length} comprados ({plan.items.filter(i => Boolean(i.is_bought)).reduce((s, i) => s + parseFloat(i.percentage || 0), 0).toFixed(1)}% ejecutado)
+                                  </ItemsSubCount>
+                                )}
+                              </div>
                               <AddItemBtn onClick={() => openItemForm(plan.id)}>
                                 <Plus size={14} /> Agregar
                               </AddItemBtn>
@@ -590,6 +657,19 @@ const PortfolioPlanner = () => {
                                           />
                                         </ItemFormGroup>
                                       </ItemFormRow>
+
+                                      <ItemCheckboxLabel>
+                                        <input
+                                          type="checkbox"
+                                          checked={Boolean((itemForm[plan.id] || {}).is_bought)}
+                                          onChange={e => setItemForm(prev => ({
+                                            ...prev,
+                                            [plan.id]: { ...(prev[plan.id] || {}), is_bought: e.target.checked }
+                                          }))}
+                                        />
+                                        <span>Comprada y lista para ejecución</span>
+                                      </ItemCheckboxLabel>
+
                                       <ItemFormActions>
                                         <CancelBtn type="button" onClick={closeItemForm} style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
                                           Cancelar
@@ -611,25 +691,40 @@ const PortfolioPlanner = () => {
                               )}
                               {[...plan.items]
                                 .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage))
-                                .map((item, idx) => (
-                                  <ItemRow key={item.id}>
-                                    <ItemColorDot style={{ background: item.color || PLAN_COLORS[idx % PLAN_COLORS.length] }} />
-                                    <ItemSymbol>{item.symbol}</ItemSymbol>
-                                    {item.label && <ItemLabel>{item.label}</ItemLabel>}
-                                    <ItemBarWrapper>
-                                      <ItemBar style={{ width: `${Math.min(parseFloat(item.percentage), 100)}%`, background: item.color || PLAN_COLORS[idx % PLAN_COLORS.length] }} />
-                                    </ItemBarWrapper>
-                                    <ItemPct>{parseFloat(item.percentage).toFixed(1)}%</ItemPct>
-                                    <ItemActions>
-                                      <SmallIconBtn onClick={() => openItemForm(plan.id, item)} title="Editar">
-                                        <Edit2 size={12} />
-                                      </SmallIconBtn>
-                                      <SmallIconBtn $danger onClick={() => deleteItem(plan.id, item.id)} title="Eliminar">
-                                        <Trash2 size={12} />
-                                      </SmallIconBtn>
-                                    </ItemActions>
-                                  </ItemRow>
-                                ))}
+                                .map((item, idx) => {
+                                  const isBought = Boolean(item.is_bought);
+                                  return (
+                                    <ItemRow key={item.id} $isBought={isBought}>
+                                      <CheckToggleBtn
+                                        type="button"
+                                        $isBought={isBought}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleItemBought(plan.id, item.id);
+                                        }}
+                                        title={isBought ? "Comprada y lista para ejecución (clic para desmarcar)" : "Marcar como comprada y lista para ejecución"}
+                                      >
+                                        {isBought && <Check size={12} strokeWidth={3} />}
+                                      </CheckToggleBtn>
+                                      <ItemColorDot style={{ background: item.color || PLAN_COLORS[idx % PLAN_COLORS.length] }} />
+                                      <ItemSymbol $isBought={isBought}>{item.symbol}</ItemSymbol>
+                                      {item.label && <ItemLabel $isBought={isBought}>{item.label}</ItemLabel>}
+                                      {isBought && <BoughtBadge>Comprada</BoughtBadge>}
+                                      <ItemBarWrapper>
+                                        <ItemBar style={{ width: `${Math.min(parseFloat(item.percentage), 100)}%`, background: isBought ? '#10b981' : (item.color || PLAN_COLORS[idx % PLAN_COLORS.length]) }} />
+                                      </ItemBarWrapper>
+                                      <ItemPct $isBought={isBought}>{parseFloat(item.percentage).toFixed(1)}%</ItemPct>
+                                      <ItemActions>
+                                        <SmallIconBtn onClick={() => openItemForm(plan.id, item)} title="Editar">
+                                          <Edit2 size={12} />
+                                        </SmallIconBtn>
+                                        <SmallIconBtn $danger onClick={() => deleteItem(plan.id, item.id)} title="Eliminar">
+                                          <Trash2 size={12} />
+                                        </SmallIconBtn>
+                                      </ItemActions>
+                                    </ItemRow>
+                                  );
+                                })}
                             </ItemsList>
 
                             {/* Total row */}
@@ -1183,6 +1278,31 @@ const ItemFormActions = styled.div`
   margin-top: 0.75rem;
 `;
 
+const ItemCheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  user-select: none;
+
+  input {
+    accent-color: #10b981;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+  }
+`;
+
+const ItemsSubCount = styled.div`
+  font-size: 0.74rem;
+  color: #10b981;
+  font-weight: 500;
+  margin-top: 2px;
+`;
+
 const ItemsList = styled.div`
   display: flex;
   flex-direction: column;
@@ -1200,11 +1320,59 @@ const ItemRow = styled.div`
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.45rem 0.6rem;
-  background: rgba(255,255,255,0.02);
-  border-radius: 7px;
-  transition: background 0.15s;
-  &:hover { background: rgba(255,255,255,0.04); }
+  padding: 0.5rem 0.65rem;
+  background: ${props => props.$isBought 
+    ? 'rgba(16, 185, 129, 0.16)' 
+    : 'rgba(255,255,255,0.02)'};
+  border: 1px solid ${props => props.$isBought 
+    ? 'rgba(52, 211, 153, 0.4)' 
+    : 'rgba(255,255,255,0.03)'};
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.$isBought 
+      ? 'rgba(16, 185, 129, 0.24)' 
+      : 'rgba(255,255,255,0.05)'};
+    border-color: ${props => props.$isBought 
+      ? 'rgba(52, 211, 153, 0.6)' 
+      : 'rgba(255,255,255,0.08)'};
+  }
+`;
+
+const CheckToggleBtn = styled.button`
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid ${props => props.$isBought ? '#10b981' : 'rgba(255, 255, 255, 0.25)'};
+  background: ${props => props.$isBought ? '#10b981' : 'rgba(255, 255, 255, 0.04)'};
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+  padding: 0;
+
+  &:hover {
+    border-color: ${props => props.$isBought ? '#059669' : '#34d399'};
+    background: ${props => props.$isBought ? '#059669' : 'rgba(52, 211, 153, 0.18)'};
+    transform: scale(1.08);
+  }
+`;
+
+const BoughtBadge = styled.span`
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  text-transform: uppercase;
 `;
 
 const ItemColorDot = styled.div`
@@ -1217,13 +1385,13 @@ const ItemColorDot = styled.div`
 const ItemSymbol = styled.div`
   font-size: 0.82rem;
   font-weight: 700;
-  color: white;
+  color: ${props => props.$isBought ? '#34d399' : 'white'};
   min-width: 45px;
 `;
 
 const ItemLabel = styled.div`
   font-size: 0.78rem;
-  color: #64748b;
+  color: ${props => props.$isBought ? '#cbd5e1' : '#64748b'};
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1248,7 +1416,7 @@ const ItemBar = styled.div`
 const ItemPct = styled.div`
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: ${props => props.$isBought ? '#34d399' : '#e2e8f0'};
   min-width: 42px;
   text-align: right;
 `;

@@ -119,6 +119,7 @@ const personalApiService = {
   deletePortfolioPlan: (id) => request('DELETE', `/portfolio-plans/${id}`),
   addPortfolioPlanItem: (planId, data) => request('POST', `/portfolio-plans/${planId}/items`, data),
   updatePortfolioPlanItem: (planId, itemId, data) => request('PUT', `/portfolio-plans/${planId}/items/${itemId}`, data),
+  togglePortfolioPlanItem: (planId, itemId) => request('PATCH', `/portfolio-plans/${planId}/items/${itemId}/toggle`),
   deletePortfolioPlanItem: (planId, itemId) => request('DELETE', `/portfolio-plans/${planId}/items/${itemId}`),
 };
 

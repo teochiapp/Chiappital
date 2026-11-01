@@ -13,6 +13,7 @@ import ScreenerContainer from './containers/ScreenerContainer';
 import AlertsContainer from './containers/AlertsContainer';
 import MacroContainer from './containers/MacroContainer';
 import BacktestingContainer from './containers/BacktestingContainer';
+import SectorialContainer from './containers/SectorialContainer';
 
 // Personal Hub
 import PersonalHub from './modules/personal/pages/PersonalHub';
@@ -35,6 +36,14 @@ import MediterraneanRecipeDetailPage from './modules/personal/pages/Mediterranea
 import MediterraneanAddRecipePage from './modules/personal/pages/MediterraneanAddRecipePage';
 import MediterraneanShoppingPage from './modules/personal/pages/MediterraneanShoppingPage';
 import MediterraneanStatsPage from './modules/personal/pages/MediterraneanStatsPage';
+
+// Knowledge Hub (Second Brain)
+import { KnowledgeProvider } from './modules/knowledge/context/KnowledgeContext';
+import KnowledgeLayout from './modules/knowledge/components/KnowledgeLayout';
+import KnowledgeDashboard from './modules/knowledge/pages/KnowledgeDashboard';
+import NotesPage from './modules/knowledge/pages/NotesPage';
+import KnowledgeGraphPage from './modules/knowledge/pages/KnowledgeGraphPage';
+import CategoriesPage from './modules/knowledge/pages/CategoriesPage';
 
 // Importar Contexto
 import { AccountProvider } from './context/AccountContext';
@@ -141,6 +150,14 @@ function App() {
                                 }
                             />
                             <Route
+                                path="/sectorial"
+                                element={
+                                    <ProtectedRoute>
+                                        <SectorialContainer />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
                                 path="/backtesting/:ticker"
                                 element={
                                     <ProtectedRoute>
@@ -181,6 +198,21 @@ function App() {
                                 <Route path="mediterranean/recipes/:id" element={<MediterraneanRecipeDetailPage />} />
                                 <Route path="mediterranean/shopping" element={<MediterraneanShoppingPage />} />
                                 <Route path="mediterranean/stats" element={<MediterraneanStatsPage />} />
+
+                                {/* ─── Subrutas de Knowledge Hub ─── */}
+                                <Route
+                                    path="knowledge"
+                                    element={
+                                        <KnowledgeProvider>
+                                            <KnowledgeLayout />
+                                        </KnowledgeProvider>
+                                    }
+                                >
+                                    <Route index element={<KnowledgeDashboard />} />
+                                    <Route path="notes" element={<NotesPage />} />
+                                    <Route path="graph" element={<KnowledgeGraphPage />} />
+                                    <Route path="categories" element={<CategoriesPage />} />
+                                </Route>
                             </Route>
 
                             <Route path="*" element={<Navigate to="/login" replace />} />

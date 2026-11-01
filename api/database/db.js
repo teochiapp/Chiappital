@@ -823,10 +823,216 @@ async function initializeDatabase() {
       label      VARCHAR(100) DEFAULT NULL,
       percentage DECIMAL(5,2) NOT NULL DEFAULT 0,
       color      VARCHAR(10) DEFAULT '#3b82f6',
+      is_bought  TINYINT(1) NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (plan_id) REFERENCES portfolio_plans(id) ON DELETE CASCADE,
       INDEX idx_plan_items (plan_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // ─── Knowledge Hub Tables ──────────────────────────────────────────────────
+
+  // Áreas de conocimiento
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_areas (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      user_id     INT NOT NULL,
+      name        VARCHAR(150) NOT NULL,
+      description TEXT DEFAULT NULL,
+      icon        VARCHAR(50) DEFAULT 'Folder',
+      color       VARCHAR(20) DEFAULT '#8b5cf6',
+      sort_order  INT DEFAULT 0,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      INDEX idx_area_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Categorías jerárquicas
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_categories (
+      id          INT AUTO_INCREMENT PRIMARY KEY,
+      user_id     INT NOT NULL,
+      area_id     INT NOT NULL,
+      parent_id   INT DEFAULT NULL,
+      name        VARCHAR(150) NOT NULL,
+      description TEXT DEFAULT NULL,
+      sort_order  INT DEFAULT 0,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (area_id) REFERENCES knowledge_areas(id) ON DELETE CASCADE,
+      FOREIGN KEY (parent_id) REFERENCES knowledge_categories(id) ON DELETE CASCADE,
+      INDEX idx_cat_user (user_id),
+      INDEX idx_cat_area (area_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Notas
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_notes (
+      id                  INT AUTO_INCREMENT PRIMARY KEY,
+      user_id             INT NOT NULL,
+      title               VARCHAR(255) NOT NULL,
+      content             LONGTEXT DEFAULT NULL,
+      content_format      VARCHAR(20) DEFAULT 'markdown',
+      primary_category_id INT DEFAULT NULL,
+      note_type           VARCHAR(50) DEFAULT 'note',
+      status              ENUM('draft', 'published', 'archived') DEFAULT 'published',
+      is_favorite         TINYINT(1) DEFAULT 0,
+      pinned              TINYINT(1) DEFAULT 0,
+      created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      archived_at         DATETIME DEFAULT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (primary_category_id) REFERENCES knowledge_categories(id) ON DELETE SET NULL,
+      INDEX idx_note_user (user_id),
+      INDEX idx_note_cat (primary_category_id),
+      INDEX idx_note_updated (updated_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Asociación secundaria Nota - Áreas
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_note_areas (
+      note_id INT NOT NULL,
+      area_id INT NOT NULL,
+      PRIMARY KEY (note_id, area_id),
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      FOREIGN KEY (area_id) REFERENCES knowledge_areas(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Etiquetas / Tags
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_tags (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      user_id    INT NOT NULL,
+      name       VARCHAR(100) NOT NULL,
+      color      VARCHAR(20) DEFAULT '#8b5cf6',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY idx_user_tag (user_id, name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Asociación Nota - Tags
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_note_tags (
+      note_id INT NOT NULL,
+      tag_id  INT NOT NULL,
+      PRIMARY KEY (note_id, tag_id),
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES knowledge_tags(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Relaciones explícitas e internas entre notas
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_relations (
+      id             INT AUTO_INCREMENT PRIMARY KEY,
+      user_id        INT NOT NULL,
+      source_note_id INT NOT NULL,
+      target_note_id INT NOT NULL,
+      relation_type  VARCHAR(50) NOT NULL DEFAULT 'related_to',
+      origin         ENUM('manual', 'imported', 'ai_approved', 'ai_suggested') DEFAULT 'manual',
+      description    TEXT DEFAULT NULL,
+      created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (source_note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      FOREIGN KEY (target_note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      UNIQUE KEY idx_relation_unique (user_id, source_note_id, target_note_id, relation_type)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Inbox & Recursos capturados
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_resources (
+      id                      INT AUTO_INCREMENT PRIMARY KEY,
+      user_id                 INT NOT NULL,
+      note_id                 INT DEFAULT NULL,
+      url                     VARCHAR(1000) DEFAULT NULL,
+      resource_type           ENUM('text', 'url', 'idea', 'document', 'pdf', 'image') DEFAULT 'text',
+      title                   VARCHAR(255) NOT NULL,
+      source_name             VARCHAR(150) DEFAULT NULL,
+      raw_content             LONGTEXT DEFAULT NULL,
+      ai_summary              TEXT DEFAULT NULL,
+      ai_suggested_area_id    INT DEFAULT NULL,
+      ai_suggested_category_id INT DEFAULT NULL,
+      ai_suggested_tags       JSON DEFAULT NULL,
+      status                  ENUM('inbox', 'processed', 'archived') DEFAULT 'inbox',
+      metadata                JSON DEFAULT NULL,
+      created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE SET NULL,
+      INDEX idx_res_user (user_id, status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Archivos adjuntos
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_attachments (
+      id           INT AUTO_INCREMENT PRIMARY KEY,
+      user_id      INT NOT NULL,
+      note_id      INT DEFAULT NULL,
+      filename     VARCHAR(255) NOT NULL,
+      storage_path VARCHAR(500) NOT NULL,
+      mime_type    VARCHAR(100) DEFAULT NULL,
+      file_size    INT DEFAULT NULL,
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      INDEX idx_attach_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Embeddings semánticos
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_embeddings (
+      id              INT AUTO_INCREMENT PRIMARY KEY,
+      user_id         INT NOT NULL,
+      note_id         INT NOT NULL,
+      embedding       JSON NOT NULL,
+      embedding_model VARCHAR(100) DEFAULT 'text-embedding-3-small',
+      updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      UNIQUE KEY idx_note_embedding (note_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Sugerencias de IA (relaciones o clasificaciones)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_ai_suggestions (
+      id              INT AUTO_INCREMENT PRIMARY KEY,
+      user_id         INT NOT NULL,
+      source_note_id  INT NOT NULL,
+      target_note_id  INT DEFAULT NULL,
+      suggestion_type VARCHAR(50) NOT NULL,
+      explanation     TEXT DEFAULT NULL,
+      status          ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+      created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+      reviewed_at     DATETIME DEFAULT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (source_note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      FOREIGN KEY (target_note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  // Historial de versiones de notas
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS knowledge_note_versions (
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      user_id    INT NOT NULL,
+      note_id    INT NOT NULL,
+      title      VARCHAR(255) NOT NULL,
+      content    LONGTEXT DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (note_id) REFERENCES knowledge_notes(id) ON DELETE CASCADE,
+      INDEX idx_version_note (note_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 

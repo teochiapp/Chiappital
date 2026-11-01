@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import {
   Flame, Target, CheckCircle2, Circle, TrendingUp, BookOpen,
-  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock, Brain, Shield
+  Dumbbell, Globe, Calendar, ArrowRight, Leaf, Sparkles, Clock, Brain, Shield, BrainCircuit
 } from 'lucide-react';
 import { usePersonalHub } from '../../../context/PersonalHubContext';
 import { colors } from '../../../styles/colors';
@@ -231,6 +231,12 @@ const PersonalHub = () => {
 
       {/* Módulos disponibles */}
       <ModuleGrid>
+        <ModuleCard onClick={() => navigate('/personal/knowledge')} style={{ borderColor: 'rgba(139, 92, 246, 0.4)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%)' }}>
+          <ModuleIcon color="#a78bfa"><BrainCircuit size={28} /></ModuleIcon>
+          <ModuleName>Knowledge Hub</ModuleName>
+          <ModuleDesc>Second Brain, notas conectadas y Grafo de conocimiento</ModuleDesc>
+          <ModuleArrow><ArrowRight size={16} /></ModuleArrow>
+        </ModuleCard>
         <ModuleCard onClick={() => navigate('/personal/habits')}>
           <ModuleIcon color={p.secondary}><CheckCircle2 size={28} /></ModuleIcon>
           <ModuleName>Hábitos</ModuleName>

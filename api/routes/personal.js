@@ -1503,7 +1503,7 @@ router.post('/portfolio-plans/:id/items', async (req, res) => {
     const db = getPool();
     const userId = req.user.id;
     const { id } = req.params;
-    const { symbol, label, percentage, color } = req.body;
+    const { symbol, label, percentage, color, is_bought } = req.body;
 
     // Verify ownership
     const [plans] = await db.execute(
@@ -1516,8 +1516,8 @@ router.post('/portfolio-plans/:id/items', async (req, res) => {
     }
 
     const [result] = await db.execute(
-      'INSERT INTO portfolio_plan_items (plan_id, symbol, label, percentage, color) VALUES (?, ?, ?, ?, ?)',
-      [id, symbol.trim().toUpperCase(), label || null, parseFloat(percentage) || 0, color || '#3b82f6']
+      'INSERT INTO portfolio_plan_items (plan_id, symbol, label, percentage, color, is_bought) VALUES (?, ?, ?, ?, ?, ?)',
+      [id, symbol.trim().toUpperCase(), label || null, parseFloat(percentage) || 0, color || '#3b82f6', is_bought ? 1 : 0]
     );
 
     const [rows] = await db.execute(
@@ -1537,7 +1537,7 @@ router.put('/portfolio-plans/:id/items/:itemId', async (req, res) => {
     const db = getPool();
     const userId = req.user.id;
     const { id, itemId } = req.params;
-    const { symbol, label, percentage, color } = req.body;
+    const { symbol, label, percentage, color, is_bought } = req.body;
 
     // Verify ownership
     const [plans] = await db.execute(
@@ -1550,13 +1550,15 @@ router.put('/portfolio-plans/:id/items/:itemId', async (req, res) => {
          symbol = COALESCE(?, symbol),
          label = ?,
          percentage = COALESCE(?, percentage),
-         color = COALESCE(?, color)
+         color = COALESCE(?, color),
+         is_bought = COALESCE(?, is_bought)
        WHERE id = ? AND plan_id = ?`,
       [
         symbol ? symbol.trim().toUpperCase() : null,
         label !== undefined ? label : null,
         percentage !== undefined ? parseFloat(percentage) : null,
         color || null,
+        is_bought !== undefined ? (is_bought ? 1 : 0) : null,
         itemId, id
       ]
     );
@@ -1571,6 +1573,36 @@ router.put('/portfolio-plans/:id/items/:itemId', async (req, res) => {
     res.status(500).json({ error: { message: 'Error interno del servidor.' } });
   }
 });
+
+// PATCH /api/personal/portfolio-plans/:id/items/:itemId/toggle
+router.patch('/portfolio-plans/:id/items/:itemId/toggle', async (req, res) => {
+  try {
+    const db = getPool();
+    const userId = req.user.id;
+    const { id, itemId } = req.params;
+
+    // Verify ownership
+    const [plans] = await db.execute(
+      'SELECT id FROM portfolio_plans WHERE id = ? AND user_id = ?', [id, userId]
+    );
+    if (!plans.length) return res.status(404).json({ error: { message: 'Plan no encontrado.' } });
+
+    await db.execute(
+      'UPDATE portfolio_plan_items SET is_bought = NOT is_bought WHERE id = ? AND plan_id = ?',
+      [itemId, id]
+    );
+
+    const [rows] = await db.execute(
+      'SELECT * FROM portfolio_plan_items WHERE id = ? AND plan_id = ?', [itemId, id]
+    );
+
+    res.json({ item: rows[0] });
+  } catch (error) {
+    console.error('Error toggling portfolio plan item:', error);
+    res.status(500).json({ error: { message: 'Error interno del servidor.' } });
+  }
+});
+
 
 // DELETE /api/personal/portfolio-plans/:id/items/:itemId
 router.delete('/portfolio-plans/:id/items/:itemId', async (req, res) => {
