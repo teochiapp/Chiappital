@@ -35,6 +35,7 @@ const itemsToInclude = [
   '.env',
   '.env.example',
   'server.js',
+  'index.js',
   'package.json',
   'package-lock.json',
   'database',

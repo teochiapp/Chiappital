@@ -33,11 +33,18 @@ async function authenticate(req, res, next) {
       });
     }
 
+    const userId = decoded.userId || decoded.id;
+    if (!userId) {
+      return res.status(401).json({
+        error: { message: 'Token inválido: payload sin identificador de usuario.' }
+      });
+    }
+
     // Verificar que el usuario aún existe en la BD
     const db = getPool();
     const [rows] = await db.execute(
       'SELECT id, username, email FROM users WHERE id = ?',
-      [decoded.userId]
+      [userId]
     );
 
     if (rows.length === 0) {

@@ -1353,6 +1353,8 @@ router.get('/graph', async (req, res) => {
       nodesParams.push(category_id);
     }
 
+    nodesQuery += ` GROUP BY n.id`;
+
     const [nodes] = await db.query(nodesQuery, nodesParams);
     const nodeIds = new Set(nodes.map(n => n.id));
 

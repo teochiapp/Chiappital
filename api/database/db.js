@@ -1,26 +1,37 @@
-// database/db.js - Conexión MySQL con pool de conexiones
+// database/db.js - Conexión MySQL con pool de conexiones resiliente
 const mysql = require('mysql2/promise');
 
 let pool = null;
+let activeHost = null;
+
+function sanitizePassword(pwd) {
+  if (!pwd) return '';
+  return String(pwd).replace(/^["']|["']$/g, '');
+}
+
+function createPoolForHost(host) {
+  return mysql.createPool({
+    host: host,
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    user: process.env.DB_USER,
+    password: sanitizePassword(process.env.DB_PASSWORD),
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    connectTimeout: 7000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 30000,
+  });
+}
 
 /**
  * Obtiene (o crea) el pool de conexiones MySQL.
  */
 function getPool() {
   if (!pool) {
-    pool = mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306', 10),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      // Reconectar automáticamente en caso de pérdida de conexión
-      enableKeepAlive: true,
-      keepAliveInitialDelay: 30000,
-    });
+    activeHost = process.env.DB_HOST || '127.0.0.1';
+    pool = createPoolForHost(activeHost);
   }
   return pool;
 }
@@ -30,7 +41,29 @@ function getPool() {
  * Se llama una vez al arrancar el servidor.
  */
 async function initializeDatabase() {
-  const db = getPool();
+  let db = getPool();
+  try {
+    await db.query('SELECT 1');
+    console.log(`[Database] Conectado exitosamente a MySQL en: ${activeHost}`);
+  } catch (err) {
+    const fallbackHost = (activeHost === '127.0.0.1' || activeHost === 'localhost') 
+      ? 'srv812.hstgr.io' 
+      : '127.0.0.1';
+    console.warn(`[Database] No se pudo conectar a ${activeHost} (${err.message}). Probando host alternativo: ${fallbackHost}...`);
+    try {
+      if (pool) {
+        await pool.end().catch(() => {});
+      }
+      activeHost = fallbackHost;
+      pool = createPoolForHost(activeHost);
+      db = pool;
+      await db.query('SELECT 1');
+      console.log(`[Database] Conexión establecida exitosamente con host alternativo: ${activeHost}`);
+    } catch (fallbackErr) {
+      console.error(`[Database] Error fatal de conexión MySQL en ambos hosts (${activeHost} y ${fallbackHost}): ${fallbackErr.message}`);
+      throw fallbackErr;
+    }
+  }
 
   // Tabla de usuarios
   await db.execute(`

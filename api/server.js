@@ -1,6 +1,26 @@
 // server.js - Entry point del servidor Express SimpleTrade API
+const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+const dotenv = require('dotenv');
+
+// Cargar .env.local si existe (para desarrollo local), luego .env (producción)
+const envLocalPath = path.join(__dirname, '.env.local');
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+}
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Fallbacks de producción para Hostinger en caso de que .env no esté presente
+if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
+if (!process.env.DB_HOST) process.env.DB_HOST = '127.0.0.1';
+if (!process.env.DB_PORT) process.env.DB_PORT = '3306';
+if (!process.env.DB_USER) process.env.DB_USER = 'u639575812_admin';
+if (!process.env.DB_PASSWORD) process.env.DB_PASSWORD = 'D3hm3Pa;';
+if (!process.env.DB_NAME) process.env.DB_NAME = 'u639575812_trades_data';
+if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'M1_s3cr3t0_ch1app1t4l_2026';
+if (!process.env.JWT_EXPIRES_IN) process.env.JWT_EXPIRES_IN = '7d';
+if (!process.env.ALLOWED_ORIGIN) process.env.ALLOWED_ORIGIN = 'https://chiappital.surcodes.com';
+if (!process.env.FINNHUB_API_KEY) process.env.FINNHUB_API_KEY = 'd3t6mg9r01qqdgfufaggd3t6mg9r01qqdgfufah0';
 
 // Capturar errores no manejados para que LiteSpeed/Hostinger nunca reciba un exit(1) y devuelva 503
 process.on('uncaughtException', (err) => {
@@ -26,7 +46,8 @@ const knowledgeRouter = require('./routes/knowledge');
 const logger = require('./utils/logger');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const isProduction = process.env.NODE_ENV === 'production';
+const PORT = process.env.PORT || (isProduction ? 3000 : 3001);
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -76,6 +97,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ─── Rutas ────────────────────────────────────────────────────────────────────
+
+// Root check para Hostinger / LiteSpeed
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Chiappital API is running',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
 
 // Health check (útil para Hostinger)
 app.get('/api/health', (req, res) => {
@@ -190,8 +221,9 @@ function initMarketScheduler() {
 }
 
 async function startServer() {
-  // 1. Iniciar servidor HTTP inmediatamente para responder pings de LiteSpeed/Hostinger
-  app.listen(PORT, () => {
+  // 1. Iniciar servidor HTTP inmediatamente en el puerto asignado por Hostinger/entorno
+  const numericPort = parseInt(PORT, 10);
+  const listenHandler = () => {
     logger.raw(`
 ─────────────────────────────────────────────
 API SERVER
@@ -201,7 +233,13 @@ Port: ${PORT}
 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 ─────────────────────────────────────────────`);
     logger.info('Server', `Health: http://localhost:${PORT}/api/health`);
-  });
+  };
+
+  if (!isNaN(numericPort)) {
+    app.listen(numericPort, listenHandler);
+  } else {
+    app.listen(PORT, listenHandler);
+  }
 
   // 2. Conectar e inicializar la base de datos de manera asíncrona
   try {

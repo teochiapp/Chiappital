@@ -37,7 +37,7 @@ async function takeDailySnapshots() {
 
     logger.info('PortfolioSnapshot', `✅ ${count} snapshots diarios guardados exitosamente.`);
   } catch (error) {
-    logger.error('PortfolioSnapshot', \`Error al guardar snapshots diarios: \${error.message}\`);
+    logger.error('PortfolioSnapshot', `Error al guardar snapshots diarios: ${error.message}`);
   }
 }
 
