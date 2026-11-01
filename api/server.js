@@ -10,18 +10,6 @@ if (fs.existsSync(envLocalPath)) {
 }
 dotenv.config({ path: path.join(__dirname, '.env') });
 
-// Fallbacks de producción para Hostinger en caso de que .env no esté presente
-if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
-if (!process.env.DB_HOST) process.env.DB_HOST = '127.0.0.1';
-if (!process.env.DB_PORT) process.env.DB_PORT = '3306';
-if (!process.env.DB_USER) process.env.DB_USER = 'u639575812_admin';
-if (!process.env.DB_PASSWORD) process.env.DB_PASSWORD = 'D3hm3Pa;';
-if (!process.env.DB_NAME) process.env.DB_NAME = 'u639575812_trades_data';
-if (!process.env.JWT_SECRET) process.env.JWT_SECRET = 'M1_s3cr3t0_ch1app1t4l_2026';
-if (!process.env.JWT_EXPIRES_IN) process.env.JWT_EXPIRES_IN = '7d';
-if (!process.env.ALLOWED_ORIGIN) process.env.ALLOWED_ORIGIN = 'https://chiappital.surcodes.com';
-if (!process.env.FINNHUB_API_KEY) process.env.FINNHUB_API_KEY = 'd3t6mg9r01qqdgfufaggd3t6mg9r01qqdgfufah0';
-
 // Capturar errores no manejados para que LiteSpeed/Hostinger nunca reciba un exit(1) y devuelva 503
 process.on('uncaughtException', (err) => {
   console.error('[Process] Excepción no capturada:', err.message, err.stack);
