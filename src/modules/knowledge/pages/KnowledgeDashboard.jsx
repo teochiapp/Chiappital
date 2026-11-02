@@ -185,70 +185,58 @@ const KnowledgeDashboard = () => {
         </AreasGrid>
       </SectionWrapper>
 
-      {/* ─── C & D. Notas Recientes & Insights ───────────────────────────── */}
-      <TwoColumnsRow>
-        {/* Notas Recientes */}
-        <RecentNotesSection>
-          <SectionHeaderBetween>
-            <div>
-              <SectionTitle>Notas Recientes</SectionTitle>
-              <SectionSubtitle>Últimas actualizaciones en tu Second Brain</SectionSubtitle>
-            </div>
-            <ViewAllBtn onClick={() => navigate('/personal/knowledge/notes')}>
-              Ver Todas <ArrowRight size={14} />
-            </ViewAllBtn>
-          </SectionHeaderBetween>
+      {/* ─── C. Notas Recientes ─────────────────────────────────────────── */}
+      <RecentNotesSection>
+        <SectionHeaderBetween>
+          <div>
+            <SectionTitle>Notas Recientes</SectionTitle>
+            <SectionSubtitle>Últimas actualizaciones en tu Second Brain</SectionSubtitle>
+          </div>
+          <ViewAllBtn onClick={() => navigate('/personal/knowledge/notes')}>
+            Ver Todas <ArrowRight size={14} />
+          </ViewAllBtn>
+        </SectionHeaderBetween>
 
-          {recentNotes.length === 0 ? (
-            <EmptyState>
-              <FileText size={32} color="#64748b" />
-              <p>Aún no tienes notas creadas.</p>
-              <CreateFirstNoteBtn onClick={() => openQuickCapture('note')}>
-                Crear tu primera nota
-              </CreateFirstNoteBtn>
-            </EmptyState>
-          ) : (
-            <NotesList>
-              {recentNotes.map((note) => (
-                <NoteItem
-                  key={note.id}
-                  onClick={() => navigate(`/personal/knowledge/notes?noteId=${note.id}`)}
-                >
-                  <NoteHeaderRow>
-                    <NoteTitleWrapper>
-                      {note.is_favorite === 1 && <Star size={14} color="#f59e0b" fill="#f59e0b" />}
-                      <NoteTitle>{note.title}</NoteTitle>
-                    </NoteTitleWrapper>
-                    {note.category_name && (
-                      <CategoryTag $color={note.area_color}>{note.category_name}</CategoryTag>
-                    )}
-                  </NoteHeaderRow>
-                  {note.preview && <NotePreview>{note.preview}...</NotePreview>}
-                  <NoteMetaRow>
-                    <NoteDate>
-                      <Clock size={12} /> {new Date(note.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                    </NoteDate>
-                    {note.area_name && (
-                      <AreaNameIndicator $color={note.area_color}>
-                        • {note.area_name}
-                      </AreaNameIndicator>
-                    )}
-                  </NoteMetaRow>
-                </NoteItem>
-              ))}
-            </NotesList>
-          )}
-        </RecentNotesSection>
-
-        {/* Knowledge Insights */}
-        <InsightsSection>
-          <SectionHeader>
-            <SectionTitle>Knowledge Insights</SectionTitle>
-            <SectionSubtitle>Sugerencias para fortalecer tu red</SectionSubtitle>
-          </SectionHeader>
-
-        </InsightsSection>
-      </TwoColumnsRow>
+        {recentNotes.length === 0 ? (
+          <EmptyState>
+            <FileText size={32} color="#64748b" />
+            <p>Aún no tienes notas creadas.</p>
+            <CreateFirstNoteBtn onClick={() => openQuickCapture('note')}>
+              Crear tu primera nota
+            </CreateFirstNoteBtn>
+          </EmptyState>
+        ) : (
+          <NotesList>
+            {recentNotes.map((note) => (
+              <NoteItem
+                key={note.id}
+                onClick={() => navigate(`/personal/knowledge/notes?noteId=${note.id}`)}
+              >
+                <NoteHeaderRow>
+                  <NoteTitleWrapper>
+                    {note.is_favorite === 1 && <Star size={14} color="#f59e0b" fill="#f59e0b" />}
+                    <NoteTitle>{note.title}</NoteTitle>
+                  </NoteTitleWrapper>
+                  {note.category_name && (
+                    <CategoryTag $color={note.area_color}>{note.category_name}</CategoryTag>
+                  )}
+                </NoteHeaderRow>
+                {note.preview && <NotePreview>{note.preview}...</NotePreview>}
+                <NoteMetaRow>
+                  <NoteDate>
+                    <Clock size={12} /> {new Date(note.updated_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                  </NoteDate>
+                  {note.area_name && (
+                    <AreaNameIndicator $color={note.area_color}>
+                      • {note.area_name}
+                    </AreaNameIndicator>
+                  )}
+                </NoteMetaRow>
+              </NoteItem>
+            ))}
+          </NotesList>
+        )}
+      </RecentNotesSection>
     </DashboardContainer>
   );
 };

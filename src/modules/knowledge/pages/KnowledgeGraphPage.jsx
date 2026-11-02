@@ -42,7 +42,6 @@ const KnowledgeGraphPage = () => {
 
   // Filtros visuales
   const [graphSearch, setGraphSearch] = useState('');
-  const [showAiEdges, setShowAiEdges] = useState(true);
   const [hideOrphans, setHideOrphans] = useState(false);
   const [labelMode, setLabelMode] = useState('hover_and_hubs'); // 'always' | 'hover_and_hubs' | 'selection'
 
@@ -99,12 +98,9 @@ const KnowledgeGraphPage = () => {
     fetchGraphData();
   }, [fetchGraphData]);
 
-  // Filtrar nodos huérfanos o bordes IA si el usuario lo solicita
+  // Filtrar nodos huérfanos o enlaces según filtros
   const filteredData = useMemo(() => {
-    let edges = rawGraphData.edges || [];
-    if (!showAiEdges) {
-      edges = edges.filter(e => e.origin !== 'ai_suggested');
-    }
+    const edges = (rawGraphData.edges || []).filter(e => e.origin !== 'ai_suggested');
 
     let nodes = rawGraphData.nodes || [];
     if (hideOrphans) {
@@ -117,7 +113,7 @@ const KnowledgeGraphPage = () => {
     }
 
     return { nodes, edges };
-  }, [rawGraphData, showAiEdges, hideOrphans]);
+  }, [rawGraphData, hideOrphans]);
 
   // Calcular vecindario activo (conexiones directas al nodo seleccionado o en hover)
   const activeNeighborhood = useMemo(() => {
@@ -429,7 +425,7 @@ const KnowledgeGraphPage = () => {
   // ¡Sin reiniciar la simulación física!
   useEffect(() => {
     renderCanvas();
-  }, [graphSearch, inspectedNode, hoveredNode, labelMode, showAiEdges, renderCanvas]);
+  }, [graphSearch, inspectedNode, hoveredNode, labelMode, renderCanvas]);
 
   // Manejador de Zoom hacia la posición del cursor (Natural Wheel Zoom)
   const handleWheel = (e) => {
@@ -691,15 +687,6 @@ const KnowledgeGraphPage = () => {
             )}
           </SearchWrapper>
 
-          {/* Toggle de Conexiones IA */}
-          <AiToggleBtn
-            $active={showAiEdges}
-            onClick={() => setShowAiEdges(!showAiEdges)}
-            title="Mostrar u ocultar sugerencias de IA en el grafo"
-          >
-            <Sparkles size={14} /> Sugerencias IA
-          </AiToggleBtn>
-
           {/* Botón de Ajustes Físicos (Obsidian HUD) */}
           <SettingsToggleBtn
             $active={showSettings}
@@ -769,15 +756,6 @@ const KnowledgeGraphPage = () => {
                   onChange={(e) => setHideOrphans(e.target.checked)}
                 />
                 <label htmlFor="chk-orphans">Ocultar notas sin enlaces</label>
-              </SettingCheckboxRow>
-              <SettingCheckboxRow>
-                <input
-                  type="checkbox"
-                  id="chk-ai"
-                  checked={showAiEdges}
-                  onChange={(e) => setShowAiEdges(e.target.checked)}
-                />
-                <label htmlFor="chk-ai">Mostrar enlaces sugeridos por IA</label>
               </SettingCheckboxRow>
             </SettingsSection>
 
@@ -855,10 +833,7 @@ const KnowledgeGraphPage = () => {
         <LegendCard>
           <LegendTitle>Leyenda</LegendTitle>
           <LegendItem>
-            <SolidLine /> Relación Manual
-          </LegendItem>
-          <LegendItem>
-            <DottedLine /> Sugerencia IA
+            <SolidLine /> Conexión entre notas
           </LegendItem>
           <LegendDivider />
           <LegendCount>

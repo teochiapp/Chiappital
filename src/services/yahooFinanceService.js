@@ -86,6 +86,36 @@ class YahooFinanceService {
     } catch (e) {/* ignorar si está lleno */}
   }
 
+  // Invalidar caché para un símbolo específico (memoria y sessionStorage)
+  invalidateCache(symbol) {
+    if (!symbol) return;
+    const clean = symbol.trim().toUpperCase();
+    const mapped = this._mapSymbol ? this._mapSymbol(clean) : clean;
+    const candidates = [clean, mapped, symbol.trim()];
+    candidates.forEach(s => {
+      this.cache.delete(`quote_${s}`);
+      this.cache.delete(`candles_${s}_1d_3mo`);
+      this.cache.delete(`candles_${s}_1d_1y`);
+      try {
+        sessionStorage.removeItem(`yf_quote_${s}`);
+        sessionStorage.removeItem(`yf_candles_${s}_1d_3mo`);
+        sessionStorage.removeItem(`yf_candles_${s}_1d_1y`);
+      } catch (e) {}
+    });
+  }
+
+  // Limpiar toda la caché de Yahoo Finance
+  clearCache() {
+    this.cache.clear();
+    try {
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('yf_')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+  }
+
   // Obtiene la URL correcta del endpoint según el entorno:
   // - dev  → /api/yahoo/chart/AAPL  (ruteado por setupProxy.js sin CORS)
   // - prod → URL pública de Yahoo (se pasa a fetchWithCorsProxies)

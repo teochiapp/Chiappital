@@ -1,0 +1,5 @@
+# 16 - Prove Yourself
+
+Propietario: Teo Chiappero
+
+Most  people want to be seduced. If  they resist your efforts, it is probably  because you have not gone far  enough to allay their doubts—about  your motives, the depth of your feelings,  and so on. One well-timed action  that shows how far you are  willing to go to win them over will  dispel their doubts. Do not worry  about looking foolish or making a  mistake—any kind of deed that is  self-sacrificing and for your targets’  sake will so overwhelm their emotions,  they won’t notice anything else.  Never appear discouraged by people’s  resistance, or complain. Instead, meet  the challenge by doing something extreme  or chivalrous. Conversely, spur  others to prove themselves by making  yourself hard to reach, unattainable,  worth fighting over.

@@ -20,6 +20,7 @@
     "multer": "^2.2.0",
     "mysql2": "^3.10.1",
     "nodemailer": "^9.0.5",
+    "ssh2": "^1.17.0",
     "yahoo-finance2": "^2.13.3"
   },
   "devDependencies": {

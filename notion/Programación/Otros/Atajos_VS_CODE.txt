@@ -1,0 +1,21 @@
+Ctrl + 2: Nos permite dividir el editor 
+Ctrl + Shift + P: Abre el desplegable de comandos.
+Ctrl + +: Permite aumentar el tamaño de la letra.
+Ctrl + F: Abre el buscador.
+Ctrl + H: Abre el mismo buscador PARA sustituir. 
+Ctrl + D: Si seleccionamos un fragmento de código lo añadiremos al buscador
+Ctrl + X: Cortar linea
+Alt + flecha abajo: Mover la línea donde se encuentra el cursos hacia abajo
+	     arriba:
+Shift + Alt + flecha abajo: Para copiar la línea actual en la línea siguiente
+	      flecha arriba:
+Ctrl + Enter: Para insertar una línea abajo de donde se encuentra el cursor 
+Shift + Ctrl + Enter: línea arriba de donde se encuentra el curso
+Ctrl + Inicio: Desplazar el cursor al principio del archivo
+Ctrl + "Fin": Desplazar el cursor al final del archivo
+Av.Pag: Desplazar el cursor hacia abajo una página completa
+Re.Pag: Desplazar el cursor hacia arriba una página completa:
+Alt + AvPag: Hacer escroll hacia abajo sin desplazar el cursor
+Alt + RePag: Hacer escroll hacia arribasin desplazar el cursor
+Shift + Alt + A: Comentar y descomentar
+Seleccion + Ctrl D: Seleccionar texto con mismo valor

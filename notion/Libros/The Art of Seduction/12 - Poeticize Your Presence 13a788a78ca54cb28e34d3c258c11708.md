@@ -1,0 +1,5 @@
+# 12 - Poeticize Your Presence
+
+Propietario: Teo Chiappero
+
+Important things happen when your targets  are alone: the slightest feeling of relief that  you are not there, and it is all over. Familiarity  and overexposure will cause  this reaction. Remain elusive, then,  so that when you are away, they  will yearn to see you again, and  will associate you only with  pleasant thoughts. Occupy their  minds by alternating an exciting  presence with a cool distance,  exuberant moments  followed by calculated absences.  Associate yourself with poetic  images and objects, so that when  they think of you, they begin to see  you through an idealized halo. The  more you figure in their minds, the  more they will envelop you in seductive  fantasies. Feed these fantasies by subtle  inconsistencies and changes in your behavior.

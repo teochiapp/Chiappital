@@ -822,39 +822,6 @@ const NotesPage = () => {
               </LinksList>
             </SidebarSection>
 
-            {/* Sugerencias de IA */}
-            <SidebarSection>
-              <SidebarHeaderBetween>
-                <SidebarSectionTitle>
-                  <Sparkles size={14} color="#ec4899" /> Sugerencias IA
-                </SidebarSectionTitle>
-                <MiniActionBtn onClick={handleFetchAiSuggestions} disabled={loadingAi}>
-                  {loadingAi ? 'Buscando...' : 'Analizar'}
-                </MiniActionBtn>
-              </SidebarHeaderBetween>
-
-              {aiSuggestions.length > 0 ? (
-                <AiSuggestionsList>
-                  {aiSuggestions.map((sug) => (
-                    <AiSuggestionCard key={sug.target_note_id}>
-                      <AiCardHeader>
-                        <FileText size={13} color="#ec4899" />
-                        <AiTargetTitle>{sug.target_title}</AiTargetTitle>
-                      </AiCardHeader>
-                      <AiExplanation>{sug.explanation}</AiExplanation>
-                      <AiActionRow>
-                        <ApproveAiBtn onClick={() => handleApproveAiSuggestion(sug)}>
-                          <CheckCircle2 size={13} /> Aprobar
-                        </ApproveAiBtn>
-                      </AiActionRow>
-                    </AiSuggestionCard>
-                  ))}
-                </AiSuggestionsList>
-              ) : (
-                <EmptySubtext>Toca "Analizar" para descubrir conexiones inteligentes.</EmptySubtext>
-              )}
-            </SidebarSection>
-
             {/* Archivos Adjuntos */}
             <SidebarSection>
               <SidebarSectionTitle>

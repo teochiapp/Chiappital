@@ -1,0 +1,112 @@
+# Labs Learned
+
+## **HTB Academy – Nmap & Service Version Lab**
+
+### **Objetivo general**
+
+Aprender a descubrir servicios, versiones y técnicas de evasión de firewall/IDS/IPS usando **Nmap** y **Netcat**.
+
+---
+
+### **1️⃣ Descubrir versión de DNS con CHAOS TXT**
+
+- **Comando principal:**
+
+```bash
+dig @<IP> version.bind CHAOS TXT
+
+```
+
+- **Objetivo:** Mostrar la versión del servidor DNS corriendo.
+- **Alternativas:**
+
+```bash
+nmap -p53 --script dns-nsid,dns-service-discovery <IP>
+
+```
+
+- **Resultado:** Flag DNS visible directamente en `version.bind`.
+
+---
+
+### **2️⃣ Escaneo de puertos con Nmap**
+
+- **Escaneo completo SYN scan con detección de versión:**
+
+```bash
+sudo nmap -sS -sV -p- -Pn <IP>
+
+```
+
+- **Notas importantes:**
+    - Puertos <1024 requieren privilegios (`sudo`)
+    - `Pn` evita ICMP ping
+    - `-top-ports` + `T4` acelera escaneo
+
+---
+
+### **3️⃣ Escanear puertos filtrados**
+
+- Algunos puertos aparecen **filtrados**:
+
+```
+53/tcp filtered
+50000/tcp filtered
+
+```
+
+- Motivo: Firewall bloqueando conexiones normales
+- **Solución:** Hacer el scan desde un **source port permitido**, ej. 53 (DNS):
+
+```bash
+sudo nmap -sS -p50000 --source-port 53 <IP>
+
+```
+
+---
+
+### **4️⃣ Conexión directa a servicio “oculto”**
+
+- Usando **Netcat/Ncat** para obtener banner:
+
+```bash
+sudo ncat -nv --source-port 53 <IP> 50000
+
+```
+
+- ⚠️ Nota: Puertos <1024 necesitan `sudo`
+- ⚠️ Si el banner no se muestra automáticamente, presionar **ENTER** o enviar un comando como `HELP`.
+
+---
+
+### **5️⃣ Uso de Nmap Scripts**
+
+- Para obtener banners sin interacción:
+
+```bash
+sudo nmap -p50000 -Pn --script banner <IP>
+
+```
+
+- Ventaja: No depende de Netcat ni de interacción manual.
+
+---
+
+### **6️⃣ Resultado final / Flag**
+
+- La **versión del servicio** oculto fue descubierta y correspondió a la flag del lab:
+
+```
+HTB{kjnsdf2n982n1827eh76238s98di1w6}
+
+```
+
+---
+
+### **Conceptos aprendidos**
+
+- Diferencia entre **puertos abiertos, cerrados y filtrados**
+- Uso de **source port spoofing** para evadir firewall
+- Técnicas básicas de evasión de **IDS/IPS**
+- Descubrimiento de **servicios y banners**
+- Uso de scripts Nmap para automatizar obtención de versiones
