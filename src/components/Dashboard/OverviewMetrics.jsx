@@ -169,7 +169,7 @@ const OverviewMetrics = () => {
     fetchDrawdown();
   }, [balance, fetchDrawdown]);
 
-  const fetchDailyGain = useCallback(async () => {
+  const fetchDailyGain = useCallback(async (force = false) => {
     if (!openTrades || openTrades.length === 0 || !balance) {
       setDailyGainUSD(0);
       setDailyGainPercent(0);
@@ -179,24 +179,53 @@ const OverviewMetrics = () => {
 
     setLoadingDailyGain(true);
     try {
-      const symbols = [...new Set(openTrades.map(t => t.symbol || t.attributes?.symbol).filter(Boolean))];
-      const quotes = await priceService.getMultipleQuotes(symbols);
+      const symbols = [...new Set(openTrades.map(t => (t.symbol || t.attributes?.symbol || '').toUpperCase()).filter(Boolean))];
+      if (force) {
+        priceService.invalidateMultiplePriceCache(symbols);
+      }
+      // Usar getLiveQuotes para consultar cotizaciones en tiempo real directamente a Finnhub / Yahoo (garantiza datos de HOY)
+      const quotes = await priceService.getLiveQuotes(symbols, force);
       
       let totalGainPercent = 0;
 
       openTrades.forEach(trade => {
-        const symbol = trade.symbol || trade.attributes?.symbol;
+        const rawSymbol = trade.symbol || trade.attributes?.symbol;
+        const symbol = rawSymbol ? rawSymbol.toUpperCase() : '';
         const portfolioPercentage = parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage || 0);
-        const quote = quotes[symbol];
+        const quote = quotes[symbol] || quotes[rawSymbol];
         
-        // Determinar si la operación fue hecha hoy para excluirla del rendimiento diario
-        const createdAt = trade.createdAt || trade.attributes?.createdAt;
+        const entryPrice = parseFloat(trade.entry_price || trade.attributes?.entry_price || 0);
+        const currentPrice = (quote && typeof quote.price === 'number') 
+          ? quote.price 
+          : (priceService.getPriceFromCache(symbol)?.price || null);
+        const tradeType = trade.type || trade.attributes?.type || 'buy';
+
+        // Determinar si la operación fue hecha hoy
+        const createdAt = trade.createdAt || trade.attributes?.createdAt || trade.created_at;
         const isToday = createdAt && new Date(createdAt).toDateString() === new Date().toDateString();
 
-        if (quote && quote.changePercent && portfolioPercentage > 0 && !isToday) {
-           const tradeType = trade.type || trade.attributes?.type;
-           const weightedPercent = (quote.changePercent * portfolioPercentage) / 100;
-           totalGainPercent += tradeType === 'buy' ? weightedPercent : -weightedPercent;
+        let tradeReturnToday = 0;
+        let hasValidReturn = false;
+
+        if (isToday && entryPrice > 0 && currentPrice) {
+          // Si la operación fue creada hoy, se toma el rendimiento actual intradiario desde el precio de entrada
+          const intraDayReturn = ((currentPrice - entryPrice) / entryPrice) * 100;
+          tradeReturnToday = tradeType === 'buy' ? intraDayReturn : -intraDayReturn;
+          hasValidReturn = true;
+        } else if (quote && typeof quote.changePercent === 'number' && !isNaN(quote.changePercent)) {
+          // Si fue creada en días previos, se toma la variación del día de hoy del mercado
+          tradeReturnToday = tradeType === 'buy' ? quote.changePercent : -quote.changePercent;
+          hasValidReturn = true;
+        } else if (currentPrice && entryPrice > 0) {
+          // Fallback a rendimiento acumulado si no está disponible la variación diaria
+          const diffReturn = ((currentPrice - entryPrice) / entryPrice) * 100;
+          tradeReturnToday = tradeType === 'buy' ? diffReturn : -diffReturn;
+          hasValidReturn = true;
+        }
+
+        if (hasValidReturn && portfolioPercentage > 0) {
+          const weightedPercent = (tradeReturnToday * portfolioPercentage) / 100;
+          totalGainPercent += weightedPercent;
         }
       });
 
@@ -256,7 +285,7 @@ const OverviewMetrics = () => {
               <span>Ganancia HOY</span>
               {dailyGainUSD >= 0 ? <TrendingUp size={14} color="#4ade80" /> : <TrendingDown size={14} color="#f87171" />}
             </div>
-            <button onClick={fetchDailyGain} title="Actualizar ganancia" className="refresh-btn">
+            <button onClick={() => fetchDailyGain(true)} title="Actualizar ganancia" className="refresh-btn">
               <RefreshCw size={14} className={loadingDailyGain ? 'spin' : ''} />
             </button>
           </MetricHeader>

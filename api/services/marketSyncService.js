@@ -537,10 +537,10 @@ async function runSync(reason = 'manual') {
       updateValues.push(symbol);
 
       if (quote) {
-        updateQuery += 'price, change_amount, change_percent, source, ';
-        updatePlaceholders.push('?', '?', '?', '?');
-        updateValues.push(quote.price, quote.changeAmount, quote.changePercent, quote.source);
-        onDuplicateUpdate.push('price = VALUES(price)', 'change_amount = VALUES(change_amount)', 'change_percent = VALUES(change_percent)', 'source = VALUES(source)', 'updated_at = NOW()', 'status = "LIVE"');
+        updateQuery += 'price, change_amount, change_percent, source, quote_time, ';
+        updatePlaceholders.push('?', '?', '?', '?', '?');
+        updateValues.push(quote.price, quote.changeAmount, quote.changePercent, quote.source, quote.quoteTime ?? null);
+        onDuplicateUpdate.push('price = VALUES(price)', 'quote_time = VALUES(quote_time)', 'change_amount = VALUES(change_amount)', 'change_percent = VALUES(change_percent)', 'source = VALUES(source)', 'updated_at = NOW()', 'status = "LIVE"');
       }
 
       let setup = newEmas.get(symbol);
@@ -782,24 +782,23 @@ async function fetchFinnhub(symbol) {
     throw new Error('Invalid price data');
   }
 
-  return { price, changePercent, changeAmount };
+  return { price, changePercent, changeAmount, quoteTime: data.t || null };
 }
 
 async function fetchYahooBulk(symbols) {
   try {
     const quotes = await yahooFinance.quote(symbols);
-    // Yahoo a veces devuelve q.symbol sin el sufijo '=F' para futuros de commodities
-    // (ej: devuelve 'GC' en lugar de 'GC=F'). Usamos el símbolo original de entrada
-    // para evitar el mismatch de key al guardar en newQuotes.
     const quotesArray = Array.isArray(quotes) ? quotes : [quotes];
-    return quotesArray.map((q, idx) => ({
-      symbol: symbols[idx] || q.symbol,
-      data: {
+    return quotesArray.flatMap(q => {
+      const symbol = symbols.includes(q.symbol) ? q.symbol : symbols.find(s => s === q.symbol + '=F');
+      if (!symbol) return [];
+      return [{ symbol, data: {
         price: q.regularMarketPrice,
+        quoteTime: q.regularMarketTime ? Math.floor(q.regularMarketTime.getTime() / 1000) : null,
         changeAmount: q.regularMarketChange,
         changePercent: q.regularMarketChangePercent
-      }
-    }));
+      } }];
+    });
   } catch (error) {
     throw new Error(`Yahoo Bulk Quote Error - ${error.message}`);
   }
@@ -1731,7 +1730,53 @@ async function resetDailyData() {
   }
 }
 
+// A separate short cache keeps alert checks away from the long-lived UI price cache.
+const alertQuoteCache = new Map();
+const pendingAlertQuotes = new Map();
+async function fetchAlertQuotes(symbols) {
+  const result = {};
+  const missing = symbols.filter(symbol => {
+    const cached = alertQuoteCache.get(symbol);
+    if (cached && Date.now() - cached.at < 30000) {
+      result[symbol] = cached.quote;
+      return false;
+    }
+    return true;
+  });
+  for (let offset = 0; offset < missing.length; offset += 10) {
+    const batch = missing.slice(offset, offset + 10);
+    const key = [...batch].sort().join(',');
+    if (!pendingAlertQuotes.has(key)) {
+      const request = (async () => {
+        const raw = await withTimeout(yahooFinance.quote(batch), 10000, 'alert quotes');
+        const quotes = {};
+        for (const quote of (Array.isArray(raw) ? raw : [raw])) {
+          if (!quote || !batch.includes(quote.symbol)) continue;
+          const value = {
+            price: quote.regularMarketPrice,
+            quoteTime: quote.regularMarketTime,
+            marketState: quote.marketState,
+            delayedMinutes: quote.exchangeDataDelayedBy
+          };
+          quotes[quote.symbol] = value;
+          alertQuoteCache.set(quote.symbol, { at: Date.now(), quote: value });
+        }
+        return quotes;
+      })().finally(() => pendingAlertQuotes.delete(key));
+      pendingAlertQuotes.set(key, request);
+    }
+    try {
+      Object.assign(result, await pendingAlertQuotes.get(key));
+    } catch (error) {
+      logger.warn('Alerts', `Live quotes unavailable: ${error.message}`);
+      for (const symbol of batch) alertQuoteCache.set(symbol, { at: Date.now(), quote: null });
+    }
+  }
+  return result;
+}
+
 module.exports = {
+  fetchAlertQuotes,
   runSync,
   calculateWeeklyIndicators,
   calculateDailySetup,

@@ -22,6 +22,13 @@ const handleResponse = async (response) => {
 };
 
 const alertService = {
+  checkEma21Alerts: async () => {
+    const response = await fetch(`${API_URL}/ema21/check`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
   /**
    * Obtiene todas las alertas del usuario
    * @returns {Promise<Array>} Lista de alertas

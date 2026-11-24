@@ -1,9 +1,10 @@
 // components/common/SymbolSearch.js - Componente de búsqueda inteligente de símbolos
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { DollarSign, TrendingUp } from 'lucide-react';
 import symbolSearchService from '../../services/symbolSearchService';
+import { readInstruments } from '../../services/marketReadService';
 import priceService from '../../services/priceService';
 
 const SearchContainer = styled.div`
@@ -51,14 +52,6 @@ const DropdownContainer = styled(motion.div)`
   z-index: 1000;
   max-height: 300px;
   overflow-y: auto;
-`;
-
-const LoadingState = styled.div`
-  padding: 1rem;
-  text-align: center;
-  color: #94a3b8;
-  font-family: 'Unbounded', sans-serif;
-  font-size: 0.9rem;
 `;
 
 const EmptyState = styled.div`
@@ -214,72 +207,36 @@ const getRegionFlag = (region) => {
   return flags[region] || '🌐';
 };
 
-const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", initialValue = "" }) => {
+const SymbolSearch = ({ onSymbolSelect, onQuoteUpdate, placeholder = "Buscar instrumento...", initialValue = "" }) => {
   const [query, setQuery] = useState(initialValue);
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [prices, setPrices] = useState(new Map()); // Map para almacenar precios por símbolo
-  const [loadingPrices, setLoadingPrices] = useState(new Set()); // Set para símbolos cargando precio
-  
+  const [quotes, setQuotes] = useState({});
   const containerRef = useRef();
   const inputRef = useRef();
-  const searchTimeoutRef = useRef(null);
+  const selection = useRef(0);
+  const results = useMemo(() => {
+    if (!isOpen) return [];
+    const term = query.trim();
+    return symbolSearchService.searchSymbols(term.toUpperCase() === 'BRKB' ? 'BRK.B' : term);
+  }, [query, isOpen]);
 
-  // Buscar símbolos con debounce
+  useEffect(() => () => { selection.current++; }, []);
+
   useEffect(() => {
-    // Limpiar timeout anterior
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    // Si no hay query, mostrar símbolos populares
-    if (!query.trim()) {
-      searchTimeoutRef.current = setTimeout(async () => {
-        setLoading(true);
-        try {
-          const popularSymbols = await symbolSearchService.searchSymbols("");
-          setResults(popularSymbols);
-          // Cargar precios para símbolos populares
-          loadPricesForResults(popularSymbols);
-        } catch (error) {
-          console.error('Error cargando símbolos populares:', error);
-          setResults([]);
-        } finally {
-          setLoading(false);
-        }
-      }, 100);
-      return;
-    }
-
-    // Buscar con debounce de 300ms
-    searchTimeoutRef.current = setTimeout(async () => {
-      setLoading(true);
-        try {
-          let queryToSearch = query.trim();
-          if (queryToSearch.toUpperCase() === 'BRKB') {
-            queryToSearch = 'BRK.B';
-          }
-          const searchResults = await symbolSearchService.searchSymbols(queryToSearch);
-          setResults(searchResults);
-          setSelectedIndex(-1);
-          // Cargar precios para los resultados
-          loadPricesForResults(searchResults);
-        } catch (error) {
-          console.error('Error en búsqueda:', error);
-          setResults([]);
-        } finally {
-          setLoading(false);
-        }
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+    if (!results.length) return;
+    let active = true;
+    const timer = setTimeout(async () => {
+      const symbols = results.map(item => item.symbol);
+      try {
+        const rows = await readInstruments(symbols);
+        if (active) setQuotes(rows);
+      } catch {
+        if (active) setQuotes(Object.fromEntries(symbols.map(symbol => [symbol, null])));
       }
-    };
-  }, [query]);
+    }, 150);
+    return () => { active = false; clearTimeout(timer); };
+  }, [results]);
 
   // Manejar clics fuera del componente
   useEffect(() => {
@@ -335,6 +292,8 @@ const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", i
   };
 
   const handleInputChange = (e) => {
+    selection.current++;
+    setSelectedIndex(-1);
     const value = e.target.value;
     setQuery(value);
     if (!isOpen && value) {
@@ -346,51 +305,32 @@ const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", i
     setIsOpen(true);
   };
 
-  // Nueva función para cargar precios
-  const loadPricesForResults = async (symbols) => {
-    if (!symbols || symbols.length === 0) return;
-    
-    // Tomar solo los primeros 5 para no sobrecargar la API
-    const symbolsToLoad = symbols.slice(0, 5);
-    
-    for (const symbol of symbolsToLoad) {
-      if (!prices.has(symbol.symbol) && !loadingPrices.has(symbol.symbol)) {
-        // Marcar como cargando
-        setLoadingPrices(prev => new Set([...prev, symbol.symbol]));
-        
-        try {
-          const price = await priceService.getCurrentPrice(symbol.symbol);
-          setPrices(prev => new Map([...prev, [symbol.symbol, price]]));
-        } catch (error) {
-          console.warn(`Error loading price for ${symbol.symbol}:`, error);
-          // Marcar como error en el precio
-          setPrices(prev => new Map([...prev, [symbol.symbol, null]]));
-        } finally {
-          // Quitar del set de carga
-          setLoadingPrices(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(symbol.symbol);
-            return newSet;
-          });
-        }
-      }
+  const handleSymbolSelect = async (item) => {
+    const version = ++selection.current;
+    const quote = quotes[item.symbol];
+    const selected = { ...item, currentPrice: quote?.price ?? null, quoteTime: quote?.quoteTime ?? null };
+    setQuery(item.symbol);
+    setIsOpen(false);
+    setSelectedIndex(-1);
+    onSymbolSelect(selected);
+
+    const age = Date.now() - (quote?.quoteTime ?? 0);
+    if (quote?.price > 0 && age >= 0 && age < 60000) return;
+    try {
+      const price = await priceService.getCurrentPrice(item.symbol, true);
+      const latest = priceService.getPriceFromCache(item.symbol);
+      if (selection.current !== version || !(price > 0) || latest?.isMock) return;
+      if (quote?.quoteTime && !(latest?.quoteTime >= quote.quoteTime)) return;
+      const updated = { price, quoteTime: latest?.quoteTime ?? null };
+      setQuotes(prev => ({ ...prev, [item.symbol]: updated }));
+      onQuoteUpdate?.({ ...item, currentPrice: price, quoteTime: updated.quoteTime });
+    } catch {
+      // El precio de entrada se puede completar manualmente.
     }
   };
 
-  const handleSymbolSelect = (symbol) => {
-    // Agregar el precio al objeto symbol si está disponible
-    const symbolWithPrice = {
-      ...symbol,
-      currentPrice: prices.get(symbol.symbol)
-    };
-    
-    setQuery(symbol.symbol);
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    onSymbolSelect(symbolWithPrice);
-  };
-
   const handleCustomSymbolCreate = () => {
+    selection.current++;
     let normalizedSymbol = query.toUpperCase().trim();
     if (normalizedSymbol === 'BRKB') {
       normalizedSymbol = 'BRK.B';
@@ -414,14 +354,6 @@ const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", i
   };
 
   const renderResults = () => {
-    if (loading) {
-      return (
-        <LoadingState>
-          🔍 Buscando instrumentos...
-        </LoadingState>
-      );
-    }
-
     if (results.length === 0 && query.trim()) {
       return (
         <>
@@ -484,19 +416,17 @@ const SymbolSearch = ({ onSymbolSelect, placeholder = "Buscar instrumento...", i
             </SymbolMeta>
             
             {/* Mostrar precio */}
-            <PriceContainer $isLoading={loadingPrices.has(symbol.symbol)}>
-              {loadingPrices.has(symbol.symbol) ? (
-                <PriceLoading>🔍 Cargando precio...</PriceLoading>
-              ) : prices.has(symbol.symbol) ? (
-                <PriceValue $isLoading={false}>
+            <PriceContainer>
+              {quotes[symbol.symbol] === undefined ? (
+                <PriceLoading>Cargando precio…</PriceLoading>
+              ) : (
+                <PriceValue title={quotes[symbol.symbol]?.quoteTime
+                  ? new Date(quotes[symbol.symbol].quoteTime).toLocaleString('es-AR') : 'Sin hora de cotización'}>
                   <DollarSign size={14} />
-                  {prices.get(symbol.symbol) !== null 
-                    ? `$${Number(prices.get(symbol.symbol)).toFixed(2)}` 
-                    : 'N/A'
-                  }
+                  {quotes[symbol.symbol]?.price > 0 ? Number(quotes[symbol.symbol].price).toFixed(2) : '—'}
                   <TrendingUp size={12} />
                 </PriceValue>
-              ) : null}
+              )}
             </PriceContainer>
           </SymbolOption>
         ))}

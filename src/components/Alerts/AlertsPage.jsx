@@ -11,7 +11,7 @@ import EmailConfigModal from './EmailConfigModal';
 import { Mail } from 'lucide-react';
 
 const AlertsPage = () => {
-  const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices } = useAlerts();
+  const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices, emaChecks, checkError } = useAlerts();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -89,7 +89,7 @@ const AlertsPage = () => {
     try {
       await alertService.updateAlert(alertData.id, {
         symbol: alertData.symbol,
-        target_price: parseFloat(alertData.target_price),
+        target_price: alertData.condition_type === 'ema21_above' ? null : parseFloat(alertData.target_price),
         condition_type: alertData.condition_type,
         notes: alertData.notes,
         is_active: alertData.is_active ? 0 : 1
@@ -111,6 +111,21 @@ const AlertsPage = () => {
 
   const activeAlerts = alerts.filter(a => a.is_active === 1);
   const inactiveAlerts = alerts.filter(a => a.is_active === 0);
+  const isAbove = a => a.condition_type !== 'below';
+  const conditionLabel = a => a.condition_type === 'ema21_above' ? 'Supera EMA21' : a.condition_type === 'above' ? 'Mayor a' : 'Menor a';
+  const targetLabel = a => {
+    if (a.condition_type !== 'ema21_above') return `$${Number(a.target_price).toFixed(2)}`;
+    const value = emaChecks[a.id]?.ema21 ?? a.ema21_value;
+    return value ? `EMA21: $${Number(value).toFixed(2)}` : 'Esperando EMA21';
+  };
+  const emaStatus = a => ({
+    missing_ema: 'Esperando EMA21 diaria',
+    market_closed: 'Esperando apertura del mercado',
+    unavailable: 'Cotización no disponible',
+    stale_quote: 'Esperando cotización sin demora',
+    watching: 'Monitoreando cada minuto',
+    triggered: 'Condición alcanzada'
+  }[emaChecks[a.id]?.status] || 'Esperando comprobación');
 
   return (
     <Layout>
@@ -118,7 +133,7 @@ const AlertsPage = () => {
         <Header>
           <TitleArea>
             <Title><BellRing size={24} style={{ marginRight: '8px', color: '#f59e0b' }}/> Alertas de Mercado</Title>
-            <Sub>Notificaciones globales basadas en precios objetivo · Chequeo cada 15 min</Sub>
+            <Sub>EMA21: cada minuto con mercado abierto · Precio objetivo: cada 15 min · Mantené Chiappital abierto</Sub>
           </TitleArea>
           <HeaderBtns>
             <RefreshBtn onClick={handleRefresh} disabled={isRefreshing || loading}>
@@ -131,6 +146,8 @@ const AlertsPage = () => {
             </CreateBtn>
           </HeaderBtns>
         </Header>
+
+        {checkError && <p role="status" style={{ color: '#fbbf24' }}>{checkError}</p>}
 
         {loading && alerts.length === 0 ? (
           <StateBox>
@@ -180,11 +197,11 @@ const AlertsPage = () => {
                           </Td>
                           <Td>
                             <ConditionBadge $type={a.condition_type}>
-                              {a.condition_type === 'above' ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-                              {a.condition_type === 'above' ? 'Mayor a' : 'Menor a'}
+                              {isAbove(a) ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
+                              {conditionLabel(a)}
                             </ConditionBadge>
                           </Td>
-                          <Td><PriceTxt>${parseFloat(a.target_price).toFixed(2)}</PriceTxt></Td>
+                          <Td><PriceTxt title={a.ema_updated_at ? `EMA actualizada: ${new Date(a.ema_updated_at).toLocaleString('es-AR')}` : undefined}>{targetLabel(a)}</PriceTxt></Td>
                           <Td>
                             <PriceTxt $inactive={!currentPrices[a.symbol]}>
                               {currentPrices[a.symbol] ? `$${parseFloat(currentPrices[a.symbol]).toFixed(2)}` : '—'}
@@ -195,6 +212,7 @@ const AlertsPage = () => {
                             <ToggleBtn $active={true} onClick={() => toggleActive(a)}>
                               <Activity size={12}/> Activa
                             </ToggleBtn>
+                            {a.condition_type === 'ema21_above' && <div style={{ color: '#94a3b8', fontSize: '.75rem', marginTop: '.4rem' }}>{emaStatus(a)}</div>}
                           </Td>
                           <Td style={{textAlign: 'right'}}>
                             <ActionBtns>
@@ -243,11 +261,11 @@ const AlertsPage = () => {
                           </Td>
                           <Td>
                             <ConditionBadge $type={a.condition_type} $inactive>
-                              {a.condition_type === 'above' ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
-                              {a.condition_type === 'above' ? 'Mayor a' : 'Menor a'}
+                              {isAbove(a) ? <ArrowUpRight size={12}/> : <ArrowDownRight size={12}/>}
+                              {conditionLabel(a)}
                             </ConditionBadge>
                           </Td>
-                          <Td><PriceTxt $inactive>${parseFloat(a.target_price).toFixed(2)}</PriceTxt></Td>
+                          <Td><PriceTxt $inactive>{targetLabel(a)}</PriceTxt></Td>
                           <Td>
                             <PriceTxt $inactive>
                               {currentPrices[a.symbol] ? `$${parseFloat(currentPrices[a.symbol]).toFixed(2)}` : '—'}
@@ -470,8 +488,8 @@ const ConditionBadge = styled.span`
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: ${p => p.$inactive ? 'rgba(255,255,255,0.05)' : p.$type === 'above' ? 'rgba(52,211,153,0.12)' : 'rgba(244,63,94,0.12)'};
-  color: ${p => p.$inactive ? '#64748b' : p.$type === 'above' ? '#34d399' : '#f43f5e'};
+  background: ${p => p.$inactive ? 'rgba(255,255,255,0.05)' : p.$type !== 'below' ? 'rgba(52,211,153,0.12)' : 'rgba(244,63,94,0.12)'};
+  color: ${p => p.$inactive ? '#64748b' : p.$type !== 'below' ? '#34d399' : '#f43f5e'};
   padding: .2rem .5rem;
   border-radius: 6px;
   font-size: .75rem;

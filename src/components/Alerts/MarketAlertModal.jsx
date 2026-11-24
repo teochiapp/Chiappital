@@ -1,36 +1,35 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useAlerts } from '../../context/AlertsContext';
 import { BellRing, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { colors } from '../../styles/colors';
+import { playAlertSound, stopAlertSound } from '../../services/alertSoundService';
 
 const p = colors.personal || { primaryLight: '#34d399' }; // fallback
 
 const MarketAlertModal = () => {
   const { triggeredAlerts, dismissTriggeredAlert } = useAlerts();
-  const bgAudioRef = useRef(null);
+  const [audioBlocked, setAudioBlocked] = useState(false);
 
   // Take the first triggered alert if there are multiple, to show one by one
   const currentAlert = triggeredAlerts[0];
 
   useEffect(() => {
-    if (currentAlert && bgAudioRef.current) {
-      bgAudioRef.current.volume = 0.5; // Ajustar volumen si es necesario
-      bgAudioRef.current.play().catch(e => console.warn('Audio play failed:', e));
-    }
+    let cancelled = false;
+    setAudioBlocked(false);
+    if (currentAlert) playAlertSound().catch(() => { if (!cancelled) setAudioBlocked(true); });
+    return () => { cancelled = true; stopAlertSound(); };
   }, [currentAlert]);
 
   if (!currentAlert) return null;
 
   const handleDismiss = () => {
-    if (bgAudioRef.current) {
-      bgAudioRef.current.pause();
-      bgAudioRef.current.currentTime = 0;
-    }
+    stopAlertSound();
     dismissTriggeredAlert(currentAlert.id);
   };
 
-  const isAbove = currentAlert.condition_type === 'above';
+  const isEma = currentAlert.condition_type === 'ema21_above';
+  const isAbove = isEma || currentAlert.condition_type === 'above';
 
   return (
     <>
@@ -44,13 +43,13 @@ const MarketAlertModal = () => {
           <SymbolDisplay>{currentAlert.symbol}</SymbolDisplay>
           
           <Description>
-            Ha cruzado el precio objetivo que configuraste.
+            {isEma ? 'El precio superó la EMA21 diaria guardada.' : 'Ha cruzado el precio objetivo que configuraste.'}
           </Description>
 
           <PriceInfo>
             <PriceRow>
-              <span>Objetivo:</span>
-              <TargetPrice>${parseFloat(currentAlert.target_price).toFixed(2)}</TargetPrice>
+              <span>{isEma ? 'EMA21 diaria:' : 'Objetivo:'}</span>
+              <TargetPrice>${parseFloat(isEma ? currentAlert.triggered_ema21 : currentAlert.target_price).toFixed(2)}</TargetPrice>
             </PriceRow>
             <PriceRow>
               <span>Actual:</span>
@@ -65,13 +64,18 @@ const MarketAlertModal = () => {
           )}
 
           <AudioControls>
+            {audioBlocked && (
+              <ControlBtn onClick={() => playAlertSound().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true))}>
+                Activar sonido
+              </ControlBtn>
+            )}
             <ControlBtn onClick={handleDismiss}>
               Cerrar Alerta
             </ControlBtn>
           </AudioControls>
 
-          {/* Audio from public folder */}
-          <audio ref={bgAudioRef} src="/TheEndBegins.mp3" loop />
+          {audioBlocked && <Description>El navegador necesita que actives el sonido.</Description>}
+          {currentAlert.email_failed && <Description>No se pudo enviar el email de esta alerta.</Description>}
           
           <CloseBtn onClick={handleDismiss}>
             <X size={20} />
@@ -202,6 +206,8 @@ const NotesBox = styled.div`
 
 const AudioControls = styled.div`
   display: flex;
+  flex-direction: column;
+  gap: .5rem;
   justify-content: center;
   width: 100%;
 `;

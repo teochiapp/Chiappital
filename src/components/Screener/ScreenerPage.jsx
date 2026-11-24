@@ -8,8 +8,7 @@ import { StyledContainer } from '../common/StyledComponents';
 import { SiTradingview } from 'react-icons/si';
 import { useNavigate } from 'react-router-dom';
 import symbolSearchService from '../../services/symbolSearchService';
-import priceService from '../../services/priceService';
-import rsiService from '../../services/rsiService';
+import { readSnapshot } from '../../services/marketReadService';
 import CreateAlertModal from '../Alerts/CreateAlertModal';
 import { colors } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
@@ -134,7 +133,6 @@ const ScreenerPage = () => {
   const [selectedScanRs, setSelectedScanRs] = useState([]);
   const [selectedScanOpScore, setSelectedScanOpScore] = useState([]);
   const [groupMode, setGroupMode] = useState('general'); // 'region' | 'sector' | 'general'
-  const [symbolsList, setSymbolsList] = useState(() => symbolSearchService.getPopularSymbols());
 
   const toggleFilter = (setState, value) => {
     setState(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
@@ -227,19 +225,11 @@ const ScreenerPage = () => {
     return comps.sort((a, b) => (b.opScore || 0) - (a.opScore || 0));
   }, [stockData, selectedETF]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchScreenerData(false); }, []);
-
-  const fetchScreenerData = useCallback(async (forceRefresh = false) => {
+  const fetchScreenerData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      if (forceRefresh) priceService.clearCache();
-      
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/market/snapshot`);
-      const data = await response.json();
-      const snapshot = data.snapshot || {};
+      const snapshot = await readSnapshot();
 
       const localSymbolsMap = {};
       symbolSearchService.getPopularSymbols().forEach(s => {
@@ -259,7 +249,6 @@ const ScreenerPage = () => {
         };
       });
 
-      setSymbolsList(dynamicSymbolsList);
 
       let latestUpdate = null;
 
@@ -306,40 +295,18 @@ const ScreenerPage = () => {
       setStockData(combined);
       setLastUpdate(latestUpdate || new Date());
 
-      const symbolsToFetchRsi = combined
-        .filter(item => item.weeklyRsi === null)
-        .map(item => item.symbol);
-
-      if (symbolsToFetchRsi.length > 0) {
-        rsiService.getMultipleWeeklyRsi(symbolsToFetchRsi, (symbol, rsiData) => {
-          if (rsiData && rsiData.current !== null) {
-            setStockData(prevData => prevData.map(item =>
-              item.symbol === symbol ? {
-                ...item,
-                weeklyRsi: rsiData.current,
-                weeklyRsiPrevious: rsiData.previous,
-                weeklyRsiDelta: rsiData.delta
-              } : item
-            ));
-          } else if (rsiData && rsiData.current === null) {
-            // Manejo de error gracefully: marcamos como N/A para no quedar iterando
-            setStockData(prevData => prevData.map(item =>
-              item.symbol === symbol ? { ...item, weeklyRsi: 'N/A' } : item
-            ));
-          }
-        }).catch(err => console.warn('Error en fetch RSI:', err));
-      }
-
     } catch (err) {
       console.error(err);
       setError('Error al obtener datos del screener');
     } finally {
       setLoading(false);
     }
-  }, [symbolsList]);
+  }, []);
+
+  useEffect(() => { fetchScreenerData(); }, [fetchScreenerData]);
 
 
-  const handleRefresh = () => fetchScreenerData(true);
+  const handleRefresh = fetchScreenerData;
 
   // ── Ejecutar Scan Rápido ─────────────────────────────────────────────────────
   const runQuickScan = useCallback(() => {
@@ -911,13 +878,7 @@ const ScreenerPage = () => {
                           </Td>
                           <Td $w="105px" $center>
                             {s.weeklyRsi === null ? (
-                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                                <RefreshCw size={10} className="spin" /> Calc...
-                              </MetaTxt>
-                            ) : s.weeklyRsi === 'N/A' ? (
-                              <MetaTxt style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#64748b' }}>
-                                N/A
-                              </MetaTxt>
+                              <MetaTxt title="Sin RSI en la última actualización">Pendiente</MetaTxt>
                             ) : (
                               <MetaTxt
                                 style={{ color: s.weeklyRsi > 70 ? '#f43f5e' : s.weeklyRsi < 30 ? '#10b981' : '#e2e8f0', fontWeight: 'bold' }}

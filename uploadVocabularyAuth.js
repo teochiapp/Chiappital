@@ -20,7 +20,17 @@ const words = [
   { word: 'Atingir', translation: 'Alcanzar', language: 'portugués', notes: 'Ele conseguiu atingir a meta.' },
   { word: 'Surtou', translation: 'Enloqueció', language: 'portugués', notes: 'Ela surtou quando viu o problema.' },
   { word: 'Vira-lata', translation: 'Perro callejero', language: 'portugués', notes: 'Adotei um cachorro vira-lata.' },
-  { word: 'Mané', translation: 'Tonto', language: 'portugués', notes: 'Não seja mané, ele está mentindo.' }
+  { word: 'Mané', translation: 'Tonto', language: 'portugués', notes: 'Não seja mané, ele está mentindo.' },
+  { word: 'Arrotou', translation: 'Eructó', language: 'portugués', notes: 'Ele arrotou depois de tomar o refrigerante.' },
+  { word: 'Focinho', translation: 'Hocico', language: 'portugués', notes: 'O cachorro encostou o focinho gelado na minha mão.' },
+  { word: 'Dólmen', translation: 'Dolmen', language: 'portugués', notes: 'Visitamos um antigo dólmen construído na Idade da Pedra.' },
+  { word: 'Patamar', translation: 'Rellano / Nivel', language: 'portugués', notes: 'Ele parou no patamar da escada para recuperar o fôlego.' },
+  { word: 'Cochilar', translation: 'Dormitar', language: 'portugués', notes: 'Costumo cochilar no sofá depois do almoço.' },
+  { word: 'Sarjeta', translation: 'Cuneta', language: 'portugués', notes: 'A água da chuva escorria pela sarjeta da rua.' },
+  { word: 'Interage', translation: 'Interactúa', language: 'portugués', notes: 'O professor interage muito bem com os alunos.' },
+  { word: 'Nojo', translation: 'Asco', language: 'portugués', notes: 'Ela sentiu nojo ao ver a comida estragada.' },
+  { word: 'Boliche', translation: 'Bowling', language: 'portugués', notes: 'Vamos jogar boliche com os amigos no sábado.' },
+  { word: 'Danar', translation: 'Maldecir', language: 'portugués', notes: 'Ele mandou tudo se danar quando perdeu a paciência.' }
 ];
 
 const rl = readline.createInterface({

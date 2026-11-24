@@ -1,5 +1,5 @@
 // components/Trades/ActivePositions.js - Componente para posiciones activas
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { AlertTriangle, TrendingUp, TrendingDown, Minus, Hand, Target, Building2, ArrowUpCircle, ArrowDownCircle, Edit2, Briefcase, FolderOpen, RefreshCw, Activity, PlusCircle, XCircle } from 'lucide-react';
@@ -9,7 +9,7 @@ import EditTradeModal from './EditTradeModal';
 import AddCapitalModal from './AddCapitalModal';
 import { useRealTimePrices } from '../../hooks/useRealTimePrices';
 import companyLogoService from '../../services/companyLogoService';
-import priceService from '../../services/priceService';
+import { readInstruments } from '../../services/marketReadService';
 import { getStrategyDisplayName } from './TradeForm';
 import { colors, componentColors, getTradingColor, withOpacity } from '../../styles/colors';
 import { getTVSymbol } from '../Screener/ScreenerPage';
@@ -427,13 +427,11 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddCapitalModal, setShowAddCapitalModal] = useState(false);
   const [companyLogos, setCompanyLogos] = useState(new Map());
-  // EMA 21: { [symbol]: { value: number|null, loading: boolean } }
-  const [ema21Map, setEma21Map] = useState({});
-  const ema21Fetched = useRef(new Set()); // evita re-fetch duplicado
-  
+  const [references, setReferences] = useState({});
+
   // Hook para precios en tiempo real
   const { 
-    prices, 
+    symbols,
     loading: pricesLoading, 
     error: pricesError, 
     lastUpdate, 
@@ -443,6 +441,27 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
     refreshPrices,
     refreshSinglePrice 
   } = useRealTimePrices(openTrades || []);
+
+  const symbolKey = [...symbols].sort().join(',');
+  useEffect(() => {
+    if (!symbolKey) return;
+    let active = true;
+    const tickers = symbolKey.split(',');
+    let timer;
+    async function loadReferences() {
+      let retryIn = 60000;
+      try {
+        const rows = await readInstruments(tickers, 60 * 60 * 1000);
+        if (tickers.every(symbol => rows[symbol]?.ema21)) retryIn = 60 * 60 * 1000;
+        if (active) setReferences(rows);
+      } catch {
+        if (active) setReferences(Object.fromEntries(tickers.map(symbol => [symbol, null])));
+      }
+      if (active) timer = setTimeout(loadReferences, retryIn);
+    }
+    loadReferences();
+    return () => { active = false; clearTimeout(timer); };
+  }, [symbolKey]);
 
   // Cargar logos de empresas
   useEffect(() => {
@@ -471,45 +490,6 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
 
     loadLogos();
   }, [openTrades]);
-
-  // Calcular EMA 21 para cada posición activa
-  // Se ejecuta cuando cambian los precios (necesitamos currentPrice para el cálculo)
-  useEffect(() => {
-    if (!openTrades || openTrades.length === 0) return;
-
-    const fetchEma = async (trade) => {
-      const symbol = getTradeAttr(trade, 'symbol');
-      if (!symbol) return;
-
-      const currentPrice = getPrice(symbol);
-      // Wait until we have a valid price before attempting to calculate EMA distance
-      if (!currentPrice || currentPrice <= 0) return;
-
-      // Evitar refetch si ya está en progreso o calculado en esta sesión
-      if (ema21Fetched.current.has(symbol)) return;
-      ema21Fetched.current.add(symbol);
-
-      // Intentar leer desde localStorage primero (sincrónico, rápido)
-      const cached = priceService.getCachedEma21Distance(symbol, currentPrice);
-      if (cached !== null) {
-        setEma21Map(prev => ({ ...prev, [symbol]: { value: cached, loading: false } }));
-        return;
-      }
-
-      // Marcar como cargando solo si no había cache
-      setEma21Map(prev => ({ ...prev, [symbol]: { value: null, loading: true } }));
-
-      try {
-        const distance = await priceService.getEma21Distance(symbol, currentPrice);
-        setEma21Map(prev => ({ ...prev, [symbol]: { value: distance, loading: false } }));
-      } catch (err) {
-        setEma21Map(prev => ({ ...prev, [symbol]: { value: null, loading: false } }));
-      }
-    };
-
-    openTrades.forEach(trade => fetchEma(trade));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openTrades, prices]); // re-evaluar cuando lleguen los precios reales
 
   // Función para adaptar estructura de Strapi
   const getTradeAttr = (trade, attr) => {
@@ -871,9 +851,11 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                 {/* Distancia a EMA 21 */}
                 {(() => {
                   const symbol = getTradeAttr(trade, 'symbol');
-                  const emaState = ema21Map[symbol];
-                  const isLoading = emaState?.loading ?? true;
-                  const emaValue = emaState?.value ?? null;
+                  const reference = references[symbol?.toUpperCase()];
+                  const isLoading = reference === undefined;
+                  const price = getPrice(symbol);
+                  const emaValue = price > 0 && reference?.ema21 > 0
+                    ? (price / reference.ema21 - 1) * 100 : null;
 
                   return (
                     <EmaBadgeWrapper $value={emaValue} $loading={isLoading}>

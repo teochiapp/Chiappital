@@ -7,7 +7,7 @@ import alertService from '../../services/alertService';
 const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) => {
   const [symbol, setSymbol] = useState('');
   const [targetPrice, setTargetPrice] = useState('');
-  const [condition, setCondition] = useState('above');
+  const [condition, setCondition] = useState('ema21_above');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ isOpen: false, type: 'error', title: '', message: '' });
@@ -19,12 +19,12 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
         setSymbol(initialData.symbol || '');
         const p = initialData.target_price || initialData.currentPrice;
         setTargetPrice(p ? (Math.round(Number(p) * 10000) / 10000).toString() : '');
-        setCondition(initialData.condition_type || 'above');
+        setCondition(initialData.condition_type || 'ema21_above');
         setNotes(initialData.notes || '');
       } else {
         setSymbol('');
         setTargetPrice('');
-        setCondition('above');
+        setCondition('ema21_above');
         setNotes('');
       }
     }
@@ -34,13 +34,13 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!symbol || !targetPrice) return;
+    if (!symbol.trim() || (condition !== 'ema21_above' && !targetPrice)) return;
     
     setIsSubmitting(true);
     try {
       const alertData = {
-        symbol: symbol.toUpperCase(),
-        target_price: parseFloat(targetPrice),
+        symbol: symbol.trim().toUpperCase(),
+        target_price: condition === 'ema21_above' ? null : parseFloat(targetPrice),
         condition_type: condition,
         notes: notes,
       };
@@ -61,7 +61,7 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
         isOpen: true,
         type: 'error',
         title: 'Error',
-        message: 'Ocurrió un error guardando la alerta. Inténtalo nuevamente.'
+        message: error.message || 'Ocurrió un error guardando la alerta. Inténtalo nuevamente.'
       });
     } finally {
       setIsSubmitting(false);
@@ -79,7 +79,7 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
             <CloseBtn onClick={onClose}><X size={18} /></CloseBtn>
           </ModalHeader>
           <Form onSubmit={handleSubmit}>
-            <FormRow>
+            <FormRow $single>
               <FormGroup>
                 <Label>Símbolo (Ticker)</Label>
                 <Input 
@@ -92,26 +92,38 @@ const CreateAlertModal = ({ isOpen, onClose, initialData = null, onSuccess }) =>
               </FormGroup>
             </FormRow>
 
-            <FormRow>
+            <FormRow $single={condition === 'ema21_above'}>
               <FormGroup>
                 <Label>Condición</Label>
                 <Select value={condition} onChange={e => setCondition(e.target.value)}>
+                  <option value="ema21_above">Supera la EMA21 diaria (↑) (Predeterminada)</option>
                   <option value="above">Precio mayor o igual a (↑)</option>
                   <option value="below">Precio menor o igual a (↓)</option>
                 </Select>
               </FormGroup>
-              <FormGroup>
+              {condition !== 'ema21_above' && <FormGroup>
                 <Label>Precio Objetivo ($)</Label>
                 <Input 
                   type="number" 
                   step="0.0001" 
+                  min="0.0001"
                   placeholder="ej: 150.50" 
                   value={targetPrice} 
                   onChange={e => setTargetPrice(e.target.value)}
                   required
                 />
-              </FormGroup>
+              </FormGroup>}
             </FormRow>
+
+            {condition === 'ema21_above' && (
+              <HelpText>
+                Compara el precio en vivo con la última EMA21 diaria guardada. Se comprueba cada minuto,
+                solo con el mercado abierto y Chiappital abierto en el navegador.
+                Suena una vez y se desactiva; podés reactivarla desde Alertas.
+                Si el precio ya supera la EMA21 al activarla, avisará en la próxima comprobación.
+                Si falta la EMA21 o una cotización reciente sin demora, queda esperando datos.
+              </HelpText>
+            )}
 
             <FormGroup>
               <Label>Notas / Razón (Opcional)</Label>
@@ -160,7 +172,8 @@ const ModalContent = styled.div`
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-  overflow: hidden;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
 `;
 
 const ModalHeader = styled.div`
@@ -187,13 +200,17 @@ const Form = styled.form`
 `;
 
 const FormRow = styled.div`
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  display: grid; grid-template-columns: ${p => p.$single ? '1fr' : '1fr 1fr'}; gap: 1rem;
   @media(max-width:400px){ grid-template-columns: 1fr; }
 `;
 
 const FormGroup = styled.div`
   display: flex; flex-direction: column; gap: 0.4rem;
   min-width: 0;
+`;
+
+const HelpText = styled.p`
+  margin: 0; color: #94a3b8; font-size: .8rem; line-height: 1.6;
 `;
 
 const Label = styled.label`

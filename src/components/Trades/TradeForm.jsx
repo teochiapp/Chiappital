@@ -355,6 +355,8 @@ const TradeForm = ({ onTradeAdded }) => {
               </Label>
               <SymbolSearch
                 onSymbolSelect={handleSymbolSelect}
+                onQuoteUpdate={item => setFormData(prev => prev.symbol === item.symbol
+                  ? { ...prev, symbolData: item } : prev)}
                 placeholder="Buscar Apple, Tesla, Bitcoin..."
                 initialValue={formData.symbol}
               />
@@ -369,6 +371,14 @@ const TradeForm = ({ onTradeAdded }) => {
                   <SymbolDetails>
                     <SymbolTitle>{formData.symbolData.symbol} - {formData.symbolData.name}</SymbolTitle>
                     <SymbolSubtitle>{formData.symbolData.sector} • {formData.symbolData.region} • {formData.symbolData.currency}</SymbolSubtitle>
+                    {formData.symbolData.currentPrice > 0 && (
+                      <SymbolSubtitle>
+                        Última cotización: {formData.symbolData.currentPrice.toLocaleString('es-AR', { maximumFractionDigits: 6 })}
+                        {' · '}{formData.symbolData.quoteTime
+                          ? new Date(formData.symbolData.quoteTime).toLocaleString('es-AR')
+                          : 'Hora no disponible'}
+                      </SymbolSubtitle>
+                    )}
                   </SymbolDetails>
                 </SelectedSymbolInfo>
               )}

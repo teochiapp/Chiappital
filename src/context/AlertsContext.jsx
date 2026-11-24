@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import alertService from '../services/alertService';
 import priceService from '../services/priceService';
+import { unlockAlertSound, stopAlertSound } from '../services/alertSoundService';
 import { useStrapiAuth } from '../hooks/useApiTrades'; // Provides the user auth
 
 const AlertsContext = createContext();
@@ -12,14 +13,35 @@ export const AlertsProvider = ({ children }) => {
   const [alerts, setAlerts] = useState([]);
   const [triggeredAlerts, setTriggeredAlerts] = useState([]);
   const [currentPrices, setCurrentPrices] = useState({});
+  const [emaChecks, setEmaChecks] = useState({});
+  const [checkError, setCheckError] = useState('');
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
+  const checkingRef = useRef(false);
+  const lastPriceCheckRef = useRef(0);
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = user?.id;
+
+  useEffect(() => {
+    const unlock = () => {
+      unlockAlertSound().then(cleanup).catch(() => {});
+    };
+    const cleanup = () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => { cleanup(); stopAlertSound(); };
+  }, []);
 
   const fetchAlerts = async () => {
     if (!user) return;
+    const userId = user.id;
     try {
       setLoading(true);
       const data = await alertService.getAlerts();
+      if (userIdRef.current !== userId) return;
       setAlerts(data);
     } catch (error) {
       console.error('Error fetching alerts in context:', error);
@@ -29,26 +51,53 @@ export const AlertsProvider = ({ children }) => {
   };
 
   // Run the check logic
-  const checkAlertPrices = async () => {
-    if (!user) return;
+  const checkAlertPrices = async ({ scheduled = false } = {}) => {
+    if (!user || checkingRef.current) return;
+    const userId = user.id;
+    checkingRef.current = true;
     try {
       // 1. Fetch latest active alerts
       const currentAlerts = await alertService.getAlerts();
+      if (userIdRef.current !== userId) return;
       setAlerts(currentAlerts);
 
       const activeAlerts = currentAlerts.filter(a => a.is_active === 1);
       if (activeAlerts.length === 0) return;
 
-      // 2. Extract unique symbols
-      const symbols = [...new Set(activeAlerts.map(a => a.symbol))];
+      const newTriggered = [];
+      let latestEmaPrices = {};
+      if (activeAlerts.some(a => a.condition_type === 'ema21_above')) {
+        try {
+          const result = await alertService.checkEma21Alerts();
+          if (userIdRef.current !== userId) return;
+          setEmaChecks(result.checks);
+          latestEmaPrices = result.prices;
+          setCurrentPrices(prev => ({ ...prev, ...result.prices }));
+          if (result.triggered.length) {
+            setTriggeredAlerts(prev => [...prev, ...result.triggered]);
+            const triggeredIds = new Set(result.triggered.map(alert => alert.id));
+            setAlerts(prev => prev.map(alert => triggeredIds.has(alert.id) ? { ...alert, is_active: 0 } : alert));
+          }
+          setCheckError('');
+        } catch (error) {
+          setCheckError('No se pudo comprobar la EMA21. Se volverá a intentar en un minuto.');
+          console.error('Error checking EMA21 alerts:', error);
+        }
+      }
+
+      // Fixed-price alerts retain their existing 15-minute schedule.
+      const checkFixed = !scheduled || Date.now() - lastPriceCheckRef.current >= 15 * 60 * 1000;
+      const fixedAlerts = checkFixed ? activeAlerts.filter(a => a.condition_type !== 'ema21_above') : [];
+      if (checkFixed) lastPriceCheckRef.current = Date.now();
+      const symbols = [...new Set(fixedAlerts.map(a => a.symbol))];
 
       // 3. Fetch prices for these symbols
-      const pricesMap = await priceService.getMultiplePrices(symbols);
-      setCurrentPrices(prev => ({ ...prev, ...pricesMap }));
+      const pricesMap = symbols.length ? await priceService.getMultiplePrices(symbols) : {};
+      if (userIdRef.current !== userId) return;
+      setCurrentPrices(prev => ({ ...prev, ...pricesMap, ...latestEmaPrices }));
 
       // 4. Check conditions
-      const newTriggered = [];
-      for (const alert of activeAlerts) {
+      for (const alert of fixedAlerts) {
         const currentPrice = pricesMap[alert.symbol];
         if (!currentPrice || currentPrice <= 0) continue;
 
@@ -83,11 +132,14 @@ export const AlertsProvider = ({ children }) => {
       // 5. Update local state if we triggered something
       if (newTriggered.length > 0) {
         setTriggeredAlerts(prev => [...prev, ...newTriggered]);
-        fetchAlerts(); // Refresh to update active status in UI
+        await fetchAlerts(); // Refresh to update active status in UI
       }
 
     } catch (error) {
       console.error('Error during alert price check:', error);
+      setCheckError('No se pudieron comprobar las alertas. Se volverá a intentar en un minuto.');
+    } finally {
+      checkingRef.current = false;
     }
   };
 
@@ -96,19 +148,21 @@ export const AlertsProvider = ({ children }) => {
       fetchAlerts();
       checkAlertPrices(); // Initial check on load
 
-      // Set up 15 minute interval
-      const INTERVAL_MS = 15 * 60 * 1000;
-      intervalRef.current = setInterval(checkAlertPrices, INTERVAL_MS);
+      intervalRef.current = setInterval(() => checkAlertPrices({ scheduled: true }), 60 * 1000);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setAlerts([]);
       setTriggeredAlerts([]);
+      setCurrentPrices({});
+      setEmaChecks({});
+      setCheckError('');
+      lastPriceCheckRef.current = 0;
     }
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [user]);
+  }, [user?.id]);
 
   const dismissTriggeredAlert = (id) => {
     setTriggeredAlerts(prev => prev.filter(a => a.id !== id));
@@ -121,6 +175,8 @@ export const AlertsProvider = ({ children }) => {
       fetchAlerts,
       checkAlertPrices,
       currentPrices,
+      emaChecks,
+      checkError,
       triggeredAlerts,
       dismissTriggeredAlert
     }}>

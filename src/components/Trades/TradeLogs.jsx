@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
+import IebImportModal from './IebImportModal';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -160,127 +160,18 @@ const TradeLogs = () => {
   const fileInputRef = useRef(null);
 
 
-  const handleFileUpload = (e) => {
+  const [importFile, setImportFile] = useState(null);
+  const [importAccount, setImportAccount] = useState(null);
+  const handleFileUpload = e => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        const parsedTrades = [];
-        let ignoredCount = 0;
-
-        // Mapeo común de Cedears a tickers de NYSE/NASDAQ
-        const cedearToNyseMap = {
-          'GOOGL': 'GOOG',
-          'BRKB': 'BRK-B',
-          // Agregar más si es necesario
-        };
-
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-          if (!row || row.length < 5) continue;
-          
-          const especie = row[0];
-          if (typeof especie !== 'string' || !especie.includes(' - ')) continue;
-
-          let rawSymbol = especie.split(' - ')[0].trim();
-          // Aplicar mapeo
-          const symbol = cedearToNyseMap[rawSymbol] || rawSymbol;
-
-          const pct = row[4]; // % del total
-          if (typeof pct !== 'number') continue;
-
-          // Filtrar posiciones con <= 0.5% de la cartera
-          if (pct <= 0.5) {
-            ignoredCount++;
-            continue;
-          }
-
-          parsedTrades.push({
-            symbol: symbol,
-            portfolio_percentage: pct,
-          });
-        }
-
-        if (parsedTrades.length === 0) {
-          alert(`No se encontraron trades válidos con más de 0.5% de cartera en el archivo Excel.${ignoredCount > 0 ? ` (Se omitieron ${ignoredCount} posiciones con <= 0.5%)` : ''}`);
-          return;
-        }
-
-        // Consolidar por símbolo sumando los porcentajes (p. ej. GOOG y GOOGL se suman)
-        const consolidatedTradesMap = {};
-        for (const pt of parsedTrades) {
-          if (consolidatedTradesMap[pt.symbol]) {
-            consolidatedTradesMap[pt.symbol] += pt.portfolio_percentage;
-          } else {
-            consolidatedTradesMap[pt.symbol] = pt.portfolio_percentage;
-          }
-        }
-        
-        const consolidatedTrades = Object.keys(consolidatedTradesMap).map(sym => ({
-          symbol: sym,
-          portfolio_percentage: consolidatedTradesMap[sym]
-        }));
-
-        const ignoredMsg = ignoredCount > 0 ? `\n(Se omitieron ${ignoredCount} activo(s) con 0,5% o menos del total)` : '';
-        if (window.confirm(`¿Seguro que querés procesar ${consolidatedTrades.length} activos consolidados del portafolio IEB?${ignoredMsg}\nLos existentes solo actualizarán su % de cartera, y los nuevos se crearán vacíos.`)) {
-          const token = localStorage.getItem('st_token');
-          if (!token) throw new Error('No hay sesión iniciada');
-          
-          let updated = 0;
-          let created = 0;
-
-          for (const pt of consolidatedTrades) {
-            const existingTrade = openTrades.find(t => (t.symbol || t.attributes?.symbol) === pt.symbol);
-
-            if (existingTrade) {
-              // Actualizar trade existente
-              const tradeId = existingTrade.id;
-              await updateTrade(tradeId, {
-                portfolio_percentage: pt.portfolio_percentage
-              });
-              updated++;
-            } else {
-              // Crear trade nuevo vacío
-              await createTrade({
-                 symbol: pt.symbol,
-                 type: 'buy',
-                 status: 'open',
-                 entry_price: 0, // Precio vacío
-                 portfolio_percentage: pt.portfolio_percentage,
-                 notes: 'Creado desde IEB',
-                 created_at: new Date().toISOString()
-              });
-              created++;
-            }
-          }
-          alert(`¡Portafolio procesado con éxito!\nActualizados: ${updated}\nNuevos: ${created}`);
-          // Ya no es estrictamente necesario refreshTrades() porque createTrade/updateTrade ya lo llaman internamente, pero lo dejamos por seguridad.
-          refreshTrades();
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Error importando: ' + err.message);
-      }
-      
-      // Limpiar el input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    };
-    
-    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+    if (file) { setImportAccount(accountType); setImportFile(file); }
   };
 
   return (
     <PageWrapper>
+      {importFile && <IebImportModal file={importFile} accountType={importAccount}
+        onClose={() => setImportFile(null)} onImported={() => refreshTrades(true)} />}
       <PageContainer>
       <PageHeader>
         <motion.div

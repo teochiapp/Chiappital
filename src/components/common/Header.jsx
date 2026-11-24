@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe, History, PieChart } from 'lucide-react';
+import { LayoutDashboard, BookOpen, LogOut, Wallet, Users, ArrowLeftRight, GraduationCap, FlaskConical, Search, BellRing, Menu, X, Globe, History, PieChart, Palmtree } from 'lucide-react';
 import { useAccount } from '../../context/AccountContext';
 import { useStrapiAuth } from '../../hooks/useApiTrades';
+import { toggleInvestmentLockState } from '../../config/investmentLock';
 import AppLogo from './Logo';
 
 const Header = () => {
@@ -44,6 +45,12 @@ const Header = () => {
         </HeaderBrand>
 
         <HeaderActions>
+          <QuickLockButton
+            onClick={toggleInvestmentLockState}
+            title="Activar Modo Vacaciones / Pausar Inversiones (Ctrl+Shift+L)"
+          >
+            <Palmtree size={16} />
+          </QuickLockButton>
           <SwitchButton onClick={() => navigate('/select-account')}>
             <ArrowLeftRight size={18} />
             Cambiar Cartera
@@ -299,6 +306,26 @@ const HeaderActions = styled.div`
 
   @media (max-width: 480px) {
     display: none;
+  }
+`;
+
+const QuickLockButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.45);
+    transform: translateY(-1px);
   }
 `;
 

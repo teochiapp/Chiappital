@@ -1,31 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MacroPage from '../components/Macro/MacroPage';
 import finnhubService from '../services/finnhubService';
 import yahooFinanceService from '../services/yahooFinanceService';
 import symbolSearchService from '../services/symbolSearchService';
 
-// ─── Caché de sesión con TTL ──────────────────────────────────────────────────
-const CACHE_KEY = 'chiappital_macro_v1';
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+// ─── Caché Local con Estrategia Stale-While-Revalidate (SWR) ───────────────────
+const CACHE_KEY = 'chiappital_macro_v2';
+const FRESH_TTL = 5 * 60 * 1000;         // 5 minutos: considerado fresco
+const MAX_STALE_TTL = 24 * 60 * 60 * 1000; // 24 horas: apto para render instantáneo
 
 function getCached() {
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return { payload: null, isFresh: false };
     const { payload, ts } = JSON.parse(raw);
-    if (Date.now() - ts < CACHE_TTL) return payload;
-    sessionStorage.removeItem(CACHE_KEY);
+    const age = Date.now() - ts;
+    if (age < FRESH_TTL) {
+      return { payload, isFresh: true };
+    }
+    if (age < MAX_STALE_TTL) {
+      return { payload, isFresh: false };
+    }
   } catch { /* ignorar */ }
-  return null;
+  return { payload: null, isFresh: false };
 }
 
 function saveCache(payload) {
   try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ payload, ts: Date.now() }));
-  } catch { /* ignorar si el storage está lleno */ }
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ payload, ts: Date.now() }));
+  } catch { /* ignorar storage lleno */ }
 }
 
-// ─── Helpers de procesamiento (extraídos para reutilización) ──────────────────
+// ─── Helpers de procesamiento para fallback en cliente ───────────────────────
 function processEarnings(earningsRes) {
   const result = { bmo: [], amc: [], other: [] };
   if (!Array.isArray(earningsRes)) return result;
@@ -87,9 +93,9 @@ function processMacro(macroRes) {
 
     let name = '';
     switch (item.symbol) {
-      case '^TNX':     name = '10Y Treasury';    break;
-      case 'DX-Y.NYB': name = 'DXY (Dollar Index)'; break;
-      case '^VIX':     name = 'VIX Volatility'; break;
+      case '^TNX':     name = '10Y Treasury';       break;
+      case 'DX-Y.NYB': name = 'DXY (Dollar Index)';  break;
+      case '^VIX':     name = 'VIX Volatility';     break;
       default: return;
     }
     processed.push({ symbol: item.symbol, name, price, change });
@@ -135,7 +141,7 @@ function processNews(newsRes) {
     if (badKeywords.some(b => t.includes(b))) return false;
     return goodKeywords.some(g => t.includes(g));
   });
-  // Fallback si el filtro estricto dejó muy pocas noticias
+
   if (filtered.length < 5) {
     filtered = newsRes.filter(a => {
       const t = ((a.headline || '') + ' ' + (a.summary || '')).toLowerCase();
@@ -149,14 +155,14 @@ function processCommodities(commodityRes) {
   return (commodityRes || []).map(item => {
     let name = item.symbol;
     switch (item.symbol) {
-      case 'CL=F':     name = '🛢️ Petróleo';    break;
-      case 'GC=F':     name = '🥇 Oro';          break;
-      case 'SI=F':     name = '🥈 Plata';         break;
-      case 'HG=F':     name = '🟠 Cobre';         break;
-      case 'ZS=F':     name = '🌱 Soja';          break;
-      case 'ZW=F':     name = '🌾 Trigo';         break;
-      case 'ZC=F':     name = '🌽 Maíz';          break;
-      case 'NG=F':     name = '🔥 Gas Natural';   break;
+      case 'CL=F': name = '🛢️ Petróleo';    break;
+      case 'GC=F': name = '🥇 Oro';          break;
+      case 'SI=F': name = '🥈 Plata';         break;
+      case 'HG=F': name = '🟠 Cobre';         break;
+      case 'ZS=F': name = '🌱 Soja';          break;
+      case 'ZW=F': name = '🌾 Trigo';         break;
+      case 'ZC=F': name = '🌽 Maíz';          break;
+      case 'NG=F': name = '🔥 Gas Natural';   break;
       default: break;
     }
     return {
@@ -167,7 +173,7 @@ function processCommodities(commodityRes) {
   });
 }
 
-// ─── Estado inicial vacío reutilizable ───────────────────────────────────────
+// ─── Estado inicial ───────────────────────────────────────────────────────────
 const EMPTY_DATA = {
   earningsDate: null,
   earnings: { bmo: [], amc: [], other: [] },
@@ -177,29 +183,19 @@ const EMPTY_DATA = {
   news: []
 };
 
-// ─── Estado de loading por sección ───────────────────────────────────────────
 const ALL_LOADING = { earnings: true, forex: true, macro: true, commodities: true, news: true };
 const ALL_DONE    = { earnings: false, forex: false, macro: false, commodities: false, news: false };
 
-// ─── Componente ──────────────────────────────────────────────────────────────
+// ─── Componente ───────────────────────────────────────────────────────────────
 const MacroContainer = () => {
   const [data, setData]               = useState(EMPTY_DATA);
   const [sectionLoading, setSL]       = useState(ALL_LOADING);
+  const [refreshing, setRefreshing]   = useState(false);
   const [error, setError]             = useState(null);
   const isMounted                     = useRef(true);
 
-  useEffect(() => {
-    isMounted.current = true;
-
-    // ── 1. Intentar caché primero (carga instantánea en revisitas) ────────
-    const cached = getCached();
-    if (cached) {
-      setData(cached);
-      setSL(ALL_DONE);
-      return;
-    }
-
-    // ── 2. Preparar fecha de earnings ─────────────────────────────────────
+  // Fallback en cliente en caso de que el backend falle o esté inaccesible
+  const runClientFallback = useCallback(async () => {
     const earningsDate = new Date();
     const dow = earningsDate.getDay();
     if (dow === 6) earningsDate.setDate(earningsDate.getDate() - 1);
@@ -207,8 +203,6 @@ const MacroContainer = () => {
     const pad = n => n.toString().padStart(2, '0');
     const targetEarningsDate = `${earningsDate.getFullYear()}-${pad(earningsDate.getMonth() + 1)}-${pad(earningsDate.getDate())}`;
 
-    // ── 3. Disparar TODAS las fetches en paralelo ────────────────────────
-    // Ninguna espera a otra — Yahoo, Finnhub y DolarAPI arrancan al mismo tiempo.
     const forexSymbols     = ['DX-Y.NYB', 'EURUSD=X', 'JPY=X', 'CNY=X', 'BRL=X', 'KRW=X'];
     const macroSymbols     = ['SPY', 'QQQ', 'IWM', '^VIX', '^TNX', 'SMH', 'IGV'];
     const commoditySymbols = ['CL=F', 'GC=F', 'SI=F', 'HG=F', 'ZS=F', 'ZW=F', 'ZC=F', 'NG=F'];
@@ -220,71 +214,129 @@ const MacroContainer = () => {
     const commodityPromise   = yahooFinanceService.getMultipleQuotes(commoditySymbols).catch(() => []);
     const dolarPromise       = fetch('https://dolarapi.com/v1/dolares').then(r => r.json()).catch(() => []);
 
-    // ── 4. Actualizar cada sección apenas llegue (progressive rendering) ──
-
-    // Forex + Dólar (se combinan porque el dólar enriquece forex)
+    // Actualizaciones progresivas
     Promise.all([forexPromise, dolarPromise]).then(([forexRes, dolarRes]) => {
       if (!isMounted.current) return;
       setData(prev => ({ ...prev, forex: processForex(forexRes, dolarRes) }));
       setSL(prev => ({ ...prev, forex: false }));
     });
 
-    // Macro (ratios dependen de macroRes solo)
     macroPromise.then(macroRes => {
       if (!isMounted.current) return;
       setData(prev => ({ ...prev, macro: processMacro(macroRes) }));
       setSL(prev => ({ ...prev, macro: false }));
     });
 
-    // Commodities
     commodityPromise.then(commodityRes => {
       if (!isMounted.current) return;
       setData(prev => ({ ...prev, commodities: processCommodities(commodityRes) }));
       setSL(prev => ({ ...prev, commodities: false }));
     });
 
-    // News (Finnhub — puede ser más lenta)
     newsPromise.then(newsRes => {
       if (!isMounted.current) return;
       setData(prev => ({ ...prev, news: processNews(newsRes) }));
       setSL(prev => ({ ...prev, news: false }));
     });
 
-    // Earnings (Finnhub — puede ser más lenta)
     earningsPromise.then(earningsRes => {
       if (!isMounted.current) return;
       setData(prev => ({ ...prev, earnings: processEarnings(earningsRes), earningsDate: targetEarningsDate }));
       setSL(prev => ({ ...prev, earnings: false }));
     });
 
-    // ── 5. Guardar en caché cuando TODO esté listo ─────────────────────
-    Promise.all([forexPromise, dolarPromise, macroPromise, commodityPromise, newsPromise, earningsPromise])
-      .then(([forexRes, dolarRes, macroRes, commodityRes, newsRes, earningsRes]) => {
-        if (!isMounted.current) return;
-        const fullData = {
-          earningsDate: targetEarningsDate,
-          earnings:    processEarnings(earningsRes),
-          forex:       processForex(forexRes, dolarRes),
-          macro:       processMacro(macroRes),
-          commodities: processCommodities(commodityRes),
-          news:        processNews(newsRes)
-        };
-        saveCache(fullData);
-      })
-      .catch(err => {
-        if (!isMounted.current) return;
-        console.error('Error fetching macro data:', err);
-        setError('Error al cargar datos macro. Intenta de nuevo más tarde.');
-        setSL(ALL_DONE);
+    try {
+      const [forexRes, dolarRes, macroRes, commodityRes, newsRes, earningsRes] = await Promise.all([
+        forexPromise, dolarPromise, macroPromise, commodityPromise, newsPromise, earningsPromise
+      ]);
+      if (!isMounted.current) return;
+      const fullData = {
+        earningsDate: targetEarningsDate,
+        earnings:    processEarnings(earningsRes),
+        forex:       processForex(forexRes, dolarRes),
+        macro:       processMacro(macroRes),
+        commodities: processCommodities(commodityRes),
+        news:        processNews(newsRes)
+      };
+      saveCache(fullData);
+    } catch (e) {
+      console.warn('Fallback cliente con errores parciales:', e);
+    }
+  }, []);
+
+  // Función principal de carga (Backend primario + Fallback cliente)
+  const loadMacroData = useCallback(async (force = false) => {
+    setRefreshing(true);
+    setError(null);
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${baseUrl}/api/market/macro-summary${force ? '?force=true' : ''}`, {
+        signal: AbortSignal.timeout(10000)
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} en backend macro-summary`);
+      }
+
+      const backendData = await response.json();
+      if (!isMounted.current) return;
+
+      if (backendData && (backendData.forex?.length > 0 || backendData.macro?.length > 0)) {
+        setData({
+          earningsDate: backendData.earningsDate || null,
+          earnings:    backendData.earnings || { bmo: [], amc: [], other: [] },
+          forex:       backendData.forex || [],
+          macro:       backendData.macro || [],
+          commodities: backendData.commodities || [],
+          news:        backendData.news || []
+        });
+        saveCache(backendData);
+        setSL(ALL_DONE);
+        return;
+      }
+      throw new Error('Respuesta de backend vacía, usando fallback');
+    } catch (err) {
+      console.warn('Backend macro-summary falló o offline, activando fallback en cliente:', err.message);
+      await runClientFallback();
+    } finally {
+      if (isMounted.current) {
+        setRefreshing(false);
+        setSL(ALL_DONE);
+      }
+    }
+  }, [runClientFallback]);
+
+  useEffect(() => {
+    isMounted.current = true;
+
+    // ── 1. SWR: Intentar leer inmediatamente de caché ──────────────────────
+    const { payload, isFresh } = getCached();
+    if (payload) {
+      setData(payload);
+      setSL(ALL_DONE);
+      // Si está fresco (< 5 min), no disparamos request inmediata
+      if (isFresh) {
+        return;
+      }
+    }
+
+    // ── 2. En segundo plano o si no hay caché, revalidar ──────────────────
+    loadMacroData(false);
+
     return () => { isMounted.current = false; };
-  }, []);
+  }, [loadMacroData]);
+
+  const handleManualRefresh = () => {
+    loadMacroData(true);
+  };
 
   return (
     <MacroPage
       data={data}
       sectionLoading={sectionLoading}
+      refreshing={refreshing}
+      onRefresh={handleManualRefresh}
       error={error}
     />
   );

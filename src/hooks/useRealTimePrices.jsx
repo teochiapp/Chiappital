@@ -27,14 +27,14 @@ export const useRealTimePrices = (trades = [], config = {}) => {
   }).filter(Boolean))];
 
   // Función para obtener precios con debouncing
-  const fetchPrices = useCallback(async (isRetry = false) => {
+  const fetchPrices = useCallback(async (isRetry = false, force = false) => {
     if (symbols.length === 0) {
       console.log('⏭️ No hay símbolos para obtener precios');
       return;
     }
 
-    // Evitar múltiples llamadas simultáneas
-    if (loading && !isRetry) {
+    // Evitar múltiples llamadas simultáneas (salvo forzado o reintento)
+    if (loading && !isRetry && !force) {
       console.log('⏳ Ya hay una carga de precios en progreso, saltando...');
       return;
     }
@@ -43,8 +43,11 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     setError(null);
 
     try {
-      console.log(`🔄 Obteniendo precios para ${symbols.length} símbolos:`, symbols);
-      const newPrices = await priceService.getMultiplePrices(symbols);
+      console.log(`🔄 Obteniendo precios para ${symbols.length} símbolos (force: ${force}):`, symbols);
+      if (force) {
+        priceService.invalidateMultiplePriceCache(symbols);
+      }
+      const newPrices = await priceService.getMultiplePrices(symbols, force);
       
       setPrices(prevPrices => ({
         ...prevPrices,
@@ -65,7 +68,7 @@ export const useRealTimePrices = (trades = [], config = {}) => {
         console.log(`🔄 Reintentando en ${retryDelay/1000}s (intento ${retryCountRef.current}/${PRICE_UPDATE_CONFIG.MAX_RETRIES})`);
         
         fetchTimeoutRef.current = setTimeout(() => {
-          fetchPrices(true);
+          fetchPrices(true, force);
         }, retryDelay);
       }
     } finally {
@@ -133,9 +136,9 @@ export const useRealTimePrices = (trades = [], config = {}) => {
     };
   }, [symbols.join(','), updateInterval, fetchPrices]);
 
-  // Función manual para refrescar todos los precios
-  const refreshPrices = useCallback(() => {
-    fetchPrices();
+  // Función manual para refrescar todos los precios (forzando bypass de caché)
+  const refreshPrices = useCallback(async () => {
+    await fetchPrices(false, true);
   }, [fetchPrices]);
 
   // Función manual para refrescar un único precio (ignorando caché)
@@ -146,7 +149,7 @@ export const useRealTimePrices = (trades = [], config = {}) => {
       console.log(`🔄 Refrescando precio individual para ${symbol}`);
       priceService.invalidatePriceCache(symbol); // Limpiar caché
       
-      const newPrice = await priceService.getCurrentPrice(symbol);
+      const newPrice = await priceService.getCurrentPrice(symbol, true);
       
       setPrices(prevPrices => ({
         ...prevPrices,

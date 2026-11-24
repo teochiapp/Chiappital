@@ -8,6 +8,16 @@ const router = express.Router();
 // Todas las rutas de trades requieren autenticación
 router.use(authenticate);
 
+router.post('/import-ieb', async (req, res) => {
+  try {
+    const { importIeb } = require('../services/iebImportService');
+    res.json(await importIeb(getPool(), req.user.id, req.body));
+  } catch (error) {
+    console.error('Error importando IEB:', error.message);
+    res.status(error.status || 500).json({ error: { message: error.status ? error.message : 'No se guardó la importación. Volvé a cargar la revisión.' } });
+  }
+});
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**

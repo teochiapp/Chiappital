@@ -2,6 +2,33 @@ const express = require('express');
 const router = express.Router();
 const { getPool } = require('../database/db');
 const { runSync } = require('../services/marketSyncService');
+const { getMacroSummary, getSectorSummary } = require('../services/macroSectorService');
+
+// Lectura por clave primaria para precios y EMA de una lista visible.
+router.get('/instruments', async (req, res) => {
+  const raw = typeof req.query.symbols === 'string' ? req.query.symbols : '';
+  const symbols = [...new Set(raw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))];
+  if (!symbols.length || symbols.length > 100 || symbols.some(s => s.length > 20)) {
+    return res.status(400).json({ error: 'Se requieren entre 1 y 100 tickers válidos.' });
+  }
+  try {
+    const [rows] = await getPool().query(
+      `SELECT symbol, price, quote_time, ema_updated_at,
+              JSON_UNQUOTE(JSON_EXTRACT(setup_factors, '$.currentEma21')) AS ema21
+       FROM market_snapshot WHERE symbol IN (?)`, [symbols]
+    );
+    const instruments = Object.fromEntries(rows.map(row => [row.symbol, {
+      price: Number(row.price) > 0 ? Number(row.price) : null,
+      quoteTime: Number(row.quote_time) > 0 ? Number(row.quote_time) * 1000 : null,
+      ema21: Number(row.ema21) > 0 ? Number(row.ema21) : null,
+      emaUpdatedAt: row.ema_updated_at
+    }]));
+    res.json({ instruments });
+  } catch (error) {
+    console.error('Error leyendo instrumentos:', error.message);
+    res.status(500).json({ error: 'No se pudieron obtener los instrumentos.' });
+  }
+});
 
 // GET /api/market/snapshot
 router.get('/snapshot', async (req, res) => {
@@ -149,6 +176,30 @@ router.get('/risk-metrics', async (req, res) => {
   } catch (error) {
     console.error('❌ Error obteniendo risk metrics:', error);
     res.status(500).json({ error: 'Error obteniendo risk metrics' });
+  }
+});
+
+// GET /api/market/macro-summary
+router.get('/macro-summary', async (req, res) => {
+  try {
+    const force = req.query.force === 'true';
+    const data = await getMacroSummary(force);
+    res.json(data);
+  } catch (error) {
+    console.error('❌ Error in /macro-summary:', error);
+    res.status(500).json({ error: 'Error obteniendo datos macro' });
+  }
+});
+
+// GET /api/market/sector-summary
+router.get('/sector-summary', async (req, res) => {
+  try {
+    const force = req.query.force === 'true';
+    const data = await getSectorSummary(force);
+    res.json(data);
+  } catch (error) {
+    console.error('❌ Error in /sector-summary:', error);
+    res.status(500).json({ error: 'Error obteniendo análisis sectorial' });
   }
 });
 

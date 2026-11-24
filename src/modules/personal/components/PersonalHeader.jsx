@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X, CalendarDays, BrainCircuit } from 'lucide-react';
+import { LayoutDashboard, Target, Dumbbell, Briefcase, Globe, ChefHat, Brain, Shield, Timer, Menu, X, CalendarDays, BrainCircuit, Lock, Unlock } from 'lucide-react';
 import AppLogo from '../../../components/common/Logo';
+import { getInvestmentLockState, toggleInvestmentLockState } from '../../../config/investmentLock';
 
 const PersonalHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState(() => getInvestmentLockState());
+
+  useEffect(() => {
+    const handleLockChange = (e) => setIsLocked(Boolean(e.detail));
+    window.addEventListener('investment-lock-change', handleLockChange);
+    return () => window.removeEventListener('investment-lock-change', handleLockChange);
+  }, []);
 
   if (!location.pathname.startsWith('/personal')) {
     return null;
@@ -28,9 +36,16 @@ const PersonalHeader = () => {
         </HeaderBrand>
 
         <HeaderActions>
-          <SwitchButton onClick={() => navigate('/dashboard')}>
+          <LockToggleButton
+            onClick={toggleInvestmentLockState}
+            $locked={isLocked}
+            title={isLocked ? 'Desbloquear Inversiones (Atajo: Ctrl+Shift+L)' : 'Bloquear Inversiones rápido (Atajo: Ctrl+Shift+L)'}
+          >
+            {isLocked ? <Lock size={15} /> : <Unlock size={15} />}
+          </LockToggleButton>
+          <SwitchButton onClick={() => navigate('/dashboard')} title={isLocked ? 'Inversiones en pausa por vacaciones' : 'Ir a Inversiones'}>
             <Briefcase size={18} />
-            Ir a Inversiones
+            {isLocked ? 'Inversiones (En Pausa ⏸️)' : 'Ir a Inversiones'}
           </SwitchButton>
         </HeaderActions>
       </HeaderTop>
@@ -276,6 +291,25 @@ const HeaderActions = styled.div`
 
   @media (max-width: 480px) {
     display: none;
+  }
+`;
+
+const LockToggleButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.$locked ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.05)'};
+  color: ${props => props.$locked ? '#fbbf24' : '#94a3b8'};
+  border: 1px solid ${props => props.$locked ? 'rgba(245, 158, 11, 0.35)' : 'rgba(255, 255, 255, 0.1)'};
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+
+  &:hover {
+    background: ${props => props.$locked ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.1)'};
+    color: ${props => props.$locked ? '#fde68a' : '#e2e8f0'};
   }
 `;
 

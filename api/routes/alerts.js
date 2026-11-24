@@ -6,6 +6,8 @@ const { sendEmail } = require('../services/emailService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { fetchAlertQuotes } = require('../services/marketSyncService');
+const { getSavedEma21, checkEmaAlerts, normalizeAlertInput } = require('../services/emaAlertService');
 
 // Configuración de multer
 const storage = multer.diskStorage({
@@ -26,12 +28,11 @@ const upload = multer({
 
 // POST /api/alerts - Create a new alert
 router.post('/', authenticate, async (req, res) => {
-  const { symbol, target_price, condition_type, notes } = req.body;
   const user_id = req.user.id;
-
-  if (!symbol || !target_price || !condition_type) {
-    return res.status(400).json({ error: 'Faltan campos obligatorios (symbol, target_price, condition_type)' });
-  }
+  let data;
+  try { data = normalizeAlertInput(req.body); }
+  catch (error) { return res.status(400).json({ error: error.message }); }
+  const { symbol, target_price, condition_type, notes } = data;
 
   try {
     const db = getPool();
@@ -61,10 +62,14 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const db = getPool();
     const [rows] = await db.execute(
-      `SELECT * FROM market_alerts WHERE user_id = ? ORDER BY created_at DESC`,
+      `SELECT a.*, ms.setup_factors AS snapshot_factors, ms.ema_updated_at
+       FROM market_alerts a LEFT JOIN market_snapshot ms ON ms.symbol = a.symbol
+       WHERE a.user_id = ? ORDER BY a.created_at DESC`,
       [user_id]
     );
-    res.json(rows);
+    res.json(rows.map(({ snapshot_factors, ...alert }) => ({
+      ...alert, ema21_value: getSavedEma21(snapshot_factors)
+    })));
   } catch (error) {
     console.error('Error fetching alerts:', error);
     res.status(500).json({ error: 'Error interno al obtener las alertas' });
@@ -75,32 +80,63 @@ router.get('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
   const user_id = req.user.id;
   const alertId = req.params.id;
-  const { symbol, target_price, condition_type, is_active, notes } = req.body;
+  const { is_active } = req.body;
 
   try {
     const db = getPool();
     
     // Validate ownership
-    const [existing] = await db.execute('SELECT id FROM market_alerts WHERE id = ? AND user_id = ?', [alertId, user_id]);
+    const [existing] = await db.execute('SELECT * FROM market_alerts WHERE id = ? AND user_id = ?', [alertId, user_id]);
     if (existing.length === 0) {
       return res.status(404).json({ error: 'Alerta no encontrada o no tienes permisos' });
     }
 
+    let data;
+    try { data = normalizeAlertInput({ ...existing[0], ...req.body }); }
+    catch (error) { return res.status(400).json({ error: error.message }); }
     await db.execute(
       `UPDATE market_alerts 
-       SET symbol = COALESCE(?, symbol),
-           target_price = COALESCE(?, target_price),
-           condition_type = COALESCE(?, condition_type),
+       SET symbol = ?,
+           target_price = ?,
+           condition_type = ?,
            is_active = COALESCE(?, is_active),
-           notes = COALESCE(?, notes)
+           notes = ?
        WHERE id = ? AND user_id = ?`,
-      [symbol ? symbol.toUpperCase() : null, target_price, condition_type, is_active !== undefined ? (is_active ? 1 : 0) : null, notes, alertId, user_id]
+      [data.symbol, data.target_price, data.condition_type, is_active !== undefined ? (is_active ? 1 : 0) : null, data.notes, alertId, user_id]
     );
 
     res.json({ message: 'Alerta actualizada correctamente' });
   } catch (error) {
     console.error('Error updating alert:', error);
     res.status(500).json({ error: 'Error interno al actualizar la alerta' });
+  }
+});
+
+// EMA conditions are evaluated and claimed on the server, using provider market metadata.
+router.post('/ema21/check', authenticate, async (req, res) => {
+  try {
+    const result = await checkEmaAlerts({ db: getPool(), userId: req.user.id, fetchQuotes: fetchAlertQuotes });
+    for (const alert of result.triggered) {
+      if (!alert.email_enabled || !alert.email_recipient) continue;
+      try {
+        const triggerData = {
+          price: alert.triggered_price,
+          ema21: ((alert.triggered_price / alert.triggered_ema21) - 1) * 100,
+          triggerTime: new Date().toISOString()
+        };
+        const content = formatEmailContent(alert, triggerData);
+        const subject = (alert.email_subject || 'Alerta Disparada: {symbol}').replace(/{symbol}/g, alert.symbol);
+        const sent = await sendEmail({ to: alert.email_recipient, subject, ...content });
+        alert.email_failed = !sent;
+      } catch (error) {
+        alert.email_failed = true;
+        console.error('Error sending EMA alert email:', error.message);
+      }
+    }
+    res.json(result);
+  } catch (error) {
+    console.error('Error checking EMA alerts:', error);
+    res.status(500).json({ error: 'No se pudieron comprobar las alertas EMA21.' });
   }
 });
 

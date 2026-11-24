@@ -60,6 +60,7 @@ import PersonalLayout from './modules/personal/components/PersonalLayout';
 
 // Global UI
 import MarketAlertModal from './components/Alerts/MarketAlertModal';
+import InvestmentBlockModal from './components/common/InvestmentBlockModal';
 
 // Componente para rutas protegidas
 import ProtectedRoute from './components/Auth/ProtectedRoute';
@@ -75,6 +76,7 @@ function App() {
                             <div className="App">
                                 <Header />
                                 <MarketAlertModal />
+                                <InvestmentBlockModal />
                             <Routes>
                             <Route path="/login" element={<LoginContainer />} />
                             <Route

@@ -55,17 +55,134 @@ const DEFAULT_STATS = {
 
 
 
+const StatsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 2rem 2rem 1.75rem 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5rem 1.5rem 1.25rem 1.5rem;
+  }
+`;
+
 const StatsTitle = styled.h2`
   font-size: 1.75rem;
   font-weight: 700;
   font-family: 'Unbounded', sans-serif;
   color: white;
-  margin: 0 0 2rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 2rem 2rem 0 2rem;
+
+  @media (max-width: 480px) {
+    font-size: 1.35rem;
+  }
 `;
+
+const TimeframeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.25rem;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.3rem;
+  }
+`;
+
+const TimeframePill = styled.button`
+  background: ${props => props.$active 
+    ? `linear-gradient(135deg, ${colors.primary} 0%, #49151A 100%)` 
+    : 'transparent'};
+  color: ${props => props.$active ? '#ffffff' : '#94a3b8'};
+  border: 1px solid ${props => props.$active ? 'rgba(255, 255, 255, 0.15)' : 'transparent'};
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: ${props => props.$active ? '600' : '500'};
+  font-family: 'Unbounded', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  box-shadow: ${props => props.$active ? '0 4px 12px rgba(101, 29, 35, 0.35)' : 'none'};
+
+  &:hover {
+    color: #ffffff;
+    background: ${props => props.$active 
+      ? `linear-gradient(135deg, ${colors.primary} 0%, #49151A 100%)` 
+      : 'rgba(255, 255, 255, 0.05)'};
+  }
+
+  @media (max-width: 600px) {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.72rem;
+    flex: 1;
+  }
+`;
+
+const TimeframeLabel = styled.span`
+  .full-text {
+    display: inline;
+  }
+  .short-text {
+    display: none;
+  }
+  @media (max-width: 640px) {
+    .full-text {
+      display: none;
+    }
+    .short-text {
+      display: inline;
+    }
+  }
+`;
+
+const TIMEFRAME_OPTIONS = [
+  { id: '1m', label: 'Este mes', title: 'Mes en curso' },
+  { id: '6m', label: '6 meses', title: 'Últimos 6 meses' },
+  { id: '12m', label: 'Este año (12 meses)', shortLabel: 'Este año (12M)', title: 'Últimos 12 meses (1 año)' },
+  { id: 'all', label: 'All time', title: 'Histórico completo' },
+];
+
+const getTimeframeStartDate = (timeframeKey) => {
+  if (timeframeKey === 'all') return null;
+  const now = new Date();
+  
+  if (timeframeKey === '1m') {
+    return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  }
+  
+  if (timeframeKey === '6m') {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 6);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  
+  if (timeframeKey === '12m') {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 12);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  
+  return null;
+};
 
 const StatsGrid = styled.div`
   display: grid;
@@ -208,9 +325,8 @@ const EmptyText = styled.p`
   margin: 0;
 `;
 
-const TradeStats = ({ stats: _globalStats, trades = [], openTrades: _openTrades = [], loading, error }) => {
-  // Ya no usamos fetchSPYYTDPerformance ni activeTab
-
+const TradeStats = ({ stats: _globalStats, trades = [], openTrades = [], loading, error }) => {
+  const [selectedTimeframe, setSelectedTimeframe] = useState('all');
 
   // Funciones de formateo de números
   const formatNumber = (num) => {
@@ -249,8 +365,32 @@ const TradeStats = ({ stats: _globalStats, trades = [], openTrades: _openTrades 
     return trade.attributes ? trade.attributes[attr] : trade[attr];
   };
 
-  // Usar todos los trades
-  const filteredTrades = useMemo(() => trades || [], [trades]);
+  // Filtrar trades según la temporalidad seleccionada
+  const filteredTrades = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
+    if (selectedTimeframe === 'all') return trades;
+
+    const startDate = getTimeframeStartDate(selectedTimeframe);
+    if (!startDate) return trades;
+
+    return trades.filter(trade => {
+      const status = getTradeAttr(trade, 'status');
+      const closedAtRaw = getTradeAttr(trade, 'closed_at') || getTradeAttr(trade, 'closedAt');
+      const createdAtRaw = getTradeAttr(trade, 'createdAt') || getTradeAttr(trade, 'created_at');
+
+      if (status === 'closed') {
+        // En trades cerrados, la ganancia/pérdida se realizó en la fecha de cierre
+        const closedDate = closedAtRaw ? new Date(closedAtRaw) : (createdAtRaw ? new Date(createdAtRaw) : null);
+        if (!closedDate || isNaN(closedDate.getTime())) return false;
+        return closedDate >= startDate;
+      } else {
+        // En trades abiertos, se considera cuándo se abrió la posición
+        const openDate = createdAtRaw ? new Date(createdAtRaw) : null;
+        if (!openDate || isNaN(openDate.getTime())) return false;
+        return openDate >= startDate;
+      }
+    });
+  }, [trades, selectedTimeframe]);
 
   const filteredOpenTrades = useMemo(
     () => filteredTrades.filter(trade => getTradeAttr(trade, 'status') === 'open'),
@@ -404,10 +544,22 @@ const TradeStats = ({ stats: _globalStats, trades = [], openTrades: _openTrades 
     };
   };
 
-  // Calcular métricas de diversificación usando trades filtrados
-  const companyDiv = calculateCompanyDiversification(filteredOpenTrades);
-  const geoDiv = calculateGeographicDiversification(filteredOpenTrades);
-  const sectorDiv = calculateSectorDiversification(filteredOpenTrades);
+  // Para la diversificación del portafolio:
+  // Si en la temporalidad hay suficientes trades abiertos (>=3), se evalúan sobre esos;
+  // si la temporalidad es corta (ej. "Este mes" con solo nuevas posiciones), se evalúa la cartera
+  // abierta global (openTrades) para mantener siempre visibles las métricas clave de salud de la cartera.
+  const diversificationOpenTrades = useMemo(() => {
+    if (filteredOpenTrades && filteredOpenTrades.length >= 3) {
+      return filteredOpenTrades;
+    }
+    const allOpen = trades.filter(t => getTradeAttr(t, 'status') === 'open');
+    return allOpen.length > 0 ? allOpen : (openTrades || []);
+  }, [filteredOpenTrades, trades, openTrades]);
+
+  // Calcular métricas de diversificación
+  const companyDiv = calculateCompanyDiversification(diversificationOpenTrades);
+  const geoDiv = calculateGeographicDiversification(diversificationOpenTrades);
+  const sectorDiv = calculateSectorDiversification(diversificationOpenTrades);
 
   // Logs para depuración (solo en desarrollo)
   useEffect(() => {
@@ -532,18 +684,42 @@ const TradeStats = ({ stats: _globalStats, trades = [], openTrades: _openTrades 
   return (
     <StatsContainer>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.5 }}
       >
-        <StatsTitle>
-          <BarChart3 size={32} />
-          Resumen General
-        </StatsTitle>
+        <StatsHeader>
+          <StatsTitle>
+            <BarChart3 size={32} />
+            Resumen General
+          </StatsTitle>
+
+          <TimeframeContainer>
+            {TIMEFRAME_OPTIONS.map((option) => (
+              <TimeframePill
+                key={option.id}
+                $active={selectedTimeframe === option.id}
+                onClick={() => setSelectedTimeframe(option.id)}
+                title={option.title}
+                type="button"
+              >
+                {option.id === '12m' ? (
+                  <TimeframeLabel>
+                    <span className="full-text">{option.label}</span>
+                    <span className="short-text">{option.shortLabel}</span>
+                  </TimeframeLabel>
+                ) : (
+                  option.label
+                )}
+              </TimeframePill>
+            ))}
+          </TimeframeContainer>
+        </StatsHeader>
       </motion.div>
 
       {filteredTrades.length > 0 ? (
         <motion.div
+          key={selectedTimeframe}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -694,10 +870,12 @@ const TradeStats = ({ stats: _globalStats, trades = [], openTrades: _openTrades 
         <EmptyState>
           <EmptyIcon>📊</EmptyIcon>
           <EmptyTitle>
-            Sin datos de trades
+            Sin datos en esta temporalidad
           </EmptyTitle>
           <EmptyText>
-            Agrega nuevos trades para ver las estadísticas
+            {selectedTimeframe === 'all'
+              ? 'Agrega nuevos trades para ver las estadísticas'
+              : `No hay operaciones registradas para ${TIMEFRAME_OPTIONS.find(o => o.id === selectedTimeframe)?.label.toLowerCase() || 'este período'}.`}
           </EmptyText>
         </EmptyState>
       )}

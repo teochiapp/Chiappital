@@ -4,8 +4,7 @@ import { priceConfig, PRICE_PROVIDERS } from '../config/priceConfig';
 class SymbolSearchService {
   constructor() {
     this.config = priceConfig;
-    this.cache = new Map(); // Cache para búsquedas
-    this.cacheExpiry = 300000; // 5 minutos de cache
+    this.catalog = null;
 
     console.log('🔍 SymbolSearchService inicializado con:', {
       provider: this.config.provider,
@@ -14,19 +13,8 @@ class SymbolSearchService {
   }
 
   // Método principal para buscar símbolos
-  async searchSymbols(query) {
-    if (!query || query.length < 2) {
-      return this.getPopularSymbols();
-    }
-
-    try {
-      const cacheKey = query.toLowerCase();
-      const cached = this.cache.get(cacheKey);
-
-      if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-        return cached.results;
-      }
-
+  searchSymbols(query = '') {
+    if (!this.catalog) {
       const allSymbols = [...this.getPopularSymbols(), ...this.getAllCedears(),
         { symbol: 'FSLR', name: 'First Solar Inc.', sector: 'Energía', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' },
         { symbol: 'RGTI', name: 'Rigetti Computing Inc.', sector: 'Software', macroCategory: 'Empresas', region: 'US', currency: 'USD', type: 'Equity' }
@@ -34,26 +22,21 @@ class SymbolSearchService {
 
       const uniqueMap = new Map();
       allSymbols.forEach(s => uniqueMap.set(s.symbol, s));
-      const uniqueSymbols = Array.from(uniqueMap.values());
-
-      const queryLower = query.toLowerCase();
-
-      const results = uniqueSymbols.filter(symbol =>
-        symbol.symbol.toLowerCase().includes(queryLower) ||
-        symbol.name.toLowerCase().includes(queryLower) ||
-        (symbol.sector && symbol.sector.toLowerCase().includes(queryLower))
-      ).slice(0, 10);
-
-      this.cache.set(cacheKey, { results, timestamp: Date.now() });
-      return results;
-    } catch (error) {
-      console.error(`❌ Error buscando símbolos para "${query}":`, error);
-      // Fallback a símbolos populares en caso de error
-      return this.getPopularSymbols().filter(symbol =>
-        symbol.symbol.toLowerCase().includes(query.toLowerCase()) ||
-        symbol.name.toLowerCase().includes(query.toLowerCase())
-      );
+      this.catalog = Array.from(uniqueMap.values(), item => ({
+        item,
+        ticker: item.symbol.toLowerCase(),
+        text: [item.symbol, item.name, item.sector].join(' ').toLowerCase()
+      }));
     }
+
+    const term = query.trim().toLowerCase();
+    const exact = this.catalog.find(entry => entry.ticker === term);
+    const matches = exact ? [exact.item] : [];
+    for (const entry of this.catalog) {
+      if (entry !== exact && entry.text.includes(term)) matches.push(entry.item);
+      if (matches.length === 10) break;
+    }
+    return matches;
   }
 
   // Búsqueda en símbolos predefinidos (modo demo)
@@ -1305,7 +1288,7 @@ class SymbolSearchService {
 
   // Limpiar cache manualmente
   clearCache() {
-    this.cache.clear();
+    this.catalog = null;
   }
 }
 

@@ -150,6 +150,15 @@ class ApiService {
     return data.data || [];
   }
 
+  async importIeb(payload) {
+    const response = await fetch(`${this.baseURL}/trades/import-ieb`, {
+      method: 'POST', headers: this.getHeaders(), body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error?.message || 'No se pudo importar la cartera.');
+    return result;
+  }
+
   async createTrade(tradeData, accountType = 'propia') {
     if (!this.token) throw new Error('Usuario no autenticado. Por favor inicia sesión.');
 

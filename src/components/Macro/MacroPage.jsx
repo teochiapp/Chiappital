@@ -1,12 +1,12 @@
 import React from 'react';
 import { 
-  
   TrendingUp, 
   DollarSign, 
   BarChart2, 
   Newspaper,
   Calendar,
-  Package
+  Package,
+  RefreshCw
 } from 'lucide-react';
 import { SiTradingview } from 'react-icons/si';
 import {
@@ -30,7 +30,7 @@ import {
 } from './styled/MacroStyles';
 import AppLogo from '../common/Logo';
 
-const MacroPage = ({ data, sectionLoading = {}, error }) => {
+const MacroPage = ({ data, sectionLoading = {}, refreshing = false, onRefresh, error }) => {
   // Ya no bloqueamos toda la página: cada sección muestra su propio skeleton.
 
   if (error) {
@@ -134,6 +134,30 @@ const MacroPage = ({ data, sectionLoading = {}, error }) => {
           <Title>Panorama Macro</Title>
           <Sub>Mercado global, noticias y calendario de earnings en tiempo real</Sub>
         </TitleArea>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backgroundColor: 'rgba(30, 41, 59, 0.7)',
+              color: '#94a3b8',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '0.45rem 0.9rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              cursor: refreshing ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+            title="Recargar datos macro"
+          >
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Actualizando...' : 'Actualizar'}
+          </button>
+        )}
       </Header>
 
       <MacroGrid>

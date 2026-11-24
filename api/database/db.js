@@ -608,8 +608,8 @@ async function initializeDatabase() {
       id            INT AUTO_INCREMENT PRIMARY KEY,
       user_id       INT NOT NULL,
       symbol        VARCHAR(20) NOT NULL,
-      target_price  DECIMAL(15, 6) NOT NULL,
-      condition_type ENUM('above', 'below') NOT NULL,
+      target_price  DECIMAL(15, 6) DEFAULT NULL,
+      condition_type ENUM('above', 'below', 'ema21_above') NOT NULL,
       is_active     TINYINT(1) NOT NULL DEFAULT 1,
       notes         TEXT DEFAULT NULL,
       email_enabled TINYINT(1) NOT NULL DEFAULT 0,
@@ -624,6 +624,15 @@ async function initializeDatabase() {
       INDEX idx_user_alerts (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  // Compatibilidad con alertas existentes: la EMA utiliza un objetivo dinámico.
+  const [alertColumns] = await db.query('SHOW COLUMNS FROM market_alerts');
+  if (!alertColumns.find(column => column.Field === 'condition_type')?.Type.includes('ema21_above')
+      || alertColumns.find(column => column.Field === 'target_price')?.Null !== 'YES') {
+    await db.execute(`ALTER TABLE market_alerts
+      MODIFY COLUMN target_price DECIMAL(15, 6) DEFAULT NULL,
+      MODIFY COLUMN condition_type ENUM('above', 'below', 'ema21_above') NOT NULL`);
+  }
 
   // Migración: Agregar columnas de Email a market_alerts (por si la tabla ya existía)
   try {
@@ -701,6 +710,12 @@ async function initializeDatabase() {
       FOREIGN KEY (symbol) REFERENCES tracked_symbols(symbol) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
+
+  try {
+    await db.execute('ALTER TABLE market_snapshot ADD COLUMN quote_time BIGINT UNSIGNED DEFAULT NULL');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+  }
 
   try {
     await db.execute(`

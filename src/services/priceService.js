@@ -1,3 +1,4 @@
+import { readInstruments } from './marketReadService';
 import { priceConfig, buildPriceUrl, extractPriceFromResponse } from '../config/priceConfig';
 import yahooFinanceService from './yahooFinanceService';
 import loggerService from './loggerService';
@@ -22,7 +23,8 @@ class PriceService {
   }
 
   // Método genérico para obtener precio actual
-  async getCurrentPrice(symbol) {
+  async getCurrentPrice(symbol, force = false) {
+    if (!symbol) return null;
     const cacheKey = symbol.toUpperCase();
     
     try {
@@ -34,26 +36,30 @@ class PriceService {
         return mockPrice;
       }
       
-      // Verificar cache primero (memoria + localStorage)
-      const cached = this.getPriceFromCache(cacheKey);
-      
-      if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-        const minutesOld = Math.round((Date.now() - cached.timestamp) / (1000 * 60));
-        const priceType = cached.isMock ? 'mock' : (cached.isDelayed ? 'delayed' : 'real');
-        loggerService.incrementCacheHit();
-        loggerService.info(`[HIT] Precio de ${symbol}: $${cached.price} (${minutesOld} min, ${priceType})`, 'CACHE');
-        return cached.price;
+      if (force) {
+        this.invalidatePriceCache(symbol);
+      } else {
+        // Verificar cache primero (memoria + localStorage)
+        const cached = this.getPriceFromCache(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+          const minutesOld = Math.round((Date.now() - cached.timestamp) / (1000 * 60));
+          const priceType = cached.isMock ? 'mock' : (cached.isDelayed ? 'delayed' : 'real');
+          loggerService.incrementCacheHit();
+          loggerService.info(`[HIT] Precio de ${symbol}: $${cached.price} (${minutesOld} min, ${priceType})`, 'CACHE');
+          return cached.price;
+        }
       }
 
       loggerService.incrementCacheMiss();
 
       // Verificar si ya hay una request pendiente para este símbolo
-      if (this.pendingRequests.has(cacheKey)) {
+      if (this.pendingRequests.has(cacheKey) && !force) {
         loggerService.info(`Precio para ${symbol} ya está en curso, esperando...`, 'API');
         return await this.pendingRequests.get(cacheKey);
       }
 
-      console.log(`🔍 Obteniendo precio para ${symbol}`);
+      console.log(`🔍 Obteniendo precio fresco para ${symbol}`);
       
       // Crear promesa para la request y guardarla
       const requestPromise = this.fetchPriceWithFallback(symbol, cacheKey);
@@ -89,9 +95,12 @@ class PriceService {
 
   // Método para obtener el cambio porcentual guardado en caché
   getChangePercent(symbol) {
+    if (!symbol) return null;
     const cacheKey = symbol.toUpperCase();
     const cached = this.getPriceFromCache(cacheKey);
-    return cached ? cached.changePercent : null;
+    return cached && typeof cached.changePercent === 'number' && !isNaN(cached.changePercent)
+      ? cached.changePercent
+      : null;
   }
 
   // Método con fallback en cascada: Finnhub -> Yahoo (si se configuró) -> null/mock
@@ -108,6 +117,7 @@ class PriceService {
         this.savePriceToCache(cacheKey, {
           price,
           changePercent: changePercent,
+          quoteTime: finnhubData.quoteTime,
           timestamp: Date.now(),
           isDelayed: false
         });
@@ -132,6 +142,7 @@ class PriceService {
         this.savePriceToCache(cacheKey, {
           price,
           changePercent,
+          quoteTime: quote.timestamp > 0 ? quote.timestamp * 1000 : null,
           timestamp: Date.now(),
           isDelayed: true
         });
@@ -165,88 +176,183 @@ class PriceService {
       throw new Error('Invalid price data');
     }
     
-    return { price, changePercent };
+    return { price, changePercent, quoteTime: data.t > 0 ? data.t * 1000 : null };
   }
 
   // Método para obtener múltiples precios de una vez
   // Retorna un mapa { SYMBOL: precio_numérico } — compatible con todo el resto de la app
-  async getMultiplePrices(symbols) {
-    const promises = symbols.map(symbol => this.getCurrentPrice(symbol));
+  async getMultiplePrices(symbols, force = false) {
+    if (!symbols || symbols.length === 0) return {};
+    if (force) {
+      this.invalidateMultiplePriceCache(symbols);
+    }
+    const promises = symbols.map(symbol => this.getCurrentPrice(symbol, force));
     const results = await Promise.allSettled(promises);
     
     const prices = {};
     symbols.forEach((symbol, index) => {
+      const upper = symbol.toUpperCase();
       if (results[index].status === 'fulfilled') {
-        prices[symbol.toUpperCase()] = results[index].value;
+        prices[upper] = results[index].value;
       } else {
-        prices[symbol.toUpperCase()] = null;
+        prices[upper] = null;
       }
     });
 
     return prices;
   }
 
-  // Método para obtener múltiples precios + changePercent para el Screener
-  // Consume el snapshot del Backend
-  async getMultipleQuotes(symbols) {
+  // Método para obtener cotizaciones en tiempo real directamente de proveedores externos (Finnhub / Yahoo)
+  // Devuelve { [SYMBOL]: { price, changePercent } } garantizando datos frescos de HOY en vivo
+  async getLiveQuotes(symbols, force = false) {
+    if (!symbols || symbols.length === 0) return {};
+    if (force) {
+      this.invalidateMultiplePriceCache(symbols);
+    }
+    await this.getMultiplePrices(symbols, force);
+    const quotes = {};
+    symbols.forEach(sym => {
+      const upper = sym.toUpperCase();
+      const cached = this.getPriceFromCache(upper);
+      const price = cached?.price ?? null;
+      const changePercent = (cached && typeof cached.changePercent === 'number' && !isNaN(cached.changePercent))
+        ? cached.changePercent
+        : 0;
+      quotes[upper] = { price, changePercent };
+      quotes[sym] = quotes[upper];
+    });
+    return quotes;
+  }
+
+  // Método para obtener múltiples precios + changePercent para el Screener y Dashboard
+  // Consume el snapshot del Backend con fallback individual a Yahoo / Finnhub para los símbolos faltantes
+  async getMultipleQuotes(symbols, force = false) {
+    if (!symbols || symbols.length === 0) return {};
+    if (force) {
+      this.invalidateMultiplePriceCache(symbols);
+    }
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/market/snapshot`);
-      if (!response.ok) throw new Error('Error al obtener market snapshot');
-      
-      const data = await response.json();
-      const snapshot = data.snapshot || {};
+      let snapshot = {};
+      try {
+        const response = await fetch(`${baseUrl}/api/market/snapshot`);
+        if (response.ok) {
+          const data = await response.json();
+          snapshot = data.snapshot || {};
+        }
+      } catch (err) {
+        loggerService.warn(`No se pudo conectar con market snapshot: ${err.message}`, 'API');
+      }
       
       const quotes = {};
+      const missingSymbols = [];
+
       symbols.forEach(symbol => {
         const cacheKey = symbol.toUpperCase();
-        if (snapshot[cacheKey]) {
+        if (snapshot[cacheKey] && snapshot[cacheKey].price !== null) {
+          const item = snapshot[cacheKey];
           quotes[cacheKey] = {
-            price: snapshot[cacheKey].price,
-            changePercent: snapshot[cacheKey].changePercent,
-            ema21Distance: snapshot[cacheKey].ema21Distance,
-            weeklyRsi: snapshot[cacheKey].rsiWeekly,
-            weeklyRsiPrevious: snapshot[cacheKey].rsiPrevious,
-            weeklyRsiDelta: snapshot[cacheKey].rsiDelta,
-            weeklyMacd: snapshot[cacheKey].macdWeekly,
-            weeklyMacdSignal: snapshot[cacheKey].macdSignal,
-            weeklyMacdHist: snapshot[cacheKey].macdHist,
-            weeklyMacdPrev: snapshot[cacheKey].macdPrevWeekly,
-            weeklyMacdPrevSignal: snapshot[cacheKey].macdPrevSignal,
-            weeklyMacdPrevHist: snapshot[cacheKey].macdPrevHist,
-            drawdown52w: snapshot[cacheKey].drawdown52w,
-            rsValue: snapshot[cacheKey].rsValue,
-            rsPrevious: snapshot[cacheKey].rsPrevious,
-            rsState: snapshot[cacheKey].rsState,
-            setupState: snapshot[cacheKey].setupState,
-            setupVerdict: snapshot[cacheKey].setupVerdict,
-            setupFactors: snapshot[cacheKey].setupFactors,
-            opScore: snapshot[cacheKey].opScore,
-            opScoreConclusions: snapshot[cacheKey].opScoreConclusions,
-            status: snapshot[cacheKey].status,
-            updatedAt: snapshot[cacheKey].updatedAt
+            price: item.price,
+            changePercent: item.changePercent,
+            ema21Distance: item.ema21Distance,
+            weeklyRsi: item.rsiWeekly,
+            weeklyRsiPrevious: item.rsiPrevious,
+            weeklyRsiDelta: item.rsiDelta,
+            weeklyMacd: item.macdWeekly,
+            weeklyMacdSignal: item.macdSignal,
+            weeklyMacdHist: item.macdHist,
+            weeklyMacdPrev: item.macdPrevWeekly,
+            weeklyMacdPrevSignal: item.macdPrevSignal,
+            weeklyMacdPrevHist: item.macdPrevHist,
+            drawdown52w: item.drawdown52w,
+            rsValue: item.rsValue,
+            rsPrevious: item.rsPrevious,
+            rsState: item.rsState,
+            setupState: item.setupState,
+            setupVerdict: item.setupVerdict,
+            setupFactors: item.setupFactors,
+            opScore: item.opScore,
+            opScoreConclusions: item.opScoreConclusions,
+            status: item.status,
+            updatedAt: item.updatedAt
           };
-          // Actualizamos la caché local por las dudas
+          quotes[symbol] = quotes[cacheKey];
           this.savePriceToCache(cacheKey, {
-            price: snapshot[cacheKey].price,
-            changePercent: snapshot[cacheKey].changePercent,
+            price: item.price,
+            changePercent: item.changePercent,
             timestamp: Date.now(),
-            isDelayed: snapshot[cacheKey].source !== 'finnhub'
+            isDelayed: item.source !== 'finnhub'
           });
         } else {
-          quotes[cacheKey] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, opScore: null, opScoreConclusions: null, status: 'ERROR', updatedAt: null };
+          missingSymbols.push(symbol);
         }
       });
+
+      // Para los símbolos que no estaban en el snapshot o no tenían precio, buscar vía Yahoo / Finnhub
+      if (missingSymbols.length > 0) {
+        await Promise.all(missingSymbols.map(async (symbol) => {
+          const cacheKey = symbol.toUpperCase();
+          try {
+            const yfQuote = await yahooFinanceService.getQuote(cacheKey);
+            if (yfQuote && typeof yfQuote.price === 'number') {
+              const cp = (typeof yfQuote.changePercent === 'number' && !isNaN(yfQuote.changePercent))
+                ? yfQuote.changePercent
+                : 0;
+              quotes[cacheKey] = {
+                price: yfQuote.price,
+                changePercent: cp,
+                ema21Distance: null,
+                status: 'OK',
+                updatedAt: new Date().toISOString()
+              };
+              quotes[symbol] = quotes[cacheKey];
+              this.savePriceToCache(cacheKey, {
+                price: yfQuote.price,
+                changePercent: cp,
+                timestamp: Date.now(),
+                isDelayed: true
+              });
+              return;
+            }
+          } catch (e) {}
+
+          // Fallback final: getCurrentPrice
+          try {
+            const price = await this.getCurrentPrice(cacheKey, force);
+            const cp = this.getChangePercent(cacheKey);
+            quotes[cacheKey] = {
+              price,
+              changePercent: cp !== null ? cp : 0,
+              ema21Distance: null,
+              status: price ? 'OK' : 'ERROR',
+              updatedAt: new Date().toISOString()
+            };
+            quotes[symbol] = quotes[cacheKey];
+          } catch (err) {
+            quotes[cacheKey] = { price: null, changePercent: null, status: 'ERROR' };
+            quotes[symbol] = quotes[cacheKey];
+          }
+        }));
+      }
       
       return quotes;
     } catch (error) {
       loggerService.error(`Error obteniendo snapshot del backend: ${error.message}`, 'API');
       
-      // Fallback básico si el backend falla: retornar mock o error
       const quotes = {};
-      symbols.forEach(symbol => {
-         quotes[symbol] = { price: null, changePercent: null, ema21Distance: null, weeklyRsi: null, weeklyRsiPrevious: null, weeklyRsiDelta: null, weeklyMacd: null, weeklyMacdSignal: null, weeklyMacdHist: null, weeklyMacdPrev: null, weeklyMacdPrevSignal: null, weeklyMacdPrevHist: null, drawdown52w: null, rsValue: null, rsPrevious: null, rsState: null, setupState: null, setupVerdict: null, setupFactors: null, opScore: null, opScoreConclusions: null, status: 'ERROR', updatedAt: null };
-      });
+      await Promise.all(symbols.map(async (symbol) => {
+        const cacheKey = symbol.toUpperCase();
+        try {
+          const price = await this.getCurrentPrice(cacheKey, force);
+          const cp = this.getChangePercent(cacheKey);
+          quotes[cacheKey] = { price, changePercent: cp !== null ? cp : 0, status: price ? 'OK' : 'ERROR' };
+          quotes[symbol] = quotes[cacheKey];
+        } catch (e) {
+          quotes[cacheKey] = { price: null, changePercent: null, status: 'ERROR' };
+          quotes[symbol] = quotes[cacheKey];
+        }
+      }));
       return quotes;
     }
   }
@@ -324,6 +430,7 @@ class PriceService {
   // Limpiar cache manualmente si es necesario
   clearCache() {
     this.cache.clear();
+    this.pendingRequests.clear();
     // Limpiar también las entradas de localStorage para precios y sessionStorage para cotizaciones
     try {
       Object.keys(localStorage).forEach(key => {
@@ -337,6 +444,9 @@ class PriceService {
         }
       });
     } catch (e) {}
+    if (yahooFinanceService && typeof yahooFinanceService.clearCache === 'function') {
+      yahooFinanceService.clearCache();
+    }
   }
 
   // Invalidar caché para un símbolo específico
@@ -344,9 +454,20 @@ class PriceService {
     if (!symbol) return;
     const cacheKey = symbol.toUpperCase();
     this.cache.delete(cacheKey);
+    this.pendingRequests.delete(cacheKey);
     try {
       localStorage.removeItem(`price_${cacheKey}`);
+      localStorage.removeItem(`ema21_${cacheKey}`);
     } catch (e) {}
+    if (yahooFinanceService && typeof yahooFinanceService.invalidateCache === 'function') {
+      yahooFinanceService.invalidateCache(symbol);
+    }
+  }
+
+  // Invalidar caché para múltiples símbolos
+  invalidateMultiplePriceCache(symbols = []) {
+    if (!Array.isArray(symbols)) return;
+    symbols.forEach(s => this.invalidatePriceCache(s));
   }
 
   // Helpers para caché persistente de precios
@@ -403,28 +524,17 @@ class PriceService {
     return null;
   }
 
-  // Calcular la distancia porcentual a la EMA 21
-  // Ahora la consumimos de la cache local del Screener, o pedimos la foto instantánea.
-  async getEma21Distance(symbol, currentPrice, forceYahoo = false) {
-    if (!currentPrice) return null;
-
-    const safeSymbol = symbol.toUpperCase();
-    
-    // Tratamos de ver si el backend snapshot ya nos lo trajo (al estar integrados con getMultipleQuotes)
-    // Para llamadas individuales (que no son del screener), podríamos hacer un fallback o solo retornar null
-    // y dejar que la UI use el valor.
-    // O hacer request al backend
+  async getEma21Distance(symbol, currentPrice) {
+    if (!symbol || !(currentPrice > 0)) return null;
+    const key = symbol.toUpperCase();
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${baseUrl}/api/market/snapshot`);
-      const data = await response.json();
-      if (data.snapshot && data.snapshot[safeSymbol] && data.snapshot[safeSymbol].ema21Distance !== null) {
-         return parseFloat(data.snapshot[safeSymbol].ema21Distance);
-      }
-    } catch(e) {}
-
-    return null;
+      const rows = await readInstruments([key], 60 * 60 * 1000);
+      return rows[key]?.ema21 > 0 ? (currentPrice / rows[key].ema21 - 1) * 100 : null;
+    } catch {
+      return null;
+    }
   }
+
 }
 
 const priceService = new PriceService();
