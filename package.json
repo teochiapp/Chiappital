@@ -41,7 +41,7 @@
     "zip:api": "node scripts/create_api_zip.js",
     "start:prod": "serve -s build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:alerts": "node --test api/tests/emaAlerts.test.js api/tests/alertsRoutes.test.js",
+    "test:alerts": "node --test api/tests/alertQuotes.test.js api/tests/emaAlerts.test.js api/tests/alertsRoutes.test.js",
     "preview": "vite preview"
   },
   "eslintConfig": {

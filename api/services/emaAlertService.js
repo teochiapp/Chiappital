@@ -15,8 +15,15 @@ function getSavedEma21(factors) {
 
 function evaluateEmaAlert(row, quote, now = Date.now()) {
   const ema21 = getSavedEma21(row.snapshot_factors);
-  const emaTime = new Date(row.ema_updated_at || '').getTime();
-  if (!ema21 || !Number.isFinite(emaTime) || now - emaTime > MAX_EMA_AGE_MS || emaTime > now) {
+  let emaValid = false;
+  if (row.ema_age_sec !== undefined && row.ema_age_sec !== null) {
+    const ageMs = Number(row.ema_age_sec) * 1000;
+    emaValid = Number.isFinite(ageMs) && ageMs >= -60000 && ageMs <= MAX_EMA_AGE_MS;
+  } else {
+    const emaTime = new Date(row.ema_updated_at || '').getTime();
+    emaValid = Number.isFinite(emaTime) && now - emaTime <= MAX_EMA_AGE_MS && emaTime <= now;
+  }
+  if (!ema21 || !emaValid) {
     return { status: 'missing_ema', ema21 };
   }
   if (!quote || !quote.marketState) return { status: 'unavailable', ema21 };
@@ -33,20 +40,23 @@ function evaluateEmaAlert(row, quote, now = Date.now()) {
 
 async function checkEmaAlerts({ db, userId, fetchQuotes, now = Date.now() }) {
   const [rows] = await db.execute(
-    `SELECT a.*, ms.setup_factors AS snapshot_factors, ms.ema_updated_at
+    `SELECT a.*, ms.setup_factors AS snapshot_factors, ms.ema_updated_at,
+            TIMESTAMPDIFF(SECOND, ms.ema_updated_at, NOW()) AS ema_age_sec
      FROM market_alerts a LEFT JOIN market_snapshot ms ON ms.symbol = a.symbol
      WHERE a.user_id = ? AND a.is_active = 1 AND a.condition_type = ?`,
     [userId, EMA_CONDITION]
   );
-  const symbols = [...new Set(rows.filter(row => getSavedEma21(row.snapshot_factors)).map(row => row.symbol))];
+  const symbols = [...new Set(rows.map(row => row.symbol))];
   const quotes = symbols.length ? await fetchQuotes(symbols) : {};
   const triggered = [];
   const checks = {};
   const prices = {};
   for (const row of rows) {
-    const result = evaluateEmaAlert(row, quotes[row.symbol], now);
+    const quote = quotes[row.symbol];
+    const result = evaluateEmaAlert(row, quote, now);
     checks[row.id] = result;
-    if (result.price) prices[row.symbol] = result.price;
+    const displayPrice = result.price ?? (Number(quote?.price) > 0 ? Number(quote.price) : null);
+    if (displayPrice) prices[row.symbol] = displayPrice;
     if (result.status !== 'triggered') continue;
     // Claim once, even when several tabs check concurrently. An edit invalidates the claim.
     const [claim] = await db.execute(
@@ -56,7 +66,7 @@ async function checkEmaAlerts({ db, userId, fetchQuotes, now = Date.now() }) {
       [row.id, userId, EMA_CONDITION, row.symbol, row.updated_at]
     );
     if (claim.affectedRows === 0) continue;
-    const { snapshot_factors, ...alert } = row;
+    const { snapshot_factors, ema_age_sec, ...alert } = row;
     triggered.push({ ...alert, is_active: 0, triggered_price: result.price, triggered_ema21: result.ema21 });
   }
   return { triggered, checks, prices };

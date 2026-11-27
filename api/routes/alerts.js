@@ -6,8 +6,8 @@ const { sendEmail } = require('../services/emailService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { fetchAlertQuotes } = require('../services/marketSyncService');
-const { getSavedEma21, checkEmaAlerts, normalizeAlertInput } = require('../services/emaAlertService');
+const { fetchAlertQuotes, ensureEmaSnapshots } = require('../services/marketSyncService');
+const { EMA_CONDITION, getSavedEma21, checkEmaAlerts, normalizeAlertInput } = require('../services/emaAlertService');
 
 // Configuración de multer
 const storage = multer.diskStorage({
@@ -42,6 +42,10 @@ router.post('/', authenticate, async (req, res) => {
       [user_id, symbol.toUpperCase(), target_price, condition_type, notes || null]
     );
 
+    if (condition_type === EMA_CONDITION && typeof ensureEmaSnapshots === 'function') {
+      ensureEmaSnapshots([symbol.toUpperCase()]).catch(() => {});
+    }
+
     res.status(201).json({
       message: 'Alerta creada con éxito',
       id: result.insertId,
@@ -61,18 +65,67 @@ router.get('/', authenticate, async (req, res) => {
   const user_id = req.user.id;
   try {
     const db = getPool();
-    const [rows] = await db.execute(
-      `SELECT a.*, ms.setup_factors AS snapshot_factors, ms.ema_updated_at
-       FROM market_alerts a LEFT JOIN market_snapshot ms ON ms.symbol = a.symbol
-       WHERE a.user_id = ? ORDER BY a.created_at DESC`,
-      [user_id]
-    );
+    const fetchRows = async () => {
+      const [rows] = await db.execute(
+        `SELECT a.*, ms.setup_factors AS snapshot_factors, ms.ema_updated_at
+         FROM market_alerts a LEFT JOIN market_snapshot ms ON ms.symbol = a.symbol
+         WHERE a.user_id = ? ORDER BY a.created_at DESC`,
+        [user_id]
+      );
+      return rows;
+    };
+
+    let rows = await fetchRows();
+    const missingEmaSymbols = [...new Set(
+      rows
+        .filter(r => r.condition_type === EMA_CONDITION && r.is_active === 1 && (!getSavedEma21(r.snapshot_factors) || !r.ema_updated_at))
+        .map(r => r.symbol)
+    )];
+    if (missingEmaSymbols.length > 0 && typeof ensureEmaSnapshots === 'function') {
+      try {
+        await ensureEmaSnapshots(missingEmaSymbols, { db });
+        rows = await fetchRows();
+      } catch (_) {}
+    }
+
     res.json(rows.map(({ snapshot_factors, ...alert }) => ({
       ...alert, ema21_value: getSavedEma21(snapshot_factors)
     })));
   } catch (error) {
     console.error('Error fetching alerts:', error);
     res.status(500).json({ error: 'Error interno al obtener las alertas' });
+  }
+});
+
+// Quotes belong to the user's alerts and never use the daily snapshot/UI cache.
+router.post('/quotes', authenticate, async (req, res) => {
+  try {
+    const [rows] = await getPool().execute(
+      'SELECT a.symbol FROM market_alerts a WHERE a.user_id = ?', [req.user.id]
+    );
+    const symbols = [...new Set(rows.map(row => row.symbol))];
+    const quotes = await fetchAlertQuotes(symbols, { force: req.body?.force === true });
+    res.set('Cache-Control', 'no-store');
+    res.json({ quotes });
+  } catch (error) {
+    console.error('Error fetching alert quotes:', error);
+    res.status(500).json({ error: 'No se pudieron obtener las cotizaciones de las alertas.' });
+  }
+});
+
+// Only quote tickers belonging to this user, including the visible inactive history.
+router.post('/quotes', authenticate, async (req, res) => {
+  try {
+    const [rows] = await getPool().execute(
+      'SELECT a.symbol FROM market_alerts a WHERE a.user_id = ?', [req.user.id]
+    );
+    const symbols = [...new Set(rows.map(row => row.symbol))];
+    const quotes = symbols.length ? await fetchAlertQuotes(symbols, { force: req.body?.force === true }) : {};
+    res.set('Cache-Control', 'no-store');
+    res.json({ quotes });
+  } catch (error) {
+    console.error('Error fetching alert quotes:', error);
+    res.status(500).json({ error: 'No se pudieron obtener las cotizaciones de las alertas.' });
   }
 });
 
@@ -115,7 +168,27 @@ router.put('/:id', authenticate, async (req, res) => {
 // EMA conditions are evaluated and claimed on the server, using provider market metadata.
 router.post('/ema21/check', authenticate, async (req, res) => {
   try {
-    const result = await checkEmaAlerts({ db: getPool(), userId: req.user.id, fetchQuotes: fetchAlertQuotes });
+    const db = getPool();
+    if (typeof ensureEmaSnapshots === 'function') {
+      try {
+        const [activeEmaRows] = await db.execute(
+          `SELECT a.symbol, ms.setup_factors AS snapshot_factors, ms.ema_updated_at
+           FROM market_alerts a LEFT JOIN market_snapshot ms ON ms.symbol = a.symbol
+           WHERE a.user_id = ? AND a.is_active = 1 AND a.condition_type = ?`,
+          [req.user.id, EMA_CONDITION]
+        );
+        const missingEmaSymbols = [...new Set(
+          activeEmaRows
+            .filter(r => !getSavedEma21(r.snapshot_factors) || !r.ema_updated_at)
+            .map(r => r.symbol)
+        )];
+        if (missingEmaSymbols.length > 0) {
+          await ensureEmaSnapshots(missingEmaSymbols, { db });
+        }
+      } catch (_) {}
+    }
+
+    const result = await checkEmaAlerts({ db, userId: req.user.id, fetchQuotes: fetchAlertQuotes });
     for (const alert of result.triggered) {
       if (!alert.email_enabled || !alert.email_recipient) continue;
       try {

@@ -3,17 +3,101 @@ const logger = require('../utils/logger');
 const opScoreService = require('./opScoreService');
 require('dotenv').config();
 
-let yahooFinance = null;
-try {
-  const yfModule = require('yahoo-finance2');
-  const YahooFinance = yfModule.default || yfModule;
-  if (typeof YahooFinance === 'function') {
-    yahooFinance = new YahooFinance({ validation: { logErrors: false } });
-  } else {
-    yahooFinance = YahooFinance;
+const YAHOO_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const REALTIME_EXCHANGES = new Set(['NMS', 'NYQ', 'NGM', 'NCM', 'PCX', 'ASE', 'BTS', 'BATS', 'CBOE', 'CCC']);
+
+function isRateLimitError(err) {
+  if (!err) return false;
+  if (err.status === 429) return true;
+  const msg = String(err.message || err);
+  return msg.includes('429') || msg.includes('Too Many Requests');
+}
+
+function mapYahooSymbol(symbol) {
+  const s = String(symbol || '').trim().toUpperCase();
+  const map = { BTC: 'BTC-USD', ETH: 'ETH-USD', MERVAL: '^MERV' };
+  return map[s] || s;
+}
+
+function deriveMarketStateFromPeriod(period, nowSec = Math.floor(Date.now() / 1000)) {
+  if (!period) return null;
+  if (period.regular && nowSec >= period.regular.start && nowSec < period.regular.end) return 'REGULAR';
+  if (period.pre && nowSec >= period.pre.start && nowSec < period.pre.end) return 'PRE';
+  if (period.post && nowSec >= period.post.start && nowSec < period.post.end) return 'POST';
+  return 'CLOSED';
+}
+
+async function fetchYahooChartDirect(symbol, { range = '2y', interval = '1d', timeoutMs = 15000 } = {}) {
+  const mapped = mapYahooSymbol(symbol);
+  const encoded = encodeURIComponent(mapped);
+  const hosts = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  let lastError = null;
+
+  for (let h = 0; h < hosts.length; h++) {
+    const url = `https://${hosts[h]}/v8/finance/chart/${encoded}?interval=${encodeURIComponent(interval)}&range=${encodeURIComponent(range)}`;
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': YAHOO_USER_AGENT,
+          'Accept': 'application/json,text/plain,*/*'
+        },
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+
+      if (response.status === 429) {
+        const err = new Error(`Yahoo HTTP 429 Too Many Requests (${symbol})`);
+        err.status = 429;
+        throw err;
+      }
+      if (response.status === 404) {
+        const err = new Error(`Yahoo HTTP 404 Not Found (${symbol})`);
+        err.status = 404;
+        throw err;
+      }
+      if (!response.ok) {
+        const err = new Error(`Yahoo HTTP ${response.status} (${symbol})`);
+        err.status = response.status;
+        throw err;
+      }
+
+      const json = await response.json();
+      if (json?.chart?.error) {
+        const err = new Error(`Yahoo Chart API Error: ${json.chart.error.description || json.chart.error.code}`);
+        err.status = json.chart.error.code === 'Not Found' ? 404 : 500;
+        throw err;
+      }
+
+      const result = json?.chart?.result?.[0];
+      if (!result) {
+        return { meta: null, quotes: [] };
+      }
+
+      const timestamps = result.timestamp || [];
+      const q = result.indicators?.quote?.[0] || {};
+      const adj = result.indicators?.adjclose?.[0]?.adjclose || [];
+      const quotes = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        quotes.push({
+          date: new Date(timestamps[i] * 1000),
+          open: q.open?.[i] ?? null,
+          high: q.high?.[i] ?? null,
+          low: q.low?.[i] ?? null,
+          close: q.close?.[i] ?? null,
+          volume: q.volume?.[i] ?? null,
+          adjclose: adj?.[i] ?? q.close?.[i] ?? null
+        });
+      }
+
+      return { meta: result.meta || null, quotes };
+    } catch (err) {
+      lastError = err;
+      // No reintentar otro host si es 429 o 404
+      if (err.status === 429 || err.status === 404) {
+        throw err;
+      }
+    }
   }
-} catch (e) {
-  logger.error('MarketSync', `Aviso: No se pudo instanciar yahoo-finance2: ${e.message}`);
+  throw lastError || new Error(`Yahoo Chart Error (${symbol})`);
 }
 
 let isSyncing = false;
@@ -34,6 +118,7 @@ let finnhubWindowRequests = 0;
 // Cache para EMA 21 (evitar recalcular innecesariamente en memoria durante la misma corrida si Yahoo falla)
 const emaMemoryCache = new Map();
 const invalidBreakStreakCache = new Map(); // symbol -> streak count
+const pendingEmaRequests = new Map(); // symbol -> Promise
 
 async function runSync(reason = 'manual') {
   if (isSyncing) {
@@ -290,39 +375,63 @@ async function runSync(reason = 'manual') {
     }
     timeYahoo = performance.now() - yahooStartTime;
 
-    // 4. Calcular EMAs pendientes
+    // 4. Calcular EMAs pendientes (priorizando posiciones abiertas, alertas activas y priority=1)
     const emaStartTime = performance.now();
     const newEmas = new Map();
     if (symbolsForEma.length > 0) {
-      // Hacemos el cálculo secuencial (o lotes pequeños) para no spamear la API de histórico de Yahoo
-      // ya que esto se hace solo 1 vez cada 12 horas.
-      // CONCURRENCIA REDUCIDA a 3 + delay entre batches para evitar rate-limit de Yahoo.
-      const EMA_CONCURRENCY = 3;
-      logger.info('Setup/EMA', `Starting EMA/Setup calculation for ${symbolsForEma.length} symbols...`);
-      for (let i = 0; i < symbolsForEma.length; i += EMA_CONCURRENCY) {
-        const batch = symbolsForEma.slice(i, i + EMA_CONCURRENCY);
-        const promises = batch.map(async (sym) => {
-          try {
-            const setup = await calculateDailySetup(sym);
-            if (setup !== null) {
-              newEmas.set(sym, setup);
-              emaSuccess++;
-            } else {
-              emaFailed++;
-            }
-          } catch (e) {
-            emaFailed++;
-            logger.error('Setup/EMA', `Failed for ${sym}: ${e.message}`);
+      if (Date.now() < yahooCooldownUntil) {
+        logger.warn('Setup/EMA', `Yahoo is on cooldown until ${new Date(yahooCooldownUntil).toLocaleTimeString()}. Skipping EMA calculation for ${symbolsForEma.length} symbols.`);
+        emaFailed += symbolsForEma.length;
+      } else {
+        // Priorizar símbolos de portafolio abierto y alertas activas para que se calculen primero
+        let prioritySet = new Set(rows.filter(r => r.priority === 1).map(r => r.symbol));
+        try {
+          const [openPos] = await db.query("SELECT DISTINCT symbol FROM trades WHERE exit_price IS NULL OR status = 'OPEN'");
+          const [activeAl] = await db.query('SELECT DISTINCT symbol FROM market_alerts WHERE is_active = 1');
+          for (const r of [...openPos, ...activeAl]) {
+            if (r.symbol) prioritySet.add(r.symbol.toUpperCase());
           }
-        });
-        await Promise.allSettled(promises);
-        // Log de progreso cada 15 símbolos para confirmar que el proceso avanza.
-        if ((i + EMA_CONCURRENCY) % 15 === 0 || i + EMA_CONCURRENCY >= symbolsForEma.length) {
-          logger.debug('Setup/EMA', `Progress: ${Math.min(i + EMA_CONCURRENCY, symbolsForEma.length)}/${symbolsForEma.length} | OK: ${emaSuccess} | Fail: ${emaFailed}`);
-        }
-        // Pausa entre batches para no saturar Yahoo Finance y evitar rate-limit.
-        if (i + EMA_CONCURRENCY < symbolsForEma.length) {
-          await new Promise(r => setTimeout(r, 600));
+        } catch (_) {}
+
+        symbolsForEma.sort((a, b) => (prioritySet.has(b) ? 1 : 0) - (prioritySet.has(a) ? 1 : 0));
+
+        const EMA_CONCURRENCY = 3;
+        logger.info('Setup/EMA', `Starting EMA/Setup calculation for ${symbolsForEma.length} symbols...`);
+        let rateLimitedAbort = false;
+        for (let i = 0; i < symbolsForEma.length; i += EMA_CONCURRENCY) {
+          const batch = symbolsForEma.slice(i, i + EMA_CONCURRENCY);
+          const promises = batch.map(async (sym) => {
+            try {
+              const setup = await calculateDailySetup(sym);
+              if (setup !== null) {
+                newEmas.set(sym, setup);
+                emaSuccess++;
+              } else {
+                emaFailed++;
+              }
+            } catch (e) {
+              emaFailed++;
+              if (isRateLimitError(e)) {
+                rateLimitedAbort = true;
+              }
+              logger.error('Setup/EMA', `Failed for ${sym}: ${e.message}`);
+            }
+          });
+          await Promise.allSettled(promises);
+
+          if (rateLimitedAbort) {
+            yahooCooldownUntil = Date.now() + 15 * 60 * 1000;
+            logger.warn('Setup/EMA', `Yahoo HTTP 429 detected. Activating 15m cooldown and aborting remaining ${symbolsForEma.length - (i + batch.length)} EMA calculations.`);
+            emaFailed += Math.max(0, symbolsForEma.length - (i + batch.length));
+            break;
+          }
+
+          if ((i + EMA_CONCURRENCY) % 15 === 0 || i + EMA_CONCURRENCY >= symbolsForEma.length) {
+            logger.debug('Setup/EMA', `Progress: ${Math.min(i + EMA_CONCURRENCY, symbolsForEma.length)}/${symbolsForEma.length} | OK: ${emaSuccess} | Fail: ${emaFailed}`);
+          }
+          if (i + EMA_CONCURRENCY < symbolsForEma.length) {
+            await new Promise(r => setTimeout(r, 400));
+          }
         }
       }
     }
@@ -334,75 +443,88 @@ async function runSync(reason = 'manual') {
     let rsiSuccess = 0;
     let rsiFailed = 0;
     if (symbolsForRsi.length > 0) {
-      // CONCURRENCIA REDUCIDA a 3 + delay entre batches para evitar rate-limit de Yahoo.
-      const RSI_CONCURRENCY = 3;
+      if (Date.now() < yahooCooldownUntil) {
+        logger.warn('RSI/MACD', `Yahoo is on cooldown until ${new Date(yahooCooldownUntil).toLocaleTimeString()}. Skipping RSI calculation for ${symbolsForRsi.length} symbols.`);
+        rsiFailed += symbolsForRsi.length;
+      } else {
+        const RSI_CONCURRENCY = 3;
 
-      // Pre-calentar la caché de índices ANTES del loop paralelo.
-      // Esto evita que múltiples promises disparen la misma llamada a Yahoo al mismo tiempo.
-      const uniqueIndexSymbols = [...new Set(symbolsForRsi.map(s => s.index_symbol).filter(Boolean))];
-      if (uniqueIndexSymbols.length > 0) {
-        logger.debug('RSI/MACD', `Pre-fetching index history for: ${uniqueIndexSymbols.join(', ')}`);
-        for (const idxSym of uniqueIndexSymbols) {
-          await getIndexHistory(idxSym); // Popula indexCache de forma secuencial
-        }
-      }
-
-      logger.info('RSI/MACD', `Starting RSI/MACD/RS calculation for ${symbolsForRsi.length} symbols...`);
-      for (let i = 0; i < symbolsForRsi.length; i += RSI_CONCURRENCY) {
-        const batch = symbolsForRsi.slice(i, i + RSI_CONCURRENCY);
-        const promises = batch.map(async (item) => {
-          const sym = item.symbol;
-          const index_symbol = item.index_symbol;
-          try {
-            const ind = await calculateWeeklyIndicators(sym, index_symbol);
-            if (ind) {
-              const { rsi, macd } = ind;
-              const quoteData = newQuotes.get(sym) || {};
-
-              if (index_symbol) {
-                quoteData.market_regime = await calculateIndexRegime(index_symbol);
-              }
-              quoteData.index_symbol = index_symbol; // Needed for grouping
-
-              if (rsi && rsi.current !== null) {
-                quoteData.rsi_weekly = rsi.current;
-                quoteData.rsi_previous = rsi.previous;
-                quoteData.rsi_delta = rsi.delta;
-              }
-              if (macd && macd.current !== null) {
-                quoteData.macd_weekly = macd.current;
-                quoteData.macd_signal = macd.signal;
-                quoteData.macd_hist = macd.hist;
-                quoteData.macd_prev_weekly = macd.prev_current;
-                quoteData.macd_prev_signal = macd.prev_signal;
-                quoteData.macd_prev_hist = macd.prev_hist;
-              }
-              if (ind.drawdown52w !== null) {
-                quoteData.drawdown_52w = ind.drawdown52w;
-              }
-              if (ind.rs_value !== undefined) {
-                quoteData.rs_value = ind.rs_value;
-                quoteData.rs_previous = ind.rs_previous;
-                quoteData.rs_state = ind.rs_state;
-              }
-              newRsis.set(sym, quoteData);
-              rsiSuccess++;
-            } else {
-              rsiFailed++;
-            }
-          } catch (e) {
-            rsiFailed++;
-            logger.debug('RSI/MACD', `Failed for ${sym}: ${e.message}`);
+        const uniqueIndexSymbols = [...new Set(symbolsForRsi.map(s => s.index_symbol).filter(Boolean))];
+        if (uniqueIndexSymbols.length > 0) {
+          logger.debug('RSI/MACD', `Pre-fetching index history for: ${uniqueIndexSymbols.join(', ')}`);
+          for (const idxSym of uniqueIndexSymbols) {
+            await getIndexHistory(idxSym);
           }
-        });
-        await Promise.allSettled(promises);
-        // Log de progreso cada 15 símbolos para confirmar que el proceso avanza.
-        if ((i + RSI_CONCURRENCY) % 15 === 0 || i + RSI_CONCURRENCY >= symbolsForRsi.length) {
-          logger.debug('RSI/MACD', `Progress: ${Math.min(i + RSI_CONCURRENCY, symbolsForRsi.length)}/${symbolsForRsi.length} | OK: ${rsiSuccess} | Fail: ${rsiFailed}`);
         }
-        // Pausa entre batches para no saturar Yahoo Finance y evitar rate-limit.
-        if (i + RSI_CONCURRENCY < symbolsForRsi.length) {
-          await new Promise(r => setTimeout(r, 500));
+
+        logger.info('RSI/MACD', `Starting RSI/MACD/RS calculation for ${symbolsForRsi.length} symbols...`);
+        let rsiRateLimitedAbort = false;
+        for (let i = 0; i < symbolsForRsi.length; i += RSI_CONCURRENCY) {
+          const batch = symbolsForRsi.slice(i, i + RSI_CONCURRENCY);
+          const promises = batch.map(async (item) => {
+            const sym = item.symbol;
+            const index_symbol = item.index_symbol;
+            try {
+              const ind = await calculateWeeklyIndicators(sym, index_symbol);
+              if (ind) {
+                const { rsi, macd } = ind;
+                const quoteData = newQuotes.get(sym) || {};
+
+                if (index_symbol) {
+                  quoteData.market_regime = await calculateIndexRegime(index_symbol);
+                }
+                quoteData.index_symbol = index_symbol; // Needed for grouping
+
+                if (rsi && rsi.current !== null) {
+                  quoteData.rsi_weekly = rsi.current;
+                  quoteData.rsi_previous = rsi.previous;
+                  quoteData.rsi_delta = rsi.delta;
+                }
+                if (macd && macd.current !== null) {
+                  quoteData.macd_weekly = macd.current;
+                  quoteData.macd_signal = macd.signal;
+                  quoteData.macd_hist = macd.hist;
+                  quoteData.macd_prev_weekly = macd.prev_current;
+                  quoteData.macd_prev_signal = macd.prev_signal;
+                  quoteData.macd_prev_hist = macd.prev_hist;
+                }
+                if (ind.drawdown52w !== null) {
+                  quoteData.drawdown_52w = ind.drawdown52w;
+                  quoteData.max_drawdown_52w = ind.maxDrawdown52w;
+                }
+                if (ind.rs_value !== undefined) {
+                  quoteData.rs_value = ind.rs_value;
+                  quoteData.rs_previous = ind.rs_previous;
+                  quoteData.rs_state = ind.rs_state;
+                }
+                newRsis.set(sym, quoteData);
+                rsiSuccess++;
+              } else {
+                rsiFailed++;
+              }
+            } catch (e) {
+              rsiFailed++;
+              if (isRateLimitError(e)) {
+                rsiRateLimitedAbort = true;
+              }
+              logger.debug('RSI/MACD', `Failed for ${sym}: ${e.message}`);
+            }
+          });
+          await Promise.allSettled(promises);
+
+          if (rsiRateLimitedAbort) {
+            yahooCooldownUntil = Date.now() + 15 * 60 * 1000;
+            logger.warn('RSI/MACD', `Yahoo HTTP 429 detected. Activating 15m cooldown and aborting remaining RSI calculations.`);
+            rsiFailed += Math.max(0, symbolsForRsi.length - (i + batch.length));
+            break;
+          }
+
+          if ((i + RSI_CONCURRENCY) % 15 === 0 || i + RSI_CONCURRENCY >= symbolsForRsi.length) {
+            logger.debug('RSI/MACD', `Progress: ${Math.min(i + RSI_CONCURRENCY, symbolsForRsi.length)}/${symbolsForRsi.length} | OK: ${rsiSuccess} | Fail: ${rsiFailed}`);
+          }
+          if (i + RSI_CONCURRENCY < symbolsForRsi.length) {
+            await new Promise(r => setTimeout(r, 400));
+          }
         }
       }
       
@@ -582,10 +704,10 @@ async function runSync(reason = 'manual') {
         if (rsiData.drawdown_52w !== undefined) {
           if (!updateQuery.endsWith(', ') && !updateQuery.endsWith('macd_prev_hist') && !updateQuery.endsWith('rsi_updated_at')) updateQuery += ', ';
           else if (updateQuery.endsWith('macd_prev_hist') || updateQuery.endsWith('rsi_updated_at')) updateQuery += ', ';
-          updateQuery += 'drawdown_52w';
-          updatePlaceholders.push('?');
-          updateValues.push(rsiData.drawdown_52w);
-          onDuplicateUpdate.push('drawdown_52w = VALUES(drawdown_52w)');
+          updateQuery += 'drawdown_52w, max_drawdown_52w';
+          updatePlaceholders.push('?', '?');
+          updateValues.push(rsiData.drawdown_52w, rsiData.max_drawdown_52w ?? null);
+          onDuplicateUpdate.push('drawdown_52w = VALUES(drawdown_52w)', 'max_drawdown_52w = VALUES(max_drawdown_52w)');
         }
         if (rsiData.rs_value !== undefined) {
           if (!updateQuery.endsWith(', ') && !updateQuery.endsWith('drawdown_52w') && !updateQuery.endsWith('macd_prev_hist') && !updateQuery.endsWith('rsi_updated_at')) updateQuery += ', ';
@@ -786,22 +908,40 @@ async function fetchFinnhub(symbol) {
 }
 
 async function fetchYahooBulk(symbols) {
-  try {
-    const quotes = await yahooFinance.quote(symbols);
-    const quotesArray = Array.isArray(quotes) ? quotes : [quotes];
-    return quotesArray.flatMap(q => {
-      const symbol = symbols.includes(q.symbol) ? q.symbol : symbols.find(s => s === q.symbol + '=F');
-      if (!symbol) return [];
-      return [{ symbol, data: {
-        price: q.regularMarketPrice,
-        quoteTime: q.regularMarketTime ? Math.floor(q.regularMarketTime.getTime() / 1000) : null,
-        changeAmount: q.regularMarketChange,
-        changePercent: q.regularMarketChangePercent
-      } }];
-    });
-  } catch (error) {
-    throw new Error(`Yahoo Bulk Quote Error - ${error.message}`);
+  const results = [];
+  const CONCURRENCY = 5;
+  for (let i = 0; i < symbols.length; i += CONCURRENCY) {
+    const chunk = symbols.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(
+      chunk.map(async (symbol) => {
+        const { meta } = await fetchYahooChartDirect(symbol, { range: '5d', interval: '1d', timeoutMs: 10000 });
+        if (!meta || !(meta.regularMarketPrice > 0)) return null;
+        const price = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose || meta.previousClose || price;
+        const changeAmount = prevClose > 0 ? price - prevClose : 0;
+        const changePercent = meta.regularMarketChangePercent != null
+          ? meta.regularMarketChangePercent
+          : (prevClose > 0 ? (changeAmount / prevClose) * 100 : 0);
+        return {
+          symbol,
+          data: {
+            price,
+            quoteTime: meta.regularMarketTime || null,
+            changeAmount,
+            changePercent
+          }
+        };
+      })
+    );
+    for (const s of settled) {
+      if (s.status === 'fulfilled' && s.value) {
+        results.push(s.value);
+      } else if (s.status === 'rejected' && isRateLimitError(s.reason)) {
+        throw s.reason;
+      }
+    }
   }
+  return results;
 }
 
 /**
@@ -954,21 +1094,23 @@ async function calculateDailySetup(symbol) {
   const SLOPE_THRESHOLD_PCT = 0.20;
   const MIN_SEPARATION_PCT = 1.0;
 
-  const chartOptions = { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1d' };
   let data;
   try {
-    // Timeout de 20s: si Yahoo no responde, lanzamos error en lugar de quedar clavados.
-    data = await withTimeout(yahooFinance.chart(symbol, chartOptions), 20000, `daily chart ${symbol}`);
+    data = await fetchYahooChartDirect(symbol, { range: '2y', interval: '1d', timeoutMs: 20000 });
   } catch (e) {
-    // Los commodities (=F) y símbolos ya con sufijo no necesitan el fallback .BA
-    if (!symbol.includes('.') && !symbol.includes('=')) {
+    // No hacer fallback .BA ante 429 o timeout; solo cuando el ticker no existe (404)
+    if (!isRateLimitError(e) && !String(e.message).includes('Timeout') && !symbol.includes('.') && !symbol.includes('=')) {
       try {
-        data = await withTimeout(yahooFinance.chart(symbol + '.BA', chartOptions), 20000, `daily chart ${symbol}.BA`);
+        data = await fetchYahooChartDirect(symbol + '.BA', { range: '2y', interval: '1d', timeoutMs: 20000 });
       } catch (e2) {
-        throw new Error(`Yahoo Chart Error ${e2.message}`);
+        const err = new Error(`Yahoo Chart Error ${e2.message}`);
+        if (isRateLimitError(e2)) err.status = 429;
+        throw err;
       }
     } else {
-      throw new Error(`Yahoo Chart Error ${e.message}`);
+      const err = new Error(`Yahoo Chart Error ${e.message}`);
+      if (isRateLimitError(e)) err.status = 429;
+      throw err;
     }
   }
 
@@ -976,8 +1118,12 @@ async function calculateDailySetup(symbol) {
 
   let closes = [], highs = [], lows = [], opens = [], volumes = [];
   for (const q of data.quotes) {
-    if (q.close !== null && !isNaN(q.close) && q.high !== null && !isNaN(q.high) && q.low !== null && !isNaN(q.low) && q.open !== null && !isNaN(q.open) && q.volume !== null && !isNaN(q.volume)) {
-      closes.push(q.close); highs.push(q.high); lows.push(q.low); opens.push(q.open); volumes.push(q.volume);
+    if (q.close !== null && Number.isFinite(q.close) && q.high !== null && Number.isFinite(q.high) && q.low !== null && Number.isFinite(q.low) && q.open !== null && Number.isFinite(q.open)) {
+      closes.push(q.close);
+      highs.push(q.high);
+      lows.push(q.low);
+      opens.push(q.open);
+      volumes.push(q.volume !== null && Number.isFinite(q.volume) ? q.volume : 0);
     }
   }
 
@@ -1472,7 +1618,7 @@ async function getIndexHistory(indexSymbol) {
 
   const promise = (async () => {
     try {
-      const data = await yahooFinance.chart(indexSymbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' });
+      const data = await fetchYahooChartDirect(indexSymbol, { range: '2y', interval: '1wk', timeoutMs: 20000 });
       if (!data || !data.quotes || data.quotes.length === 0) return null;
 
       let closesByTime = new Map();
@@ -1542,14 +1688,11 @@ async function calculateIndexRegime(indexSymbol) {
 async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod = 14) {
   let data;
   try {
-    // Timeout de 20s: si Yahoo no responde, lanzamos error en lugar de quedar clavados.
-    data = await withTimeout(
-      yahooFinance.chart(symbol, { period1: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], interval: '1wk' }),
-      20000,
-      `weekly chart ${symbol}`
-    );
+    data = await fetchYahooChartDirect(symbol, { range: '2y', interval: '1wk', timeoutMs: 20000 });
   } catch (e) {
-    throw new Error(`Yahoo Chart Error ${e.message}`);
+    const err = new Error(`Yahoo Chart Error ${e.message}`);
+    if (isRateLimitError(e)) err.status = 429;
+    throw err;
   }
 
   if (!data || !data.quotes || data.quotes.length === 0) return null;
@@ -1705,78 +1848,194 @@ async function calculateWeeklyIndicators(symbol, indexSymbol = null, rsiPeriod =
     }
   }
 
-  return { rsi, macd, drawdown52w, rs_value, rs_previous, rs_state };
+  const { maxDrawdown52w } = require('./portfolioHistory');
+  return { rsi, macd, drawdown52w, maxDrawdown52w: maxDrawdown52w(data.quotes.slice(0, endIdx).map(q => q.adjclose ?? q.close).filter(close => Number.isFinite(close) && close > 0).slice(-52)), rs_value, rs_previous, rs_state };
 }
 
 async function resetDailyData() {
   const db = getPool();
   try {
-    logger.info('MarketSync', 'Midnight reset: clearing setups, EMAs, RSIs, RS and OP Scores...');
+    // Stale-while-revalidate: marcamos timestamps como vencidos para forzar recálculo
+    // SIN borrar setup_factors ni ema21_distance, así Portafolio y Alertas nunca quedan vacíos.
+    logger.info('MarketSync', 'Midnight refresh: marking EMA, RSI and RS timestamps stale for recalculation...');
     await db.execute(`
-      UPDATE market_snapshot 
-      SET ema_updated_at = NULL, 
-          rsi_updated_at = NULL, 
-          rs_updated_at  = NULL,
-          setup_state = NULL, 
-          op_score = NULL,
-          setup_verdict = NULL,
-          setup_factors = NULL,
-          op_score_conclusions = NULL,
-          market_regime = NULL
+      UPDATE market_snapshot
+      SET ema_updated_at = IF(ema_updated_at IS NOT NULL, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL),
+          rsi_updated_at = IF(rsi_updated_at IS NOT NULL, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL),
+          rs_updated_at  = IF(rs_updated_at  IS NOT NULL, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL)
     `);
-    logger.info('MarketSync', 'Midnight reset complete. Next sync will recalculate everything.');
+    logger.info('MarketSync', 'Midnight refresh complete. Existing EMAs preserved until recalculated.');
   } catch (error) {
-    logger.error('MarketSync', `Error in midnight reset: ${error.message}`);
+    logger.error('MarketSync', `Error in midnight refresh: ${error.message}`);
   }
+}
+
+// Calcula y persiste EMA21 on-demand para los símbolos visibles (Portafolio / Alertas) que no tengan EMA válida.
+async function ensureEmaSnapshots(symbols, { db = getPool(), maxAgeMs = 24 * 60 * 60 * 1000 } = {}) {
+  const clean = [...new Set((symbols || []).map(s => String(s || '').trim().toUpperCase()).filter(Boolean))];
+  if (!clean.length) return {};
+  if (Date.now() < yahooCooldownUntil) return {};
+
+  let rows = [];
+  try {
+    const [existing] = await db.query(
+      'SELECT symbol, setup_factors, ema_updated_at, TIMESTAMPDIFF(SECOND, ema_updated_at, NOW()) AS ema_age_sec FROM market_snapshot WHERE symbol IN (?)',
+      [clean]
+    );
+    rows = existing;
+  } catch (e) {
+    logger.warn('Setup/EMA', `ensureEmaSnapshots lookup failed: ${e.message}`);
+    return {};
+  }
+
+  const rowMap = new Map(rows.map(r => [r.symbol, r]));
+  const maxAgeSec = maxAgeMs / 1000;
+  const missing = clean.filter(sym => {
+    const r = rowMap.get(sym);
+    if (!r || !r.ema_updated_at || !r.setup_factors) return true;
+    const ageSec = Number(r.ema_age_sec);
+    if (!Number.isFinite(ageSec) || ageSec > maxAgeSec) return true;
+    try {
+      const parsed = typeof r.setup_factors === 'string' ? JSON.parse(r.setup_factors) : r.setup_factors;
+      const ema = Number(parsed?.currentEma21 ?? parsed?.ema21);
+      return !(Number.isFinite(ema) && ema > 0);
+    } catch {
+      return true;
+    }
+  });
+
+  if (!missing.length) return {};
+
+  const updated = {};
+  const CONCURRENCY = 4;
+  for (let i = 0; i < missing.length; i += CONCURRENCY) {
+    if (Date.now() < yahooCooldownUntil) break;
+    const batch = missing.slice(i, i + CONCURRENCY);
+    await Promise.allSettled(
+      batch.map(async (sym) => {
+        if (!pendingEmaRequests.has(sym)) {
+          const promise = (async () => {
+            const setup = await calculateDailySetup(sym);
+            if (!setup || !(setup.ema21 > 0)) return null;
+            const currentPrice = setup.setup_factors?.currentPrice ?? null;
+            await db.execute(
+              `INSERT INTO market_snapshot (symbol, price, ema21_distance, ema_updated_at, setup_state, setup_verdict, setup_factors, updated_at, status)
+               VALUES (?, ?, ?, NOW(), ?, ?, ?, NOW(), 'LIVE')
+               ON DUPLICATE KEY UPDATE
+                 price = COALESCE(VALUES(price), price),
+                 ema21_distance = VALUES(ema21_distance),
+                 ema_updated_at = NOW(),
+                 setup_state = VALUES(setup_state),
+                 setup_verdict = VALUES(setup_verdict),
+                 setup_factors = VALUES(setup_factors),
+                 updated_at = NOW()`,
+              [sym, currentPrice, setup.ema21_distance, setup.setup_state, setup.setup_verdict, JSON.stringify(setup.setup_factors)]
+            );
+            return setup;
+          })().finally(() => pendingEmaRequests.delete(sym));
+          pendingEmaRequests.set(sym, promise);
+        }
+        try {
+          const setup = await pendingEmaRequests.get(sym);
+          if (setup) updated[sym] = setup;
+        } catch (err) {
+          if (isRateLimitError(err)) {
+            yahooCooldownUntil = Date.now() + 15 * 60 * 1000;
+          }
+          logger.warn('Setup/EMA', `On-demand EMA failed for ${sym}: ${err.message}`);
+        }
+      })
+    );
+  }
+  return updated;
 }
 
 // A separate short cache keeps alert checks away from the long-lived UI price cache.
 const alertQuoteCache = new Map();
 const pendingAlertQuotes = new Map();
-async function fetchAlertQuotes(symbols) {
+async function fetchAlertQuotes(symbols, { force = false } = {}) {
   const result = {};
-  const missing = symbols.filter(symbol => {
+  const clean = [...new Set((symbols || []).map(s => String(s || '').trim().toUpperCase()).filter(Boolean))];
+  const missing = clean.filter(symbol => {
     const cached = alertQuoteCache.get(symbol);
-    if (cached && Date.now() - cached.at < 30000) {
-      result[symbol] = cached.quote;
+    if (!force && cached && Date.now() - cached.at < 30000) {
+      if (cached.quote) result[symbol] = cached.quote;
       return false;
     }
     return true;
   });
-  for (let offset = 0; offset < missing.length; offset += 10) {
-    const batch = missing.slice(offset, offset + 10);
-    const key = [...batch].sort().join(',');
-    if (!pendingAlertQuotes.has(key)) {
-      const request = (async () => {
-        const raw = await withTimeout(yahooFinance.quote(batch), 10000, 'alert quotes');
-        const quotes = {};
-        for (const quote of (Array.isArray(raw) ? raw : [raw])) {
-          if (!quote || !batch.includes(quote.symbol)) continue;
-          const value = {
-            price: quote.regularMarketPrice,
-            quoteTime: quote.regularMarketTime,
-            marketState: quote.marketState,
-            delayedMinutes: quote.exchangeDataDelayedBy
-          };
-          quotes[quote.symbol] = value;
-          alertQuoteCache.set(quote.symbol, { at: Date.now(), quote: value });
+
+  const CONCURRENCY = 4;
+  for (let offset = 0; offset < missing.length; offset += CONCURRENCY) {
+    const batch = missing.slice(offset, offset + CONCURRENCY);
+    await Promise.allSettled(
+      batch.map(async (symbol) => {
+        if (!pendingAlertQuotes.has(symbol)) {
+          const request = (async () => {
+            try {
+              const { meta } = await fetchYahooChartDirect(symbol, { range: '1d', interval: '1m', timeoutMs: 10000 });
+              if (!meta || !(meta.regularMarketPrice > 0)) throw new Error('Missing Yahoo quote');
+
+              const nowSec = Math.floor(Date.now() / 1000);
+              const marketState = meta.marketState || deriveMarketStateFromPeriod(meta.currentTradingPeriod, nowSec);
+              let price = meta.regularMarketPrice;
+              let quoteTime = meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000) : null;
+              let delayedMinutes = meta.exchangeDataDelayedBy != null
+                ? Number(meta.exchangeDataDelayedBy)
+                : (REALTIME_EXCHANGES.has(meta.exchangeName) ? 0 : null);
+
+              // Match Portfolio's Finnhub priority; Yahoo supplies market-session metadata.
+              if (FINNHUB_API_KEY && !symbol.endsWith('.BA') && !symbol.includes('=F')) {
+                try {
+                  const fh = await fetchFinnhub(symbol);
+                  if (fh?.price > 0 && fh?.quoteTime > 0
+                      && (!quoteTime || fh.quoteTime * 1000 >= quoteTime.getTime())) {
+                    price = fh.price;
+                    quoteTime = new Date(fh.quoteTime * 1000);
+                    delayedMinutes = 0;
+                  }
+                } catch (_) {}
+              }
+
+              const value = { price, quoteTime, marketState, delayedMinutes };
+              alertQuoteCache.set(symbol, { at: Date.now(), quote: value });
+              return value;
+            } catch (error) {
+              logger.warn('Alerts', `Live Yahoo chart quote unavailable for ${symbol}: ${error.message}`);
+              // Fallback a Finnhub solo para mostrar precio actual (marketState queda undefined para no disparar en falso)
+              if (FINNHUB_API_KEY && !symbol.endsWith('.BA') && !symbol.includes('=F')) {
+                try {
+                  const fh = await fetchFinnhub(symbol);
+                  if (fh?.price > 0) {
+                    const value = {
+                      price: fh.price,
+                      quoteTime: fh.quoteTime ? new Date(fh.quoteTime * 1000) : null,
+                      marketState: undefined,
+                      delayedMinutes: 0
+                    };
+                    alertQuoteCache.set(symbol, { at: Date.now(), quote: value });
+                    return value;
+                  }
+                } catch (_) {}
+              }
+              alertQuoteCache.set(symbol, { at: Date.now(), quote: null });
+              return null;
+            }
+          })().finally(() => pendingAlertQuotes.delete(symbol));
+          pendingAlertQuotes.set(symbol, request);
         }
-        return quotes;
-      })().finally(() => pendingAlertQuotes.delete(key));
-      pendingAlertQuotes.set(key, request);
-    }
-    try {
-      Object.assign(result, await pendingAlertQuotes.get(key));
-    } catch (error) {
-      logger.warn('Alerts', `Live quotes unavailable: ${error.message}`);
-      for (const symbol of batch) alertQuoteCache.set(symbol, { at: Date.now(), quote: null });
-    }
+        const quote = await pendingAlertQuotes.get(symbol);
+        if (quote) result[symbol] = quote;
+      })
+    );
   }
   return result;
 }
 
 module.exports = {
   fetchAlertQuotes,
+  fetchYahooChartDirect,
+  ensureEmaSnapshots,
   runSync,
   calculateWeeklyIndicators,
   calculateDailySetup,

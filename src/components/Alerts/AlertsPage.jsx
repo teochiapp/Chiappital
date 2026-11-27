@@ -4,6 +4,7 @@ import { BellRing, Plus, Edit2, Trash2, RefreshCw, AlertCircle, ArrowUpRight, Ar
 import { StyledContainer } from '../common/StyledComponents';
 import FeedbackModal from '../common/FeedbackModal';
 import { useAlerts } from '../../context/AlertsContext';
+import { canEvaluateAlertQuote } from '../../services/alertQuotes';
 import alertService from '../../services/alertService';
 import { colors } from '../../styles/colors';
 import CreateAlertModal from './CreateAlertModal';
@@ -11,7 +12,7 @@ import EmailConfigModal from './EmailConfigModal';
 import { Mail } from 'lucide-react';
 
 const AlertsPage = () => {
-  const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices, emaChecks, checkError } = useAlerts();
+  const { alerts, loading, fetchAlerts, checkAlertPrices, currentPrices, currentQuotes, emaChecks, checkError } = useAlerts();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -24,12 +25,12 @@ const AlertsPage = () => {
   const [feedback, setFeedback] = useState({ isOpen: false, type: 'info', title: '', message: '', isConfirm: false, onConfirm: null });
 
   useEffect(() => {
-    fetchAlerts();
+    checkAlertPrices();
   }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await checkAlertPrices();
+    await checkAlertPrices({ force: true });
     setIsRefreshing(false);
   };
 
@@ -94,7 +95,7 @@ const AlertsPage = () => {
         notes: alertData.notes,
         is_active: alertData.is_active ? 0 : 1
       });
-      fetchAlerts();
+      await checkAlertPrices();
     } catch (error) {
       console.error(error);
       setTimeout(() => {
@@ -127,13 +128,20 @@ const AlertsPage = () => {
     triggered: 'Condición alcanzada'
   }[emaChecks[a.id]?.status] || 'Esperando comprobación');
 
+  const fixedStatus = a => {
+    const quote = currentQuotes[a.symbol];
+    if (!quote?.marketState) return 'Cotización no disponible';
+    if (quote.marketState !== 'REGULAR') return 'Esperando apertura del mercado';
+    return canEvaluateAlertQuote(quote) ? 'Monitoreando cada minuto' : 'Esperando cotización sin demora';
+  };
+
   return (
     <Layout>
       <StyledContainer>
         <Header>
           <TitleArea>
             <Title><BellRing size={24} style={{ marginRight: '8px', color: '#f59e0b' }}/> Alertas de Mercado</Title>
-            <Sub>EMA21: cada minuto con mercado abierto · Precio objetivo: cada 15 min · Mantené Chiappital abierto</Sub>
+            <Sub>Cotizaciones y alertas: cada minuto con mercado abierto · Mantené Chiappital abierto</Sub>
           </TitleArea>
           <HeaderBtns>
             <RefreshBtn onClick={handleRefresh} disabled={isRefreshing || loading}>
@@ -212,7 +220,7 @@ const AlertsPage = () => {
                             <ToggleBtn $active={true} onClick={() => toggleActive(a)}>
                               <Activity size={12}/> Activa
                             </ToggleBtn>
-                            {a.condition_type === 'ema21_above' && <div style={{ color: '#94a3b8', fontSize: '.75rem', marginTop: '.4rem' }}>{emaStatus(a)}</div>}
+                            <div style={{ color: '#94a3b8', fontSize: '.75rem', marginTop: '.4rem' }}>{a.condition_type === 'ema21_above' ? emaStatus(a) : fixedStatus(a)}</div>
                           </Td>
                           <Td style={{textAlign: 'right'}}>
                             <ActionBtns>
@@ -301,7 +309,7 @@ const AlertsPage = () => {
         onClose={closeModal}
         initialData={alertInitialData}
         onSuccess={() => {
-          fetchAlerts();
+          checkAlertPrices();
           setFeedback({
             isOpen: true,
             type: 'success',

@@ -616,6 +616,19 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
     }).format(amount);
   };
 
+  const handleManualRefresh = async () => {
+    const tickers = symbolKey ? symbolKey.split(',') : [];
+    const tasks = [refreshPrices()];
+    if (tickers.length > 0) {
+      tasks.push(
+        readInstruments(tickers, 0)
+          .then(rows => setReferences(rows))
+          .catch(() => {})
+      );
+    }
+    await Promise.allSettled(tasks);
+  };
+
   if (loading) {
     return (
       <PositionsContainer>
@@ -709,7 +722,7 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
             )}
           </div>
           <RefreshButton 
-            onClick={refreshPrices} 
+            onClick={handleManualRefresh} 
             disabled={pricesLoading}
           >
             {pricesLoading ? (
@@ -858,7 +871,11 @@ const ActivePositions = ({ openTrades, loading, error, onCloseTrade, onUpdateTra
                     ? (price / reference.ema21 - 1) * 100 : null;
 
                   return (
-                    <EmaBadgeWrapper $value={emaValue} $loading={isLoading}>
+                    <EmaBadgeWrapper
+                      $value={emaValue}
+                      $loading={isLoading}
+                      title={reference?.ema21 > 0 ? `EMA21 diaria: $${Number(reference.ema21).toFixed(2)}` : undefined}
+                    >
                       {isLoading
                         ? <EmaSpinner />
                         : <Activity size={14} color={emaValue === null ? '#64748b' : emaValue >= 0 ? '#4ade80' : '#f87171'} />

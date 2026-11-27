@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getPool } = require('../database/db');
-const { runSync } = require('../services/marketSyncService');
+const { runSync, ensureEmaSnapshots } = require('../services/marketSyncService');
 const { getMacroSummary, getSectorSummary } = require('../services/macroSectorService');
 
 // Lectura por clave primaria para precios y EMA de una lista visible.
@@ -11,12 +11,35 @@ router.get('/instruments', async (req, res) => {
   if (!symbols.length || symbols.length > 100 || symbols.some(s => s.length > 20)) {
     return res.status(400).json({ error: 'Se requieren entre 1 y 100 tickers válidos.' });
   }
-  try {
+  const queryInstruments = async (list) => {
     const [rows] = await getPool().query(
       `SELECT symbol, price, quote_time, ema_updated_at,
-              JSON_UNQUOTE(JSON_EXTRACT(setup_factors, '$.currentEma21')) AS ema21
-       FROM market_snapshot WHERE symbol IN (?)`, [symbols]
+              COALESCE(
+                JSON_UNQUOTE(JSON_EXTRACT(setup_factors, '$.currentEma21')),
+                JSON_UNQUOTE(JSON_EXTRACT(setup_factors, '$.ema21'))
+              ) AS ema21
+       FROM market_snapshot WHERE symbol IN (?)`, [list]
     );
+    return rows;
+  };
+  try {
+    let rows = await queryInstruments(symbols);
+    const bySymbol = new Map(rows.map(r => [r.symbol, r]));
+    const missingEma = symbols.filter(sym => {
+      const r = bySymbol.get(sym);
+      return !r || !(Number(r.ema21) > 0) || !r.ema_updated_at;
+    });
+
+    // Calcular on-demand si faltan EMAs para los símbolos visibles (ej. Portafolio)
+    if (missingEma.length > 0 && missingEma.length <= 50 && typeof ensureEmaSnapshots === 'function') {
+      try {
+        await ensureEmaSnapshots(missingEma);
+        rows = await queryInstruments(symbols);
+      } catch (e) {
+        console.warn('On-demand EMA refresh skipped:', e.message);
+      }
+    }
+
     const instruments = Object.fromEntries(rows.map(row => [row.symbol, {
       price: Number(row.price) > 0 ? Number(row.price) : null,
       quoteTime: Number(row.quote_time) > 0 ? Number(row.quote_time) * 1000 : null,
@@ -133,13 +156,14 @@ router.get('/risk-metrics', async (req, res) => {
     // 1. Fetch drawdown_52w from market_snapshot
     const placeholders = symbolList.map(() => '?').join(',');
     const [rows] = await db.query(
-      `SELECT symbol, drawdown_52w FROM market_snapshot WHERE symbol IN (${placeholders})`, 
+      `SELECT symbol, drawdown_52w, max_drawdown_52w FROM market_snapshot WHERE symbol IN (${placeholders})`,
       symbolList
     );
     const dbMetrics = {};
     rows.forEach(r => { 
       dbMetrics[r.symbol] = { 
-        drawdown_52w: r.drawdown_52w !== null ? parseFloat(r.drawdown_52w) : null 
+        drawdown_52w: r.drawdown_52w != null ? parseFloat(r.drawdown_52w) : null,
+        max_drawdown_52w: r.max_drawdown_52w != null ? Number(r.max_drawdown_52w) : null
       }; 
     });
 
@@ -147,7 +171,7 @@ router.get('/risk-metrics', async (req, res) => {
     
     // 2. Fetch Beta from Finnhub Basic Financials
     for (const sym of symbolList) {
-      metrics[sym] = { drawdown_52w: dbMetrics[sym]?.drawdown_52w || null, beta: null };
+      metrics[sym] = { ...dbMetrics[sym], beta: null };
       
       if (FINNHUB_API_KEY) {
         try {

@@ -1,3 +1,4 @@
+import { riskSymbols, portfolioRisk } from '../../services/portfolioMetrics';
 // components/Dashboard/PortfolioPlanner.js - Planificación de Carteras
 import React, { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes, css } from 'styled-components';
@@ -42,7 +43,7 @@ const PortfolioPlanner = () => {
   // Risk metrics cache
   const [metricsCache, setMetricsCache] = useState(() => {
     try {
-      const cached = localStorage.getItem('st_risk_metrics');
+      const cached = localStorage.getItem('st_risk_metrics_v2');
       return cached ? JSON.parse(cached) : {};
     } catch { return {}; }
   });
@@ -53,12 +54,12 @@ const PortfolioPlanner = () => {
     const plan = plans.find(p => p.id === expandedPlanId);
     if (!plan || !plan.items.length) return;
 
-    const symbols = plan.items.map(i => i.symbol.toUpperCase());
+    const symbols = riskSymbols(plan.items.map(i => i.symbol));
     const missing = symbols.filter(s => {
       const cached = metricsCache[s];
       if (!cached) return true;
       // Cache expires in 1 day
-      return Date.now() - (cached.timestamp || 0) > 86400000;
+      return Date.now() - (cached.timestamp || 0) > (cached.max_drawdown_52w == null ? 60000 : 3600000);
     });
 
     if (missing.length > 0) {
@@ -70,7 +71,7 @@ const PortfolioPlanner = () => {
             for (const [sym, metric] of Object.entries(data.metrics || {})) {
               newMetrics[sym] = { ...metric, timestamp: now };
             }
-            localStorage.setItem('st_risk_metrics', JSON.stringify(newMetrics));
+            localStorage.setItem('st_risk_metrics_v2', JSON.stringify(newMetrics));
             return newMetrics;
           });
         })
@@ -400,57 +401,19 @@ const PortfolioPlanner = () => {
             const isOver = total > 100.01;
             const isExpanded = expandedPlanId === plan.id;
 
-            // ─── Risk Calculation ───
-            let totalBeta = 0;
-            let totalDrawdown = 0;
-            let betaWeightSum = 0;
-            let drawdownWeightSum = 0;
-            let rawTotalPct = 0;
-
-            plan.items.forEach(item => {
-              const sym = item.symbol.toUpperCase();
-              const metric = metricsCache[sym] || {};
-              const pct = parseFloat(item.percentage) || 0;
-              
-              if (pct === 0) return;
-              rawTotalPct += pct;
-
-              let itemBeta = 1.0;
-              if (metric.beta !== undefined && metric.beta !== null) {
-                itemBeta = metric.beta;
-              } else if (sym === 'PSQ' || sym === 'SH' || sym === 'DOG') {
-                itemBeta = -1.0;
-              }
-
-              totalBeta += itemBeta * pct;
-              betaWeightSum += pct;
-
-              if (metric.drawdown_52w !== undefined && metric.drawdown_52w !== null) {
-                totalDrawdown += metric.drawdown_52w * pct;
-                drawdownWeightSum += pct;
-              }
-            });
-
-            // Consider cash for risk
-            const cashPct = Math.max(0, 100 - rawTotalPct);
-            if (cashPct > 0) {
-              totalBeta += 0 * cashPct;
-              betaWeightSum += cashPct;
-
-              totalDrawdown += 0 * cashPct;
-              drawdownWeightSum += cashPct;
-            }
-
-            const weightedBeta = betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
-            const weightedDrawdown = drawdownWeightSum > 0 ? totalDrawdown / drawdownWeightSum : 0;
+            const risk = portfolioRisk(plan.items, metricsCache);
+            const weightedBeta = risk.beta;
+            const weightedDrawdown = risk.historical;
 
             const getBetaColor = (b) => {
+    if (b < 0) return '#a78bfa';
               if (b < 0.50) return '#34d399';
               if (b < 0.90) return '#fbbf24';
               if (b < 1.50) return '#fb923c';
               return '#f87171';
             };
             const getBetaDesc = (b) => {
+              if (b < 0) return 'Exposición neta inversa';
               if (b < 0.25) return '🟢 Muy conservadora';
               if (b < 0.50) return '🟢 Conservadora';
               if (b < 0.70) return '🟡 Moderada-conservadora';
@@ -745,19 +708,19 @@ const PortfolioPlanner = () => {
                                 </RiskHeader>
                                 <RiskGrid>
                                   <RiskCard>
-                                    <RiskLabel>Beta Ponderado <Info size={12} color="#64748b" title="Mide la volatilidad de la cartera respecto al mercado (S&P 500 = 1.0)" style={{ cursor: 'help' }}/></RiskLabel>
+                                    <RiskLabel>Beta Ponderado <Info size={12} color="#64748b" title="Sensibilidad al mercado ponderada por patrimonio, con signo negativo para los inversos" style={{ cursor: 'help' }}/></RiskLabel>
                                     <RiskValue $color={getBetaColor(weightedBeta)}>
-                                      {weightedBeta.toFixed(2)}
+                                      {risk.betaMissing ? 'Datos incompletos' : weightedBeta.toFixed(2)}
                                     </RiskValue>
-                                    <RiskDesc $color={getBetaColor(weightedBeta)}>{getBetaDesc(weightedBeta)}</RiskDesc>
+                                    <RiskDesc $color={getBetaColor(weightedBeta)}>{risk.betaMissing ? 'Falta beta para ' + risk.betaMissing.toFixed(1) + '% del patrimonio' : getBetaDesc(weightedBeta)}</RiskDesc>
                                   </RiskCard>
                                   <RiskCard>
-                                    <RiskLabel>Caída Máxima (1 Año) <Info size={12} color="#64748b" title="Peor caída estimada basada en el drawdown de 52 semanas de los componentes" style={{ cursor: 'help' }}/></RiskLabel>
+                                    <RiskLabel>Escenario histórico (52 semanas) <Info size={12} color="#64748b" title="Suma ponderada de las peores caídas entre cierres semanales de cada componente en las últimas 52 semanas. La porción emparejada de coberturas aporta cero bajo el criterio de dolarización." style={{ cursor: 'help' }}/></RiskLabel>
                                     <RiskValue $color={getDrawdownColor(weightedDrawdown)}>
-                                      {weightedDrawdown < 0 ? weightedDrawdown.toFixed(1) : 0}%
+                                      {risk.historicalMissing ? 'Datos incompletos' : weightedDrawdown.toFixed(1) + '%'}
                                     </RiskValue>
                                     <RiskDesc $color={getDrawdownColor(weightedDrawdown)}>
-                                      Riesgo de pérdida profunda
+                                      {risk.historicalMissing ? 'Falta historial para ' + risk.historicalMissing.toFixed(1) + '% del patrimonio' : 'Estimación semanal por componentes'}
                                     </RiskDesc>
                                   </RiskCard>
                                 </RiskGrid>

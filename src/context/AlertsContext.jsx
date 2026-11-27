@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import alertService from '../services/alertService';
-import priceService from '../services/priceService';
+import { canEvaluateAlertQuote } from '../services/alertQuotes';
 import { unlockAlertSound, stopAlertSound } from '../services/alertSoundService';
 import { useStrapiAuth } from '../hooks/useApiTrades'; // Provides the user auth
 
@@ -13,12 +13,12 @@ export const AlertsProvider = ({ children }) => {
   const [alerts, setAlerts] = useState([]);
   const [triggeredAlerts, setTriggeredAlerts] = useState([]);
   const [currentPrices, setCurrentPrices] = useState({});
+  const [currentQuotes, setCurrentQuotes] = useState({});
   const [emaChecks, setEmaChecks] = useState({});
   const [checkError, setCheckError] = useState('');
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef(null);
   const checkingRef = useRef(false);
-  const lastPriceCheckRef = useRef(0);
   const userIdRef = useRef(user?.id);
   userIdRef.current = user?.id;
 
@@ -51,7 +51,7 @@ export const AlertsProvider = ({ children }) => {
   };
 
   // Run the check logic
-  const checkAlertPrices = async ({ scheduled = false } = {}) => {
+  const checkAlertPrices = async ({ force = false } = {}) => {
     if (!user || checkingRef.current) return;
     const userId = user.id;
     checkingRef.current = true;
@@ -62,44 +62,42 @@ export const AlertsProvider = ({ children }) => {
       setAlerts(currentAlerts);
 
       const activeAlerts = currentAlerts.filter(a => a.is_active === 1);
-      if (activeAlerts.length === 0) return;
 
       const newTriggered = [];
-      let latestEmaPrices = {};
+      // The same short-lived server quotes feed the table, fixed targets and EMA checks.
+      const { quotes } = await alertService.getQuotes({ force });
+      if (userIdRef.current !== userId) return;
+      const prices = Object.fromEntries(currentAlerts.map(alert => [
+        alert.symbol, quotes[alert.symbol]?.price > 0 ? quotes[alert.symbol].price : null
+      ]));
+      setCurrentPrices(prices);
+      setCurrentQuotes(quotes);
+      setCheckError(activeAlerts.some(alert => !quotes[alert.symbol])
+        ? 'Hay cotizaciones no disponibles. Se volverá a intentar en un minuto.' : '');
       if (activeAlerts.some(a => a.condition_type === 'ema21_above')) {
         try {
           const result = await alertService.checkEma21Alerts();
           if (userIdRef.current !== userId) return;
           setEmaChecks(result.checks);
-          latestEmaPrices = result.prices;
           setCurrentPrices(prev => ({ ...prev, ...result.prices }));
           if (result.triggered.length) {
             setTriggeredAlerts(prev => [...prev, ...result.triggered]);
             const triggeredIds = new Set(result.triggered.map(alert => alert.id));
             setAlerts(prev => prev.map(alert => triggeredIds.has(alert.id) ? { ...alert, is_active: 0 } : alert));
           }
-          setCheckError('');
         } catch (error) {
           setCheckError('No se pudo comprobar la EMA21. Se volverá a intentar en un minuto.');
           console.error('Error checking EMA21 alerts:', error);
         }
       }
 
-      // Fixed-price alerts retain their existing 15-minute schedule.
-      const checkFixed = !scheduled || Date.now() - lastPriceCheckRef.current >= 15 * 60 * 1000;
-      const fixedAlerts = checkFixed ? activeAlerts.filter(a => a.condition_type !== 'ema21_above') : [];
-      if (checkFixed) lastPriceCheckRef.current = Date.now();
-      const symbols = [...new Set(fixedAlerts.map(a => a.symbol))];
-
-      // 3. Fetch prices for these symbols
-      const pricesMap = symbols.length ? await priceService.getMultiplePrices(symbols) : {};
-      if (userIdRef.current !== userId) return;
-      setCurrentPrices(prev => ({ ...prev, ...pricesMap, ...latestEmaPrices }));
+      const fixedAlerts = activeAlerts.filter(a => a.condition_type !== 'ema21_above');
 
       // 4. Check conditions
       for (const alert of fixedAlerts) {
-        const currentPrice = pricesMap[alert.symbol];
-        if (!currentPrice || currentPrice <= 0) continue;
+        const quote = quotes[alert.symbol];
+        if (!canEvaluateAlertQuote(quote)) continue;
+        const currentPrice = quote.price;
 
         let isTriggered = false;
         if (alert.condition_type === 'above' && currentPrice >= alert.target_price) {
@@ -136,6 +134,9 @@ export const AlertsProvider = ({ children }) => {
       }
 
     } catch (error) {
+      if (userIdRef.current !== userId) return;
+      setCurrentPrices({});
+      setCurrentQuotes({});
       console.error('Error during alert price check:', error);
       setCheckError('No se pudieron comprobar las alertas. Se volverá a intentar en un minuto.');
     } finally {
@@ -148,15 +149,15 @@ export const AlertsProvider = ({ children }) => {
       fetchAlerts();
       checkAlertPrices(); // Initial check on load
 
-      intervalRef.current = setInterval(() => checkAlertPrices({ scheduled: true }), 60 * 1000);
+      intervalRef.current = setInterval(() => checkAlertPrices(), 60 * 1000);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setAlerts([]);
       setTriggeredAlerts([]);
       setCurrentPrices({});
+      setCurrentQuotes({});
       setEmaChecks({});
       setCheckError('');
-      lastPriceCheckRef.current = 0;
     }
 
     return () => {
@@ -175,6 +176,7 @@ export const AlertsProvider = ({ children }) => {
       fetchAlerts,
       checkAlertPrices,
       currentPrices,
+      currentQuotes,
       emaChecks,
       checkError,
       triggeredAlerts,

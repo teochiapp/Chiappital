@@ -1,3 +1,4 @@
+import { riskSymbols, portfolioRisk, dailyPortfolioReturn } from '../../services/portfolioMetrics';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Activity, Info, Pencil, Check, X } from 'lucide-react';
@@ -14,13 +15,14 @@ const OverviewMetrics = () => {
   const { openTrades } = useStrapiTrades();
   
   const [dailyGainUSD, setDailyGainUSD] = useState(0);
+  const [dailyMissing, setDailyMissing] = useState(0);
   const [dailyGainPercent, setDailyGainPercent] = useState(0);
   const [loadingDailyGain, setLoadingDailyGain] = useState(true);
 
   // Beta Ponderado State
   const [metricsCache, setMetricsCache] = useState(() => {
     try {
-      const cached = localStorage.getItem('st_risk_metrics');
+      const cached = localStorage.getItem('st_risk_metrics_v2');
       return cached ? JSON.parse(cached) : {};
     } catch { return {}; }
   });
@@ -83,15 +85,16 @@ const OverviewMetrics = () => {
     return parseFloat(lastMetric.usd_end) || 0;
   }, [metrics]);
 
-  const fetchRiskMetrics = useCallback(async () => {
+  const fetchRiskMetrics = useCallback(async (force = false) => {
     if (!openTrades || openTrades.length === 0) return;
     setLoadingBeta(true);
     try {
-      const symbols = openTrades.map(t => (t.symbol || t.attributes?.symbol).toUpperCase());
+      const symbols = riskSymbols(openTrades.map(t => t.symbol || t.attributes?.symbol));
       const missing = symbols.filter(s => {
+        if (force === true) return true;
         const cached = metricsCache[s];
         if (!cached) return true;
-        return Date.now() - (cached.timestamp || 0) > 86400000;
+        return Date.now() - (cached.timestamp || 0) > (cached.max_drawdown_52w == null ? 60000 : 3600000);
       });
 
       if (missing.length > 0) {
@@ -102,7 +105,7 @@ const OverviewMetrics = () => {
           for (const [sym, metric] of Object.entries(data.metrics || {})) {
             newMetrics[sym] = { ...metric, timestamp: now };
           }
-          localStorage.setItem('st_risk_metrics', JSON.stringify(newMetrics));
+          localStorage.setItem('st_risk_metrics_v2', JSON.stringify(newMetrics));
           return newMetrics;
         });
       }
@@ -117,41 +120,8 @@ const OverviewMetrics = () => {
     fetchRiskMetrics();
   }, [fetchRiskMetrics]);
 
-  const weightedBeta = useMemo(() => {
-    if (!openTrades || openTrades.length === 0) return 0;
-    let totalBeta = 0;
-    let betaWeightSum = 0;
-    let rawTotalPct = 0;
-
-    openTrades.forEach(trade => {
-      const sym = trade.symbol || trade.attributes?.symbol;
-      if (!sym) return;
-      
-      const metric = metricsCache[sym.toUpperCase()] || {};
-      const pct = parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage) || 0;
-      
-      if (pct === 0) return;
-      rawTotalPct += pct;
-
-      let itemBeta = 1.0; 
-      if (metric.beta !== undefined && metric.beta !== null) {
-        itemBeta = metric.beta;
-      } else if (sym.toUpperCase() === 'PSQ' || sym.toUpperCase() === 'SH' || sym.toUpperCase() === 'DOG') {
-        itemBeta = -1.0;
-      }
-
-      totalBeta += itemBeta * pct;
-      betaWeightSum += pct;
-    });
-
-    const cashPct = Math.max(0, 100 - rawTotalPct);
-    if (cashPct > 0) {
-      totalBeta += 0 * cashPct; 
-      betaWeightSum += cashPct;
-    }
-
-    return betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
-  }, [openTrades, metricsCache]);
+  const risk = useMemo(() => portfolioRisk(openTrades || [], metricsCache), [openTrades, metricsCache]);
+  const weightedBeta = risk.beta;
 
   const fetchDrawdown = useCallback(async () => {
     try {
@@ -173,6 +143,7 @@ const OverviewMetrics = () => {
     if (!openTrades || openTrades.length === 0 || !balance) {
       setDailyGainUSD(0);
       setDailyGainPercent(0);
+      setDailyMissing(0);
       setLoadingDailyGain(false);
       return;
     }
@@ -180,73 +151,31 @@ const OverviewMetrics = () => {
     setLoadingDailyGain(true);
     try {
       const symbols = [...new Set(openTrades.map(t => (t.symbol || t.attributes?.symbol || '').toUpperCase()).filter(Boolean))];
-      if (force) {
-        priceService.invalidateMultiplePriceCache(symbols);
-      }
       // Usar getLiveQuotes para consultar cotizaciones en tiempo real directamente a Finnhub / Yahoo (garantiza datos de HOY)
       const quotes = await priceService.getLiveQuotes(symbols, force);
       
-      let totalGainPercent = 0;
-
-      openTrades.forEach(trade => {
-        const rawSymbol = trade.symbol || trade.attributes?.symbol;
-        const symbol = rawSymbol ? rawSymbol.toUpperCase() : '';
-        const portfolioPercentage = parseFloat(trade.portfolio_percentage || trade.attributes?.portfolio_percentage || 0);
-        const quote = quotes[symbol] || quotes[rawSymbol];
-        
-        const entryPrice = parseFloat(trade.entry_price || trade.attributes?.entry_price || 0);
-        const currentPrice = (quote && typeof quote.price === 'number') 
-          ? quote.price 
-          : (priceService.getPriceFromCache(symbol)?.price || null);
-        const tradeType = trade.type || trade.attributes?.type || 'buy';
-
-        // Determinar si la operación fue hecha hoy
-        const createdAt = trade.createdAt || trade.attributes?.createdAt || trade.created_at;
-        const isToday = createdAt && new Date(createdAt).toDateString() === new Date().toDateString();
-
-        let tradeReturnToday = 0;
-        let hasValidReturn = false;
-
-        if (isToday && entryPrice > 0 && currentPrice) {
-          // Si la operación fue creada hoy, se toma el rendimiento actual intradiario desde el precio de entrada
-          const intraDayReturn = ((currentPrice - entryPrice) / entryPrice) * 100;
-          tradeReturnToday = tradeType === 'buy' ? intraDayReturn : -intraDayReturn;
-          hasValidReturn = true;
-        } else if (quote && typeof quote.changePercent === 'number' && !isNaN(quote.changePercent)) {
-          // Si fue creada en días previos, se toma la variación del día de hoy del mercado
-          tradeReturnToday = tradeType === 'buy' ? quote.changePercent : -quote.changePercent;
-          hasValidReturn = true;
-        } else if (currentPrice && entryPrice > 0) {
-          // Fallback a rendimiento acumulado si no está disponible la variación diaria
-          const diffReturn = ((currentPrice - entryPrice) / entryPrice) * 100;
-          tradeReturnToday = tradeType === 'buy' ? diffReturn : -diffReturn;
-          hasValidReturn = true;
-        }
-
-        if (hasValidReturn && portfolioPercentage > 0) {
-          const weightedPercent = (tradeReturnToday * portfolioPercentage) / 100;
-          totalGainPercent += weightedPercent;
-        }
-      });
-
-      const totalGainUSD = (balance * totalGainPercent) / 100;
-
-      setDailyGainUSD(totalGainUSD);
-      setDailyGainPercent(totalGainPercent);
+      const daily = dailyPortfolioReturn(openTrades, quotes);
+      setDailyMissing(daily.missing);
+      setDailyGainUSD(balance * daily.percent / 100);
+      setDailyGainPercent(daily.percent);
       setLoadingDailyGain(false);
     } catch (err) {
       console.error('Error fetching daily gain:', err);
+      setDailyMissing(100);
+      setDailyGainPercent(0);
+      setDailyGainUSD(0);
       setLoadingDailyGain(false);
     }
   }, [openTrades, balance]);
 
   useEffect(() => {
-    fetchDailyGain();
-    const interval = setInterval(fetchDailyGain, 5 * 60 * 1000);
+    fetchDailyGain(true);
+    const interval = setInterval(() => fetchDailyGain(true), 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchDailyGain]);
 
   const getBetaColor = (b) => {
+    if (b < 0) return '#a78bfa';
     if (b < 0.50) return '#34d399'; // Green
     if (b < 0.90) return '#fbbf24'; // Yellow
     if (b < 1.50) return '#fb923c'; // Orange
@@ -254,6 +183,7 @@ const OverviewMetrics = () => {
   };
 
   const getBetaDesc = (b) => {
+    if (b < 0) return 'Exposición neta inversa';
     if (b < 0.25) return '🟢 Muy conservadora';
     if (b < 0.50) return '🟢 Conservadora';
     if (b < 0.70) return '🟡 Moderada-conservadora';
@@ -282,7 +212,7 @@ const OverviewMetrics = () => {
         <MetricCard className="narrow">
           <MetricHeader>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>Ganancia HOY</span>
+              <span title="Variación ponderada en USD de las posiciones abiertas con cotización de hoy (Nueva York). Estimación sobre el último saldo informado.">Ganancia HOY</span>
               {dailyGainUSD >= 0 ? <TrendingUp size={14} color="#4ade80" /> : <TrendingDown size={14} color="#f87171" />}
             </div>
             <button onClick={() => fetchDailyGain(true)} title="Actualizar ganancia" className="refresh-btn">
@@ -290,10 +220,10 @@ const OverviewMetrics = () => {
             </button>
           </MetricHeader>
           <MetricValue className={dailyGainUSD >= 0 ? 'positive' : 'negative'}>
-            {loadingDailyGain ? '...' : `${dailyGainPercent >= 0 ? '+' : ''}${dailyGainPercent.toFixed(2)}%`}
+            {loadingDailyGain ? '...' : dailyMissing ? 'Datos incompletos' : `${dailyGainPercent >= 0 ? '+' : ''}${dailyGainPercent.toFixed(2)}%`}
           </MetricValue>
           <MetricSub className={dailyGainUSD >= 0 ? 'positive' : 'negative'}>
-            {loadingDailyGain ? '...' : `${dailyGainUSD >= 0 ? '+' : ''}$${Math.abs(dailyGainUSD).toLocaleString('es-AR', { maximumFractionDigits: 2 })}`}
+            {loadingDailyGain ? '...' : dailyMissing ? 'Datos incompletos' : `${dailyGainUSD >= 0 ? '+' : ''}$${dailyGainUSD.toLocaleString('es-AR', { maximumFractionDigits: 2 })}`}
           </MetricSub>
         </MetricCard>
 
@@ -301,17 +231,17 @@ const OverviewMetrics = () => {
           <MetricHeader>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               Beta Ponderado
-              <Info size={12} color="#64748b" title="Mide la volatilidad respecto al mercado" />
+              <Info size={12} color="#64748b" title="Sensibilidad al mercado ponderada por porcentaje del patrimonio. Los ETFs inversos tienen signo negativo." />
             </span>
-            <button onClick={fetchRiskMetrics} title="Actualizar Beta" className="refresh-btn">
+            <button onClick={() => fetchRiskMetrics(true)} title="Actualizar Beta" className="refresh-btn">
               <RefreshCw size={14} className={loadingBeta ? 'spin' : ''} />
             </button>
           </MetricHeader>
           <MetricValue style={{ color: getBetaColor(weightedBeta) }}>
-            {loadingBeta && Object.keys(metricsCache).length === 0 ? '...' : weightedBeta.toFixed(2)}
+            {loadingBeta && Object.keys(metricsCache).length === 0 ? '...' : (risk.betaMissing ? 'Parcial ' : '') + weightedBeta.toFixed(2)}
           </MetricValue>
           <MetricSub>
-            {getBetaDesc(weightedBeta)}
+            {risk.betaMissing ? 'Sin beta para ' + risk.betaMissing.toFixed(1) + '% del patrimonio' : getBetaDesc(weightedBeta)}
           </MetricSub>
         </MetricCard>
 

@@ -712,6 +712,12 @@ async function initializeDatabase() {
   `);
 
   try {
+    await db.execute('ALTER TABLE market_snapshot ADD COLUMN max_drawdown_52w DECIMAL(10,4) DEFAULT NULL');
+  } catch (error) {
+    if (error.code !== 'ER_DUP_FIELDNAME') throw error;
+  }
+
+  try {
     await db.execute('ALTER TABLE market_snapshot ADD COLUMN quote_time BIGINT UNSIGNED DEFAULT NULL');
   } catch (error) {
     if (error.code !== 'ER_DUP_FIELDNAME') throw error;

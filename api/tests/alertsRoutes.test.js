@@ -8,6 +8,7 @@ test('alert HTTP workflow with isolated database, quote provider and email trans
   let livePrice = 99;
   let emailFails = false;
   let emailCount = 0;
+  let quoteOptions;
   const savedEma = { snapshot_factors: { currentEma21: 100 }, ema_updated_at: new Date() };
   const db = { async execute(sql, params) {
     if (sql.includes('FROM users')) return [[{ id: params[0], username: 'QA' }]];
@@ -18,6 +19,7 @@ test('alert HTTP workflow with isolated database, quote provider and email trans
       return [{ insertId: records.length }];
     }
     if (sql.startsWith('SELECT *')) return [records.filter(row => row.id === Number(params[0]) && row.user_id === params[1])];
+    if (sql.startsWith('SELECT a.symbol')) return [records.filter(row => row.user_id === params[0])];
     if (sql.includes('SELECT a.*')) return [records.filter(row => row.user_id === params[0]
       && (!sql.includes('a.is_active = 1') || (row.is_active && row.condition_type === params[1])))
       .map(row => ({ ...row, ...savedEma }))];
@@ -37,8 +39,11 @@ test('alert HTTP workflow with isolated database, quote provider and email trans
   } };
   const replacements = {
     '../database/db': { getPool: () => db },
-    '../services/marketSyncService': { fetchAlertQuotes: async symbols => Object.fromEntries(symbols.map(symbol => [symbol,
-      { price: livePrice, marketState: 'REGULAR', quoteTime: new Date(), delayedMinutes: 0 }])) },
+    '../services/marketSyncService': { fetchAlertQuotes: async (symbols, options) => {
+      quoteOptions = options;
+      return Object.fromEntries(symbols.map(symbol => [symbol,
+        { price: livePrice, marketState: 'REGULAR', quoteTime: new Date(), delayedMinutes: 0 }]));
+    } },
     '../services/emailService': { sendEmail: async () => { emailCount++; if (emailFails) throw new Error('Test SMTP unavailable'); return true; } }
   };
   const previous = {};
@@ -64,6 +69,7 @@ test('alert HTTP workflow with isolated database, quote provider and email trans
   try {
     await t.test('requires authentication', async () => {
       assert.equal((await request('/ema21/check', 'POST', {}, null)).status, 401);
+      assert.equal((await request('/quotes', 'POST', {}, null)).status, 401);
     });
     await t.test('creates a dynamic EMA alert without a target and lists its saved EMA', async () => {
       const result = await request('', 'POST', { symbol: ' aapl ', condition_type: 'ema21_above' });
@@ -72,6 +78,17 @@ test('alert HTTP workflow with isolated database, quote provider and email trans
       const list = await request();
       assert.equal(list.data[0].ema21_value, 100);
       assert.equal('snapshot_factors' in list.data[0], false);
+    });
+    await t.test('quotes current user tickers, forces refresh and never exposes another user quotes', async () => {
+      const result = await request('/quotes', 'POST', { force: true });
+      assert.equal(result.status, 200);
+      assert.equal(result.data.quotes.AAPL.price, livePrice);
+      assert.deepEqual(quoteOptions, { force: true });
+      livePrice = 98;
+      assert.equal((await request('/quotes', 'POST', {})).data.quotes.AAPL.price, 98);
+      assert.deepEqual(quoteOptions, { force: false });
+      assert.deepEqual((await request('/quotes', 'POST', {}, 8)).data.quotes, {});
+      livePrice = 99;
     });
     await t.test('validates fixed targets and supports switching back to EMA', async () => {
       assert.equal((await request('/1', 'PUT', { condition_type: 'above' })).status, 400);

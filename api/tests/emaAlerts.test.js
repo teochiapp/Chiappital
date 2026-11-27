@@ -102,13 +102,25 @@ test('claims a trigger exactly once across concurrent tabs and scopes it to its 
   assert.match(db.calls.find(call => call.sql.includes('UPDATE')).sql, /updated_at = \?/);
 });
 
-test('does not deactivate alerts when data is unavailable or the market is closed', async () => {
-  for (const quotes of [{}, { AAPL: { ...quote, marketState: 'CLOSED' } }]) {
-    const db = makeDb();
-    const result = await checkEmaAlerts({ db, userId: 7, fetchQuotes: async () => quotes, now });
-    assert.equal(result.triggered.length, 0);
-    assert.equal(db.calls.length, 1);
-  }
+test('does not deactivate alerts when data is unavailable or the market is closed, while exposing last quote price', async () => {
+  const dbEmpty = makeDb();
+  const resEmpty = await checkEmaAlerts({ db: dbEmpty, userId: 7, fetchQuotes: async () => ({}), now });
+  assert.equal(resEmpty.triggered.length, 0);
+  assert.equal(dbEmpty.calls.length, 1);
+
+  const dbClosed = makeDb();
+  const resClosed = await checkEmaAlerts({ db: dbClosed, userId: 7, fetchQuotes: async () => ({ AAPL: { ...quote, marketState: 'CLOSED' } }), now });
+  assert.equal(resClosed.triggered.length, 0);
+  assert.equal(resClosed.checks[1].status, 'market_closed');
+  assert.equal(resClosed.prices.AAPL, 101);
+  assert.equal(dbClosed.calls.length, 1);
+});
+
+test('uses MySQL ema_age_sec when provided to avoid MySQL vs Node timezone drift', () => {
+  const tzShiftedRow = { ...row, ema_updated_at: new Date(now + 3 * 3600 * 1000), ema_age_sec: 120 };
+  assert.equal(evaluateEmaAlert(tzShiftedRow, quote, now).status, 'triggered');
+  const staleBySec = { ...row, ema_updated_at: new Date(now), ema_age_sec: 8 * 86400 };
+  assert.equal(evaluateEmaAlert(staleBySec, quote, now).status, 'missing_ema');
 });
 
 test('requests each ticker once and avoids provider calls when there are no alerts', async () => {

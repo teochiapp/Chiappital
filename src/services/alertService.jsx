@@ -22,6 +22,15 @@ const handleResponse = async (response) => {
 };
 
 const alertService = {
+  getQuotes: async ({ force = false } = {}) => {
+    const response = await fetch(`${API_URL}/quotes`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ force }),
+      cache: 'no-store',
+    });
+    return handleResponse(response);
+  },
   checkEma21Alerts: async () => {
     const response = await fetch(`${API_URL}/ema21/check`, {
       method: 'POST',

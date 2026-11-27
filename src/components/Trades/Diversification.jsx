@@ -1,3 +1,4 @@
+import { riskSymbols, portfolioRisk } from '../../services/portfolioMetrics';
 // components/Trades/Diversification.js - Componente para análisis de diversificación
 import React, { useMemo, useState, useEffect } from 'react';
 import styled from 'styled-components';
@@ -249,7 +250,7 @@ const Diversification = ({ openTrades, loading, error }) => {
   // Risk metrics cache
   const [metricsCache, setMetricsCache] = useState(() => {
     try {
-      const cached = localStorage.getItem('st_risk_metrics');
+      const cached = localStorage.getItem('st_risk_metrics_v2');
       return cached ? JSON.parse(cached) : {};
     } catch { return {}; }
   });
@@ -258,11 +259,11 @@ const Diversification = ({ openTrades, loading, error }) => {
   useEffect(() => {
     if (!openTrades || openTrades.length === 0) return;
 
-    const symbols = openTrades.map(t => getTradeAttr(t, 'symbol').toUpperCase());
+    const symbols = riskSymbols(openTrades.map(t => getTradeAttr(t, 'symbol')));
     const missing = symbols.filter(s => {
       const cached = metricsCache[s];
       if (!cached) return true;
-      return Date.now() - (cached.timestamp || 0) > 86400000;
+      return Date.now() - (cached.timestamp || 0) > (cached.max_drawdown_52w == null ? 60000 : 3600000);
     });
 
     if (missing.length > 0) {
@@ -274,7 +275,7 @@ const Diversification = ({ openTrades, loading, error }) => {
             for (const [sym, metric] of Object.entries(data.metrics || {})) {
               newMetrics[sym] = { ...metric, timestamp: now };
             }
-            localStorage.setItem('st_risk_metrics', JSON.stringify(newMetrics));
+            localStorage.setItem('st_risk_metrics_v2', JSON.stringify(newMetrics));
             return newMetrics;
           });
         })
@@ -298,7 +299,7 @@ const Diversification = ({ openTrades, loading, error }) => {
     let totalPortfolio = 0;
 
     openTrades.forEach(trade => {
-      const symbol = getTradeAttr(trade, 'symbol');
+      const symbol = String(getTradeAttr(trade, 'symbol') || '').trim().toUpperCase();
       const portfolioPercentage = parseFloat(getTradeAttr(trade, 'portfolio_percentage')) || 0;
       
       if (!symbol || portfolioPercentage === 0) return;
@@ -330,45 +331,21 @@ const Diversification = ({ openTrades, loading, error }) => {
       }
     });
 
-    // --- EXCEPCIÓN: LÓGICA DE NEUTRALIZACIÓN QQQ/PSQ ---
-    const qqqPerc = companies['QQQ'] || 0;
-    const psqPerc = companies['PSQ'] || 0;
-
-    if (qqqPerc > 0 && psqPerc > 0) {
-      const hedgedAmount = Math.min(qqqPerc, psqPerc);
-      
-      companies['QQQ'] = Math.max(0, qqqPerc - psqPerc);
-      companies['PSQ'] = Math.max(0, psqPerc - qqqPerc);
-      
-      // Si la exposición neta es 0, ocultarlo
-      if (companies['QQQ'] <= 0.001) delete companies['QQQ'];
-      if (companies['PSQ'] <= 0.001) delete companies['PSQ'];
-      
-      // Ajustar países y sectores restando la parte neutralizada
-      const qqqTrade = openTrades.find(t => getTradeAttr(t, 'symbol') === 'QQQ');
-      const psqTrade = openTrades.find(t => getTradeAttr(t, 'symbol') === 'PSQ');
-      
-      if (qqqTrade) {
-        const qqqData = getSymbolData(qqqTrade);
-        if (countries[qqqData.countryName]) countries[qqqData.countryName] -= hedgedAmount;
-        if (sectors[qqqData.sectorName]) sectors[qqqData.sectorName] -= hedgedAmount;
-      }
-      
-      if (psqTrade) {
-        const psqData = getSymbolData(psqTrade);
-        if (countries[psqData.countryName]) countries[psqData.countryName] -= hedgedAmount;
-        if (sectors[psqData.sectorName]) sectors[psqData.sectorName] -= hedgedAmount;
-      }
-      
-      // Limpiar países o sectores si quedaron en 0
-      Object.keys(countries).forEach(k => { if (countries[k] <= 0.001) delete countries[k]; });
-      Object.keys(sectors).forEach(k => { if (sectors[k] <= 0.001) delete sectors[k]; });
-      
-      // Ajustar el totalPortfolio restando el capital neutralizado
-      const neutralizedCapital = hedgedAmount * 2;
-      totalPortfolio -= neutralizedCapital;
+    const exposure = portfolioRisk(openTrades, metricsCache);
+    for (const [symbol, gross] of Object.entries(companies)) {
+      const remaining = exposure.residual[symbol.toUpperCase()] ?? gross;
+      const removed = gross - remaining;
+      if (removed <= 0) continue;
+      companies[symbol] = remaining;
+      const trade = openTrades.find(row => String(getTradeAttr(row, 'symbol')).toUpperCase() === symbol.toUpperCase());
+      const data = getSymbolData(trade);
+      countries[data.countryName] -= removed;
+      sectors[data.sectorName] -= removed;
+      totalPortfolio -= removed;
     }
-    // ---------------------------------------------------
+    for (const groups of [companies, countries, sectors]) {
+      Object.keys(groups).forEach(key => { if (groups[key] <= .001) delete groups[key]; });
+    }
 
     // Convertir a arrays para gráficos
     const companiesArray = Object.entries(companies).map(([name, value], index) => ({
@@ -398,73 +375,29 @@ const Diversification = ({ openTrades, loading, error }) => {
         totalCompanies: companiesArray.length,
         totalCountries: countriesArray.length,
         totalSectors: sectorsArray.length,
-        largestPosition: Math.max(...companiesArray.map(c => c.value)),
+        largestPosition: Math.max(0, ...companiesArray.map(c => c.value)),
         largestCompany: companiesArray.length > 0 ? companiesArray[0].name : 'N/A', // La empresa con mayor posición (primer elemento ya está ordenado)
         mostDiversifiedSector: sectorsArray.length > 0 ? sectorsArray[0].name : 'N/A'
       }
     };
-  }, [openTrades]);
+  }, [openTrades, metricsCache]);
 
   // Procesar riesgo de la cartera
   const riskMetrics = useMemo(() => {
     if (!openTrades || openTrades.length === 0) return null;
 
-    let totalBeta = 0;
-    let totalDrawdown = 0;
-    let betaWeightSum = 0;
-    let drawdownWeightSum = 0;
-    let rawTotalPct = 0;
-
-    openTrades.forEach(trade => {
-      const sym = getTradeAttr(trade, 'symbol');
-      if (!sym) return;
-      
-      const metric = metricsCache[sym.toUpperCase()] || {};
-      const pct = parseFloat(getTradeAttr(trade, 'portfolio_percentage')) || 0;
-      
-      if (pct === 0) return;
-      rawTotalPct += pct;
-
-      // Calcular Beta (Considerar explícitamente PSQ o inversos comunes si la API no lo trae negativo)
-      let itemBeta = 1.0; // Default neutral
-      if (metric.beta !== undefined && metric.beta !== null) {
-        itemBeta = metric.beta;
-      } else if (sym.toUpperCase() === 'PSQ' || sym.toUpperCase() === 'SH' || sym.toUpperCase() === 'DOG') {
-        itemBeta = -1.0; // ETFs inversos 1x comunes si no hay dato
-      }
-
-      totalBeta += itemBeta * pct;
-      betaWeightSum += pct;
-
-      if (metric.drawdown_52w !== undefined && metric.drawdown_52w !== null) {
-        totalDrawdown += metric.drawdown_52w * pct;
-        drawdownWeightSum += pct;
-      }
-    });
-
-    // Agregar Tasa de Efectivo (Liquidez)
-    // El efectivo tiene 0 Beta y 0% Drawdown
-    const cashPct = Math.max(0, 100 - rawTotalPct);
-    if (cashPct > 0) {
-      totalBeta += 0 * cashPct; // Beta del cash es 0
-      betaWeightSum += cashPct;
-
-      totalDrawdown += 0 * cashPct; // Drawdown del cash es 0
-      drawdownWeightSum += cashPct;
-    }
-
-    const weightedBeta = betaWeightSum > 0 ? totalBeta / betaWeightSum : 0;
-    const weightedDrawdown = drawdownWeightSum > 0 ? totalDrawdown / drawdownWeightSum : 0;
-
-    return { weightedBeta, weightedDrawdown };
+    const risk = portfolioRisk(openTrades, metricsCache);
+    return { ...risk, weightedBeta: risk.beta, weightedDrawdown: risk.historical };
   }, [openTrades, metricsCache]);
 
   const getBetaColor = (b) => {
+    if (b < 0) return '#a78bfa';
     if (b > 1.2) return '#f87171'; // Red
     if (b < 0.8) return '#34d399'; // Green
     return '#fbbf24'; // Yellow
   };
   const getBetaDesc = (b) => {
+    if (b < 0) return 'Exposición neta inversa';
     if (b > 1.2) return 'Agresiva / Alta volatilidad';
     if (b < 0.8) return 'Conservadora / Baja volatilidad';
     return 'Neutral / Mercado';
@@ -537,7 +470,7 @@ const Diversification = ({ openTrades, loading, error }) => {
     );
   }
 
-  if (!diversificationData || diversificationData.totalPortfolio === 0) {
+  if (!diversificationData || riskMetrics.total === 0) {
     return (
       <DiversificationContainer>
         <Header>
@@ -704,13 +637,25 @@ const Diversification = ({ openTrades, loading, error }) => {
       <GlobalStatsGrid>
         <StatCard $color={colors.trading.profit}>
           <StatValue>{diversificationData.totalPortfolio}%</StatValue>
-          <StatLabel>Total de Cartera Invertido</StatLabel>
+          <StatLabel>Exposición sin cobertura</StatLabel>
         </StatCard>
         <StatCard $color={colors.gray[600]}>
-          <StatValue>{(100 - diversificationData.totalPortfolio).toFixed(1)}%</StatValue>
-          <StatLabel>Liquidez Disponible</StatLabel>
+          <StatValue>{riskMetrics.liquidity.toFixed(1)}%</StatValue>
+          <StatLabel title="Efectivo más capital cubierto. PSQ compensa QQQ y TQQQ según su exposición diaria. SH compensa SPY y la sensibilidad positiva restante al mercado, estimada por beta.">Liquidez efectiva estimada</StatLabel>
+          <StatLabel>Efectivo estimado {riskMetrics.cash.toFixed(1)} % · Cobertura {riskMetrics.hedged.toFixed(1)} %</StatLabel>
+          <StatLabel>Por índice {riskMetrics.directHedged.toFixed(1)} % · Por beta {riskMetrics.estimatedHedged.toFixed(1)} %</StatLabel>
+          {riskMetrics.unknownExposure > 0 && <StatLabel>Sin beta para estimar cobertura: {riskMetrics.unknownExposure.toFixed(1)} %</StatLabel>}
         </StatCard>
       </GlobalStatsGrid>
+      {riskMetrics.hedges.length > 0 && <details style={{ padding: '1rem 2rem', color: '#94a3b8' }}>
+        <summary>Cómo se calculó la cobertura</summary>
+        {riskMetrics.hedges.map(hedge => <p key={hedge.inverse + hedge.direct}>
+          {hedge.inverse} {hedge.inverseCapital.toFixed(2)} % + {hedge.direct} {hedge.directCapital.toFixed(2)} %
+          {' · '}{hedge.method === 'index' ? 'Por exposición al mismo índice' : 'Cobertura de mercado estimada por beta'}
+        </p>)}
+        <p>La compensación por beta estima la sensibilidad al mercado. Las posiciones conservan riesgo específico, costos y diferencias de seguimiento.</p>
+      </details>}
+      {riskMetrics.overallocated && <p role="alert" style={{ color: '#fbbf24', padding: '0 2rem' }}>Los pesos superan el 100 % del patrimonio. Revisá las posiciones duplicadas o sus porcentajes.</p>}
 
       <TabsContainer style={{ marginTop: '1.5rem' }}>
         <TabButton
@@ -755,26 +700,26 @@ const Diversification = ({ openTrades, loading, error }) => {
         </motion.div>
       </TabContent>
 
-      {riskMetrics && diversificationData.totalPortfolio > 0 && (
+      {riskMetrics && (
         <RiskSection>
           <RiskHeader>
             <Activity size={18} /> Análisis de Riesgo Estimado de la Cartera
           </RiskHeader>
           <RiskGrid>
             <RiskCard $color={getBetaColor(riskMetrics.weightedBeta)}>
-              <RiskLabel>Beta Ponderado <Info size={14} color="#64748b" title="Mide la volatilidad de la cartera respecto al mercado (S&P 500 = 1.0)" style={{ cursor: 'help' }}/></RiskLabel>
+              <RiskLabel>Beta Ponderado <Info size={14} color="#64748b" title="Sensibilidad al mercado ponderada por patrimonio, con signo negativo para los inversos" style={{ cursor: 'help' }}/></RiskLabel>
               <RiskValue $color={getBetaColor(riskMetrics.weightedBeta)}>
-                {riskMetrics.weightedBeta.toFixed(2)}
+                {riskMetrics.betaMissing ? 'Datos incompletos' : riskMetrics.weightedBeta.toFixed(2)}
               </RiskValue>
-              <RiskDesc $color={getBetaColor(riskMetrics.weightedBeta)}>{getBetaDesc(riskMetrics.weightedBeta)}</RiskDesc>
+              <RiskDesc $color={getBetaColor(riskMetrics.weightedBeta)}>{riskMetrics.betaMissing ? 'Falta beta para ' + riskMetrics.betaMissing.toFixed(1) + '% del patrimonio' : getBetaDesc(riskMetrics.weightedBeta)}</RiskDesc>
             </RiskCard>
             <RiskCard $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
-              <RiskLabel>Caída Máxima Estimada (1 Año) <Info size={14} color="#64748b" title="Peor caída estimada basada en el drawdown de 52 semanas de los componentes" style={{ cursor: 'help' }}/></RiskLabel>
+              <RiskLabel>Escenario de caída histórica (52 semanas) <Info size={14} color="#64748b" title="Suma ponderada de las peores caídas entre cierres semanales de cada componente en las últimas 52 semanas. La porción emparejada de coberturas aporta cero bajo el criterio de dolarización." style={{ cursor: 'help' }}/></RiskLabel>
               <RiskValue $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
-                {riskMetrics.weightedDrawdown < 0 ? riskMetrics.weightedDrawdown.toFixed(1) : 0}%
+                {riskMetrics.historicalMissing ? 'Datos incompletos' : riskMetrics.weightedDrawdown.toFixed(1) + '%'}
               </RiskValue>
               <RiskDesc $color={getDrawdownColor(riskMetrics.weightedDrawdown)}>
-                Riesgo de pérdida profunda histórica
+                {riskMetrics.historicalMissing ? 'Falta historial para ' + riskMetrics.historicalMissing.toFixed(1) + '% del patrimonio' : 'Estimación semanal por componentes y pesos actuales'}
               </RiskDesc>
             </RiskCard>
           </RiskGrid>

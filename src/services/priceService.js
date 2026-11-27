@@ -205,22 +205,18 @@ class PriceService {
   // Método para obtener cotizaciones en tiempo real directamente de proveedores externos (Finnhub / Yahoo)
   // Devuelve { [SYMBOL]: { price, changePercent } } garantizando datos frescos de HOY en vivo
   async getLiveQuotes(symbols, force = false) {
-    if (!symbols || symbols.length === 0) return {};
-    if (force) {
-      this.invalidateMultiplePriceCache(symbols);
-    }
+    if (!symbols?.length) return {};
     await this.getMultiplePrices(symbols, force);
     const quotes = {};
-    symbols.forEach(sym => {
-      const upper = sym.toUpperCase();
-      const cached = this.getPriceFromCache(upper);
-      const price = cached?.price ?? null;
-      const changePercent = (cached && typeof cached.changePercent === 'number' && !isNaN(cached.changePercent))
-        ? cached.changePercent
-        : 0;
-      quotes[upper] = { price, changePercent };
-      quotes[sym] = quotes[upper];
-    });
+    for (const symbol of symbols) {
+      const cached = this.getPriceFromCache(symbol.toUpperCase());
+      quotes[symbol.toUpperCase()] = {
+        price: cached?.price ?? null,
+        changePercent: Number.isFinite(cached?.changePercent) ? cached.changePercent : null,
+        quoteTime: cached?.quoteTime ?? null,
+        isMock: cached?.isMock ?? false,
+      };
+    }
     return quotes;
   }
 
