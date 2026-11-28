@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useSectorialData } from '../../hooks/useSectorialData';
 import DotPlotCard from './DotPlotCard';
+import SectorRotationChart from './SectorRotationChart';
 import { RefreshCw } from 'lucide-react';
 
 const SectorialPage = () => {
@@ -9,6 +10,7 @@ const SectorialPage = () => {
   const [activeTab, setActiveTab] = useState('sectores'); // 'sectores' | 'paises'
   
   const currentData = activeTab === 'sectores' ? data.sectors : data.regions;
+  const currentRrg = activeTab === 'sectores' ? (data.rrg?.sectors || []) : (data.rrg?.regions || []);
 
   // Ordenar de mayor a menor rendimiento para cada temporalidad
   const getSortedData = (dataArray, key) => {
@@ -48,6 +50,12 @@ const SectorialPage = () => {
       </Header>
 
       {error && <ErrorMessage>Error cargando datos: {error}</ErrorMessage>}
+
+      <SectorRotationChart
+        items={currentRrg}
+        loading={loading}
+        activeTab={activeTab}
+      />
 
       <Grid>
         <DotPlotCard 

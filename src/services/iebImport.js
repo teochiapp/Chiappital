@@ -1,4 +1,5 @@
 const normalize = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+const INSTRUMENT_HEADERS = new Set(['especie', 'instrumento']);
 
 export function iebNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
@@ -23,9 +24,10 @@ export function parseIebRows(rows, fileName) {
   for (let index = 0; index < rows.length; index++) {
     const row = rows[index];
     const first = String(row[0] ?? '').trim();
-    if (normalize(first) === 'especie') {
+    const headerKey = normalize(first);
+    if (INSTRUMENT_HEADERS.has(headerKey)) {
       columns = Object.fromEntries(row.map((value, i) => [normalize(value), i]));
-      for (const label of ['especie', 'posicion total', '% del total']) {
+      for (const label of [headerKey, 'posicion total', '% del total']) {
         if (columns[label] === undefined) throw new Error('Falta la columna ' + label);
       }
       continue;

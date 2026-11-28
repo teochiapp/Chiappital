@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import yahooFinanceService from '../services/yahooFinanceService';
 import { GICS_SECTORS } from '../components/Lab/SectorAnalysis';
 import { REGIONS } from '../components/Lab/CountryAnalysis';
+import { computeRrgGroup } from '../utils/rrgCalculator';
 
-const CACHE_KEY = 'chiappital_sectorial_v2';
+const CACHE_KEY = 'chiappital_sectorial_v4';
 const FRESH_TTL = 15 * 60 * 1000;         // 15 minutos fresco
 const MAX_STALE_TTL = 48 * 60 * 60 * 1000; // 48 horas apto para render instantáneo SWR
 
@@ -30,12 +31,12 @@ function saveCachedData(payload) {
 }
 
 export const useSectorialData = () => {
-  const [data, setData] = useState({ sectors: [], regions: [] });
+  const [data, setData] = useState({ sectors: [], regions: [], rrg: { benchmark: 'SPY', sectors: [], regions: [] } });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isMounted = useRef(true);
 
-  // Fallback en cliente procesado en lotes paralelos si el backend falla
+  // Fallback en cliente procesado en lotes paralelos si el backend falla o aún no incluye rrg
   const runClientFallback = useCallback(async () => {
     const allSymbols = [...GICS_SECTORS, ...REGIONS];
     const results = [];
@@ -45,7 +46,7 @@ export const useSectorialData = () => {
       const chunk = allSymbols.slice(i, i + BATCH_SIZE);
       const promises = chunk.map(async (item) => {
         try {
-          const candles = await yahooFinanceService.getCandles(item.ticker, '1d', '3mo');
+          const candles = await yahooFinanceService.getCandles(item.ticker, '1d', '6mo');
           if (!candles || candles.length < 22) {
             return { ...item, error: 'Datos insuficientes' };
           }
@@ -65,6 +66,14 @@ export const useSectorialData = () => {
           const weeklyPerf = ((lastClose - weekClose) / weekClose) * 100;
           const monthlyPerf = ((lastClose - monthClose) / monthClose) * 100;
           const sparkline = validCandles.slice(Math.max(0, len - 21)).map(c => c.close);
+          const series = validCandles
+            .filter(c => c.time || c.date)
+            .map(c => ({
+              date: typeof c.time === 'number'
+                ? new Date(c.time * 1000).toISOString().slice(0, 10)
+                : String(c.date || c.time).slice(0, 10),
+              close: c.close
+            }));
 
           return {
             ...item,
@@ -72,6 +81,7 @@ export const useSectorialData = () => {
             weeklyPerf,
             monthlyPerf,
             sparkline,
+            series,
             error: null
           };
         } catch (err) {
@@ -84,9 +94,20 @@ export const useSectorialData = () => {
       results.push(...chunkResults);
     }
 
-    const sectors = results.filter(r => GICS_SECTORS.some(s => s.id === r.id));
-    const regions = results.filter(r => REGIONS.some(s => s.id === r.id));
-    const fullResult = { sectors, regions };
+    const spySeries = results.find(r => r.ticker === 'SPY')?.series || [];
+    const sectorsWithSeries = results.filter(r => GICS_SECTORS.some(s => s.id === r.id));
+    const regionsWithSeries = results.filter(r => REGIONS.some(s => s.id === r.id));
+    const stripSeries = ({ series, ...rest }) => rest;
+
+    const fullResult = {
+      sectors: sectorsWithSeries.map(stripSeries),
+      regions: regionsWithSeries.map(stripSeries),
+      rrg: {
+        benchmark: 'SPY',
+        sectors: computeRrgGroup(sectorsWithSeries, spySeries),
+        regions: computeRrgGroup(regionsWithSeries, spySeries)
+      }
+    };
 
     if (isMounted.current) {
       setData(fullResult);
@@ -102,7 +123,7 @@ export const useSectorialData = () => {
 
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const res = await fetch(`${baseUrl}/api/market/sector-summary${force ? '?force=true' : ''}`, {
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(12000)
       });
 
       if (!res.ok) {
@@ -113,12 +134,19 @@ export const useSectorialData = () => {
       if (!isMounted.current) return;
 
       if (backendData && (backendData.sectors?.length > 0 || backendData.regions?.length > 0)) {
+        const hasRrg = backendData.rrg && (backendData.rrg.sectors?.length > 0 || backendData.rrg.regions?.length > 0);
         const payload = {
           sectors: backendData.sectors || [],
-          regions: backendData.regions || []
+          regions: backendData.regions || [],
+          rrg: backendData.rrg || { benchmark: 'SPY', sectors: [], regions: [] }
         };
         setData(payload);
-        saveCachedData(payload);
+        if (hasRrg) {
+          saveCachedData(payload);
+          return;
+        }
+        // Si el backend remoto aún no tiene RRG desplegado, enriquecemos en cliente
+        await runClientFallback();
         return;
       }
 
@@ -138,10 +166,10 @@ export const useSectorialData = () => {
 
     // ── 1. SWR: Intentar leer inmediatamente de caché ──────────────────────
     const { payload, isFresh } = getCachedData();
-    if (payload && (payload.sectors?.length > 0 || payload.regions?.length > 0)) {
+    const hasRrg = payload?.rrg && (payload.rrg.sectors?.length > 0 || payload.rrg.regions?.length > 0);
+    if (payload && (payload.sectors?.length > 0 || payload.regions?.length > 0) && hasRrg) {
       setData(payload);
       setLoading(false);
-      // Si está fresco (< 15 min), no disparamos request inmediata
       if (isFresh) {
         return;
       }

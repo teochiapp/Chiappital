@@ -85,3 +85,36 @@ test('detects headers, derives missing percentages and excludes settlement detai
   assert.equal(iebNumber('1.234,56'), 1234.56);
   assert.equal(iebNumber('-'), null);
 });
+
+test('supports IEB reports using Instrumento header across Cedears, Bonos, Otros and cash tables', async () => {
+  const code = readFileSync(path.join(__dirname, '../../src/services/iebImport.js'), 'utf8');
+  const { parseIebRows } = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+  const parsed = parseIebRows([
+    ['Fecha:', '2026-11-27'],
+    ['Patrimonio total', 31985953.75],
+    ['Tenencia Mercado Argentino'],
+    ['Cedears'],
+    ['Instrumento', 'Moneda de emisión', 'Cantidad', 'Precio', '% del total', 'PPP', 'Var%', 'Resultado', 'Actualizado', 'Posición total'],
+    ['CAT - CEDEAR CAATERPIL', 'ARS', 22, 49300, 3.3908634, 69458.8290909, -29.0227022, -443494.2400007, '16:31:43', 1084600],
+    ['Disponible', '-', 22, 49300, '-', '-', '-', '-', '-', 1084600],
+    ['GOOGL - CEDEAR ALPHABET INC. CL  A', 'ARS', 200, 8330, '-', '-', '-', '-', '16:35:35', 1666000],
+    ['Liquidar', '-', 200, 8330, '-', '-', '-', '-', '-', 1666000],
+    ['Subtotal', '-', '-', '-', 76.4234521, '-', '-', -2570111.42, '-', 27173370],
+    ['Bonos'],
+    ['Instrumento', 'Moneda de emisión', 'Cantidad', 'Precio', '% del total', 'PPP', 'Var%', 'Resultado', 'Actualizado', 'Posición total'],
+    ['AO28 - BONO TESORO NACIONAL 6% 31/10/28 USD', 'USD', 1446, 132210, 5.9768629, 132072.7206118, 0.1039423, 1985.0599534, '16:35:04', 1911756.6],
+    ['Otros'],
+    ['Instrumento', 'Moneda de emisión', 'Cantidad', 'Precio', '% del total', 'PPP', 'Var%', 'Resultado', 'Actualizado', 'Posición total'],
+    ['DOLARUSA - DOLARES USA ESP 7000', 'USD', 2.13, 1711, 0.0113938, 1627.7230047, 5.116165, 177.38, '16:35:04', 3644.43],
+    ['ARS '],
+    ['Plazo', 'Fecha', 'Saldo'],
+    ['Hoy', '2026-11-27', 563.33],
+  ], 'IEB-2026-11-27-Portafolio-ARS.xlsx');
+  assert.equal(parsed.date, '2026-11-27');
+  assert.equal(parsed.currency, 'ARS');
+  assert.deepEqual(parsed.items.map(i => i.symbol), ['CAT', 'GOOGL', 'AO28', 'DOLARUSA']);
+  assert.equal(parsed.items[1].calculated, true);
+  assert.ok(Math.abs(parsed.items[1].percentage - (1666000 / 31985953.75 * 100)) < 1e-6);
+  assert.equal(parsed.items[2].section, 'Bonos');
+  assert.equal(parsed.items[3].cash, true);
+});

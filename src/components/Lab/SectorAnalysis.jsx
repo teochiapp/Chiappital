@@ -5,6 +5,7 @@ import { colors, withOpacity } from '../../styles/colors';
 import { useLabData } from '../../context/LabContext';
 
 export const GICS_SECTORS = [
+  { id: 'xlk', name: 'Tecnología', ticker: 'XLK' },
   { id: 'igv', name: 'Software', ticker: 'IGV' },
   { id: 'smh', name: 'Semiconductores', ticker: 'SMH' },
   { id: 'btc', name: 'Criptomonedas', ticker: 'BTC' },

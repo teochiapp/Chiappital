@@ -28,7 +28,7 @@ export default function IebImportModal({ file, accountType, onClose, onImported 
           || workbook.SheetNames.find(sheet => {
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { header: 1 });
             return rows.some(row => String(row[0]).trim().toLowerCase() === 'patrimonio total')
-              && rows.some(row => String(row[0]).trim().toLowerCase() === 'especie');
+              && rows.some(row => ['especie', 'instrumento'].includes(String(row[0]).trim().toLowerCase()));
           });
         if (!name) throw new Error('El archivo debe contener la hoja Patrimonio.');
         const parsed = parseIebRows(XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1 }), file.name);
